@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SponsorAI — Investor Briefing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="investor-portal.css" />
+</head>
+<body>
+
+  <!-- Background — fixed, darkened for reading comfort -->
+  <div class="bg-scene">
+    <div class="bg-image bg-image--alt"></div>
+    <div class="bg-overlay bg-overlay--portal"></div>
+    <div class="bg-vignette"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <div class="page page--portal">
+
+    <!-- Header -->
+    <header class="header">
+      <a href="hub.html" class="header__logo"><img src="images/logo-whitesvg.svg" alt="SponsorAI" height="20" style="display:block;"></a>
+      <button class="portal-signout" id="signOutBtn">Sign out</button>
+    </header>
+
+    <!-- Main content -->
+    <main class="portal-main">
+
+      <!-- ① Welcome -->
+      <section class="psec psec--welcome">
+        <div class="psec__eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>Investor briefing — confidential</span>
+        </div>
+        <h1 class="psec__hero">You're early.</h1>
+        <p class="psec__lead">
+          SponsorAI is building a new intelligence layer for the global sports
+          sponsorship market. Our goal is simple: bring clarity to a space that has
+          historically relied on relationships, guesswork, and fragmented data.
+        </p>
+        <p class="psec__lead psec__lead--muted">
+          Brands, rights holders, and agencies make billion-pound decisions every year
+          with very little structured insight. SponsorAI is designed to change that.
+        </p>
+      </section>
+
+      <div class="portal-rule portal-rule--heavy"></div>
+
+      <!-- ② Prototype CTAs -->
+      <section class="psec psec--cta">
+        <p class="cta-intro">Explore where the product is heading.</p>
+        <div class="proto-grid">
+
+          <a href="#" class="proto-card">
+            <div class="proto-card__top">
+              <span class="proto-card__tag">Design</span>
+            </div>
+            <div class="proto-card__body">
+              <h3 class="proto-card__title">Design Prototype</h3>
+              <p class="proto-card__desc">Visual concept and UX flow. See how the platform looks and feels.</p>
+            </div>
+            <div class="proto-card__footer">
+              <span class="proto-card__link">Open prototype</span>
+              <span class="proto-card__arrow">→</span>
+            </div>
+          </a>
+
+          <a href="#" class="proto-card proto-card--alt">
+            <div class="proto-card__top">
+              <span class="proto-card__tag">Product</span>
+            </div>
+            <div class="proto-card__body">
+              <h3 class="proto-card__title">Working Prototype</h3>
+              <p class="proto-card__desc">Live and interactive. See the core intelligence layer in action.</p>
+            </div>
+            <div class="proto-card__footer">
+              <span class="proto-card__link">Open prototype</span>
+              <span class="proto-card__arrow">→</span>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+      <div class="portal-rule"></div>
+
+      <!-- ③ What SponsorAI Does -->
+      <section class="psec">
+        <div class="psec__label">01</div>
+        <h2 class="psec__heading">What SponsorAI Does</h2>
+        <p class="psec__body">
+          SponsorAI provides a structured view of the sponsorship landscape by analysing
+          audience attention, engagement signals, and brand alignment across sports
+          properties.
+        </p>
+        <p class="psec__body">
+          Instead of rankings or opinions, SponsorAI surfaces neutral signals that help
+          organisations understand:
+        </p>
+        <ul class="psec__list">
+          <li>Where audience attention is growing</li>
+          <li>Which properties are building momentum</li>
+          <li>How different sponsorship opportunities compare</li>
+          <li>Where brand alignment may naturally exist</li>
+        </ul>
+        <p class="psec__body psec__body--muted">
+          The platform helps decision-makers explore the sponsorship market with
+          greater clarity and confidence.
+        </p>
+      </section>
+
+      <div class="portal-rule"></div>
+
+      <!-- ③ What Makes It Different -->
+      <section class="psec">
+        <div class="psec__label">02</div>
+        <h2 class="psec__heading">What Makes It Different</h2>
+        <p class="psec__body">
+          SponsorAI is not a marketplace, an agency, or a brokerage. It is an
+          intelligence platform designed to make the sponsorship market more transparent
+          and easier to navigate.
+        </p>
+        <div class="principles">
+          <div class="principle">
+            <div class="principle__mark">—</div>
+            <div class="principle__text">No pay-to-rank</div>
+          </div>
+          <div class="principle">
+            <div class="principle__mark">—</div>
+            <div class="principle__text">Neutral data signals</div>
+          </div>
+          <div class="principle">
+            <div class="principle__mark">—</div>
+            <div class="principle__text">Structured market visibility</div>
+          </div>
+          <div class="principle">
+            <div class="principle__mark">—</div>
+            <div class="principle__text">Decision support, not predictions</div>
+          </div>
+        </div>
+        <p class="psec__body psec__body--muted">
+          The goal is not to tell people what to sponsor. The goal is to make the
+          landscape visible enough for better decisions to emerge.
+        </p>
+      </section>
+
+      <div class="portal-rule"></div>
+
+      <!-- ④ Current Stage -->
+      <section class="psec">
+        <div class="psec__label">03</div>
+        <h2 class="psec__heading">Current Stage</h2>
+        <div class="stage-callout">
+          <div class="stage-callout__pulse">
+            <span class="eyebrow-dot eyebrow-dot--lg"></span>
+            <span>Early development</span>
+          </div>
+          <p class="stage-callout__body">
+            We are building the core data infrastructure, scoring models, and first
+            platform experience. Early partners are helping shape how the product evolves.
+            This phase is focused on validating the model and preparing for the first
+            controlled release.
+          </p>
+        </div>
+      </section>
+
+      <div class="portal-rule"></div>
+
+      <!-- ⑤ What Happens Next -->
+      <section class="psec">
+        <div class="psec__label">04</div>
+        <h2 class="psec__heading">What Happens Next</h2>
+        <p class="psec__body">
+          Over the coming months we will begin onboarding early organisations and
+          testing the platform in real sponsorship decision environments.
+        </p>
+        <p class="psec__body psec__body--muted">
+          If you have questions or would like to discuss the project further,
+          feel free to reach out.
+        </p>
+      </section>
+
+
+      <div class="portal-rule portal-rule--heavy"></div>
+
+      <!-- Email signup -->
+      <section class="psec psec--signup">
+        <p class="signup-label">Stay in the loop</p>
+        <h2 class="psec__heading">Get updates as the product develops.</h2>
+        <p class="psec__body">We'll reach out when there's something worth sharing — milestones, early access, and key decisions.</p>
+        <form class="signup signup--portal" id="portalSignupForm" novalidate>
+          <div class="signup__field">
+            <input
+              class="signup__input"
+              type="email"
+              id="portalEmailInput"
+              placeholder="you@company.com"
+              autocomplete="email"
+              required
+            />
+            <button class="signup__btn" type="submit">
+              <span class="signup__btn-text">Notify me</span>
+              <span class="signup__btn-arrow">→</span>
+            </button>
+          </div>
+          <p class="signup__note" id="portalSignupNote" aria-live="polite"></p>
+        </form>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="footer__copy">© 2026 SponsorAI</span>
+      <span class="footer__divider">·</span>
+      <span class="footer__tagline">Confidential — for invited investors only</span>
+    </footer>
+
+  </div>
+
+  <script src="investor-auth.js"></script>
+</body>
+</html>

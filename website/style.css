@@ -1,0 +1,734 @@
+/* =============================================
+   SPONSORAI — Holding Page
+   ============================================= */
+
+/* === Reset & Base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #ffffff;
+  background-color: #050508;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Background Scene === */
+.bg-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/*
+ * Hero background — drop any sports image into images/hero.jpg and it
+ * will render automatically. The CSS gradient below acts as a fallback
+ * (and shows through if no image is present).
+ *
+ * Good free image sources:
+ *   unsplash.com → search "stadium lights", "football pitch", "motorsport"
+ *   pexels.com   → search "stadium night", "sports crowd"
+ */
+.bg-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('images/sports-bg.png');
+  background-size: cover;
+  background-position: center 40%;
+  background-repeat: no-repeat;
+  /* Fallback gradient (stadium palette) shown when no image is present */
+  background-color: #050d0a;
+  /* Subtle desaturation so the overlay always reads cleanly */
+  filter: saturate(0.8) brightness(0.4);
+}
+
+/* CSS gradient scene — used as fallback when no hero image is loaded */
+.bg-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 60%,
+      #0d2a1a 0%,
+      #0a1e14 30%,
+      #06100d 60%,
+      #030a08 100%
+    );
+}
+
+/* Ensure scene children sit above the pseudo-element */
+.bg-collage,
+.bg-image,
+.bg-overlay,
+.bg-vignette,
+.bg-noise,
+.light-beam,
+.light-glow,
+.pitch-lines {
+  z-index: 1;
+}
+
+/* =============================================
+   SPORTS COLLAGE
+   Five sport-environment panels arranged like
+   photographs spread across the upper viewport.
+   ============================================= */
+
+.bg-collage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Shared panel styles */
+.sport-panel {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 3px;
+  box-shadow:
+    0 12px 50px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  opacity: 0.88;
+}
+
+/* Bottom fade on every panel — dissolves into the dark page */
+.sport-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 45%;
+  background: linear-gradient(to bottom, transparent 0%, rgba(5, 5, 8, 0.95) 100%);
+  pointer-events: none;
+}
+
+/* ── Panel 1: Football pitch
+   Rich mid-tone green with visible mow stripes + centre-line */
+.sport-panel--pitch {
+  left: -1%;
+  top: -4%;
+  width: 22%;
+  height: 56vh;
+  transform: rotate(-1.5deg);
+  transform-origin: top center;
+  background:
+    /* Faint vertical centre-line */
+    linear-gradient(
+      90deg,
+      transparent 49.5%, rgba(255,255,255,0.12) 49.5%,
+      rgba(255,255,255,0.12) 50.5%, transparent 50.5%
+    ),
+    /* Horizontal mow stripes */
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px,
+      transparent 1px, transparent 42px
+    ),
+    linear-gradient(155deg, #1a5c2e 0%, #2a7a3c 40%, #1e6632 70%, #144d24 100%);
+}
+
+/* ── Panel 2: Stadium crowd at night
+   Visible indigo-navy with warm amber crowd-light clusters */
+.sport-panel--stadium {
+  left: 19%;
+  top: -6%;
+  width: 23%;
+  height: 60vh;
+  transform: rotate(1.3deg);
+  transform-origin: top center;
+  background:
+    radial-gradient(ellipse 35% 25% at 28% 28%, rgba(255, 165, 50, 0.50) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 18% at 72% 18%, rgba(255, 185, 70, 0.40) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 20% at 55% 65%, rgba(255, 140, 40, 0.25) 0%, transparent 100%),
+    radial-gradient(ellipse 15% 12% at 15% 55%, rgba(255, 160, 55, 0.30) 0%, transparent 100%),
+    radial-gradient(ellipse 10% 8% at 85% 45%, rgba(255, 200, 80, 0.25) 0%, transparent 100%),
+    linear-gradient(165deg, #14144a 0%, #1e1c5a 50%, #14144a 100%);
+}
+
+/* ── Panel 3: Motorsport
+   Dark asphalt with a strong orange heat-glow from below */
+.sport-panel--motor {
+  left: 38.5%;
+  top: -2%;
+  width: 22%;
+  height: 57vh;
+  transform: rotate(-0.6deg);
+  transform-origin: top center;
+  background:
+    repeating-linear-gradient(
+      -48deg,
+      rgba(255, 100, 20, 0.07) 0px, rgba(255, 100, 20, 0.07) 1px,
+      transparent 1px, transparent 38px
+    ),
+    radial-gradient(ellipse 100% 50% at 50% 90%, rgba(255, 90, 10, 0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 30% at 20% 15%, rgba(255, 130, 30, 0.20) 0%, transparent 100%),
+    linear-gradient(160deg, #1e0c04 0%, #2e1408 50%, #1e0c04 100%);
+}
+
+/* ── Panel 4: Tennis (hard court)
+   Vivid US-Open-blue with visible court grid */
+.sport-panel--tennis {
+  left: 57%;
+  top: -5%;
+  width: 23%;
+  height: 59vh;
+  transform: rotate(1.8deg);
+  transform-origin: top center;
+  background:
+    /* Court grid */
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1px,
+      transparent 1px, transparent 54px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1px,
+      transparent 1px, transparent 54px
+    ),
+    /* Net-line at mid-height */
+    linear-gradient(
+      0deg,
+      transparent 47%, rgba(255,255,255,0.15) 47%,
+      rgba(255,255,255,0.15) 53%, transparent 53%
+    ),
+    linear-gradient(155deg, #0e2e5c 0%, #1a4480 50%, #0e2e5c 100%);
+}
+
+/* ── Panel 5: Athletics track
+   Vivid terracotta-red with lane lines */
+.sport-panel--athletics {
+  left: 76%;
+  top: -2%;
+  width: 27%;
+  height: 54vh;
+  transform: rotate(-1.2deg);
+  transform-origin: top center;
+  background:
+    /* Lane dividers */
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.10) 0px, rgba(255,255,255,0.10) 1px,
+      transparent 1px, transparent 36px
+    ),
+    /* Horizon glow */
+    radial-gradient(ellipse 120% 45% at 50% 100%, rgba(220, 80, 20, 0.55) 0%, transparent 65%),
+    linear-gradient(155deg, #4a1a08 0%, #6a2a0e 50%, #4a1a08 100%);
+}
+
+/* Pitch line markings — subtle emerald green */
+.pitch-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+}
+
+.pitch-line {
+  position: absolute;
+  background: rgba(80, 200, 120, 0.6);
+}
+
+.pitch-line--h1 {
+  top: 40%;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+}
+
+.pitch-line--h2 {
+  top: 62%;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+}
+
+.pitch-line--v {
+  top: 30%;
+  bottom: 25%;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.pitch-circle {
+  position: absolute;
+  top: 51%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 1px solid rgba(80, 200, 120, 0.6);
+}
+
+/* Stadium floodlight glow — warm amber floods from above */
+.light-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.light-glow--1 {
+  top: -10%;
+  left: -5%;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, rgba(255, 180, 60, 0.22) 0%, transparent 70%);
+  animation: pulse-glow 8s ease-in-out infinite alternate;
+}
+
+.light-glow--2 {
+  top: -10%;
+  right: -5%;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, rgba(255, 160, 40, 0.18) 0%, transparent 70%);
+  animation: pulse-glow 10s ease-in-out 2s infinite alternate-reverse;
+}
+
+.light-glow--3 {
+  bottom: 10%;
+  left: 30%;
+  width: 40vw;
+  height: 30vw;
+  background: radial-gradient(circle, rgba(100, 180, 255, 0.06) 0%, transparent 70%);
+}
+
+/* Beam shafts */
+.light-beam {
+  position: absolute;
+  top: 0;
+  width: 30vw;
+  height: 100vh;
+  pointer-events: none;
+  opacity: 0.06;
+}
+
+.light-beam--left {
+  left: 5%;
+  background: linear-gradient(170deg, rgba(255, 200, 100, 0.8) 0%, transparent 60%);
+  transform-origin: top center;
+  transform: rotate(-8deg);
+}
+
+.light-beam--right {
+  right: 5%;
+  background: linear-gradient(190deg, rgba(255, 200, 100, 0.8) 0%, transparent 60%);
+  transform-origin: top center;
+  transform: rotate(8deg);
+}
+
+/* Dark overlay for readability
+   Top is deliberately lighter so the collage panels breathe.
+   Mid-section stays clear for text. Bottom is heavy so footer reads. */
+.bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 8, 0.08) 0%,
+    rgba(5, 5, 8, 0.10) 30%,
+    rgba(5, 5, 8, 0.55) 62%,
+    rgba(5, 5, 8, 0.90) 100%
+  );
+}
+
+/* Cinematic vignette */
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 90% at 50% 50%,
+    transparent 40%,
+    rgba(2, 2, 5, 0.7) 100%
+  );
+}
+
+/* Film grain / noise overlay */
+.bg-noise {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  animation: noise-shift 0.5s steps(1) infinite;
+}
+
+/* === Page Layout === */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+/* === Header === */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36px 0 0;
+}
+
+.header__logo {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.header__badge {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 5px 12px;
+  border-radius: 100px;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.header__badge:hover {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* === Hero === */
+/* Content sits in the lower portion of the viewport,
+   leaving the upper half clear for the collage to read. */
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 72px;
+}
+
+.hero__inner {
+  text-align: center;
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Eyebrow line */
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 36px;
+}
+
+.eyebrow-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(120, 220, 120, 0.7);
+  animation: blink 2.8s ease-in-out infinite;
+}
+
+/* Main headline */
+.hero__headline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(38px, 6vw, 72px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 44px;
+}
+
+.hero__headline em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Body copy */
+.hero__body {
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 620px;
+  margin-bottom: 16px;
+}
+
+.hero__body--secondary {
+  color: rgba(255, 255, 255, 0.42);
+  margin-bottom: 40px;
+}
+
+/* Whisper line */
+.hero__whisper {
+  font-size: clamp(13px, 1.3vw, 15px);
+  font-weight: 300;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.28);
+  font-style: italic;
+  max-width: 580px;
+  margin-bottom: 56px;
+}
+
+/* === Email Signup === */
+.signup {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.signup__field {
+  display: flex;
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.signup__field:focus-within {
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.signup__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  caret-color: rgba(255, 255, 255, 0.6);
+}
+
+.signup__input::placeholder {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.signup__btn {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0a0a10;
+  border: none;
+  padding: 0 22px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.signup__btn:hover {
+  background: #ffffff;
+}
+
+.signup__btn:active {
+  transform: scale(0.98);
+}
+
+.signup__btn-arrow {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.signup__btn:hover .signup__btn-arrow {
+  transform: translateX(3px);
+}
+
+/* Success / error states */
+.signup__note {
+  font-size: 13px;
+  font-weight: 400;
+  min-height: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.signup__note.is-success {
+  color: rgba(120, 220, 120, 0.85);
+}
+
+.signup__note.is-error {
+  color: rgba(255, 120, 100, 0.85);
+}
+
+/* Success state — field fades */
+.signup.is-submitted .signup__field {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* === Footer === */
+.footer {
+  padding: 28px 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.02em;
+}
+
+.footer__divider {
+  opacity: 0.4;
+}
+
+/* === Utilities === */
+.desktop-break {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-break {
+    display: block;
+  }
+}
+
+/* === Animations === */
+@keyframes pulse-glow {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0.7; transform: scale(1.08); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+@keyframes noise-shift {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-1%, -1%); }
+  20%  { transform: translate(1%, 0); }
+  30%  { transform: translate(0, 1%); }
+  40%  { transform: translate(-1%, 1%); }
+  50%  { transform: translate(1%, -1%); }
+  60%  { transform: translate(0, 0); }
+  70%  { transform: translate(1%, 1%); }
+  80%  { transform: translate(-1%, 0); }
+  90%  { transform: translate(0, -1%); }
+  100% { transform: translate(1%, 0); }
+}
+
+/* Entrance animations */
+.header,
+.hero__eyebrow,
+.hero__headline,
+.hero__body,
+.hero__whisper,
+.signup,
+.footer {
+  animation: fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.header           { animation-delay: 0.1s; }
+.hero__eyebrow    { animation-delay: 0.3s; }
+.hero__headline   { animation-delay: 0.45s; }
+.hero__body:first-of-type { animation-delay: 0.6s; }
+.hero__body--secondary    { animation-delay: 0.7s; }
+.hero__whisper    { animation-delay: 0.8s; }
+.signup           { animation-delay: 0.95s; }
+.footer           { animation-delay: 0.5s; }
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  .page {
+    padding: 0 20px;
+  }
+
+  .header {
+    padding-top: 24px;
+  }
+
+  .hero {
+    padding: 0 0 48px;
+  }
+
+  .hero__headline {
+    margin-bottom: 32px;
+  }
+
+  .signup__btn-text {
+    display: none;
+  }
+
+  .signup__btn {
+    padding: 0 18px;
+  }
+
+  .signup__btn-arrow {
+    font-size: 18px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .footer__divider {
+    display: none;
+  }
+}

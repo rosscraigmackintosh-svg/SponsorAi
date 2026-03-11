@@ -1,0 +1,401 @@
+/* =============================================
+   SPONSORAI — Investor Portal
+   ============================================= */
+
+/* === Shared overrides === */
+
+.header__logo {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+/* Heavier overlay for a reading page */
+.bg-overlay--portal {
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 8, 0.70) 0%,
+    rgba(5, 5, 8, 0.72) 50%,
+    rgba(5, 5, 8, 0.88) 100%
+  ) !important;
+}
+
+/* Alternative image (set per-page) */
+.bg-image--alt {
+  background-image: url('images/sports-bg3.png');
+}
+
+/* Portal page doesn't bottom-anchor like the hero page */
+.page--portal {
+  min-height: 100vh;
+}
+
+/* Sign out button */
+.portal-signout {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.30);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.portal-signout:hover {
+  color: rgba(255, 255, 255, 0.60);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* === Portal main — scrolling content === */
+.portal-main {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 72px 0 80px;
+}
+
+/* === Section base === */
+.psec {
+  padding: 56px 0;
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.psec--welcome { padding-top: 24px; }
+
+/* Section number label */
+.psec__label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.20);
+  margin-bottom: 20px;
+}
+
+/* Eyebrow for welcome */
+.psec__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.30);
+  margin-bottom: 32px;
+}
+
+/* Big hero headline */
+.psec__hero {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(52px, 8vw, 88px);
+  font-weight: 400;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin-bottom: 36px;
+}
+
+/* Section headings */
+.psec__heading {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(24px, 3.5vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+/* Lead text — slightly larger */
+.psec__lead {
+  font-size: clamp(16px, 2vw, 18px);
+  font-weight: 300;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.60);
+  margin-bottom: 18px;
+  max-width: 640px;
+}
+
+.psec__lead--muted {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* Body copy */
+.psec__body {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.52);
+  margin-bottom: 18px;
+  max-width: 620px;
+}
+
+.psec__body--muted {
+  color: rgba(255, 255, 255, 0.30);
+  font-style: italic;
+}
+
+/* Bullet list */
+.psec__list {
+  list-style: none;
+  margin: 24px 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.psec__list li {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.60);
+  padding-left: 20px;
+  position: relative;
+}
+
+.psec__list li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* === Principles grid === */
+.principles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 28px 0 32px;
+}
+
+.principle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.principle__mark {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.20);
+  flex-shrink: 0;
+}
+
+.principle__text {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.01em;
+}
+
+/* === Current stage callout === */
+.stage-callout {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 24px 0 24px 28px;
+  margin: 8px 0;
+}
+
+.stage-callout__pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(120, 220, 120, 0.70);
+  margin-bottom: 16px;
+}
+
+.eyebrow-dot--lg {
+  width: 6px;
+  height: 6px;
+}
+
+.stage-callout__body {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.50);
+  max-width: 580px;
+}
+
+/* === Dividers === */
+.portal-rule {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin: 0;
+}
+
+.portal-rule--heavy {
+  border-top-color: rgba(255, 255, 255, 0.12);
+  margin-bottom: 8px;
+}
+
+/* === Prototype CTA section === */
+.psec--cta {
+  padding-top: 48px;
+  padding-bottom: 56px;
+}
+
+.cta-intro {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+  margin-bottom: 48px;
+}
+
+.proto-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Prototype card */
+.proto-card {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  text-decoration: none;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  cursor: pointer;
+  min-height: 200px;
+}
+
+.proto-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.20);
+  transform: translateY(-2px);
+}
+
+/* Highlighted variant */
+.proto-card--alt {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.proto-card--alt:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.proto-card__top {
+  margin-bottom: 20px;
+}
+
+.proto-card__tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.30);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.proto-card__body {
+  flex: 1;
+}
+
+.proto-card__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.proto-card__desc {
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.proto-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.proto-card__link {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.40);
+  transition: color 0.2s ease;
+}
+
+.proto-card:hover .proto-card__link {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.proto-card__arrow {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.30);
+  transition: transform 0.2s ease, color 0.2s ease;
+  display: inline-block;
+}
+
+.proto-card:hover .proto-card__arrow {
+  transform: translateX(4px);
+  color: rgba(255, 255, 255, 0.70);
+}
+
+/* === Email signup section === */
+.psec--signup {
+  padding-top: 48px;
+  padding-bottom: 80px;
+}
+
+.signup-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+  margin-bottom: 16px;
+}
+
+.signup--portal {
+  margin-top: 32px;
+  max-width: 480px;
+}
+
+/* === Responsive === */
+@media (max-width: 640px) {
+  .portal-main {
+    padding: 48px 0 60px;
+  }
+
+  .proto-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .principles {
+    grid-template-columns: 1fr;
+  }
+
+  .psec__hero {
+    font-size: 52px;
+  }
+}

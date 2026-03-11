@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opportunities - SponsorAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink:#1a1a2e;--blue:#2c6fad;--blue-light:#deeaf6;--blue-mid:#b8d4ee;--green:#2a7a50;--green-light:#ddf0e6;--purple:#6b4fa0;--purple-light:#ede8f7;--amber:#b87c20;--amber-light:#fdf3e0;--red:#c0392b;--red-light:#fdecea;--mid:#3a3a3a;--subtle:#6b6b6b;--rule:#d4d4d4;--pale:#f6f6f6;--panel:#f1f6fb;--white:#ffffff; }
+    html { font-size: 14px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--pale); color: var(--mid); line-height: 1.55; min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--rule); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 10; display: flex; flex-direction: column; }
+    .content { margin-left: 220px; flex: 1; min-width: 0; padding: 28px 32px 60px; }
+    .sidebar-logo-area { padding: 18px 16px 14px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 12px; }
+    .logo-mark { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; }
+    .logo-mark span { color: var(--blue); }
+    .brand-chip { display: flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--blue-mid); border-radius: 6px; padding: 7px 10px; cursor: pointer; font-size: 12px; color: var(--blue); font-weight: 500; width: 100%; }
+    .brand-chip:hover { background: var(--blue-light); }
+    .brand-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+    .brand-chip-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .sidebar-section { padding: 0 14px 8px; margin-bottom: 4px; }
+    .sidebar-label { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: 0.7px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; margin-top: 12px; }
+    .sidebar-link { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 5px; font-size: 13px; color: var(--mid); text-decoration: none; cursor: pointer; transition: all 0.12s; user-select: none; }
+    .sidebar-link:hover { background: var(--pale); color: var(--ink); }
+    .sidebar-link.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+    .sidebar-link svg { opacity: 0.65; flex-shrink: 0; }
+    .sidebar-link.active svg { opacity: 1; }
+    .sidebar-divider { height: 1px; background: var(--rule); margin: 10px 14px; }
+    .sidebar-count { margin-left: auto; font-size: 11px; background: var(--rule); color: var(--subtle); border-radius: 10px; padding: 1px 7px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--subtle); margin-bottom: 24px; }
+    .btn { font-size: 12px; padding: 7px 14px; border-radius: 5px; cursor: pointer; border: 1px solid var(--rule); background: var(--white); color: var(--mid); transition: all 0.12s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:hover { background: var(--pale); border-color: var(--blue-mid); color: var(--ink); }
+    .btn-primary { background: var(--blue); color: var(--white); border-color: var(--blue); }
+    .btn-primary:hover { background: #235a8e; border-color: #235a8e; color: var(--white); }
+    .signal-pill { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
+    .signal-fit { background: var(--green-light); color: var(--green); }
+    .signal-bud { background: var(--purple-light); color: var(--purple); }
+    .signal-label { font-weight: 400; opacity: 0.75; font-size: 10px; }
+    
+    .filters-bar { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-label { font-size: 12px; color: var(--subtle); font-weight: 500; }
+    .filter-input { font-size: 12px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 5px; background: var(--white); color: var(--ink); }
+    .filter-count { margin-left: auto; font-size: 12px; color: var(--subtle); font-weight: 500; }
+    
+    .opportunities-list { display: flex; flex-direction: column; gap: 12px; }
+    .opp-row { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; display: flex; gap: 16px; align-items: center; }
+    .opp-row.in-budget { border-left: 4px solid var(--green); }
+    
+    .opp-property { display: flex; gap: 12px; align-items: flex-start; min-width: 180px; }
+    .opp-avatar { width: 40px; height: 40px; border-radius: 6px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .opp-property-text { flex: 1; }
+    .opp-property-name { font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; margin-bottom: 2px; }
+    .opp-property-name:hover { color: var(--blue); }
+    .opp-property-type { font-size: 11px; color: var(--subtle); }
+    
+    .opp-details { flex: 1; min-width: 0; }
+    .opp-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .opp-meta { font-size: 11px; color: var(--subtle); }
+    
+    .opp-signals { display: flex; gap: 8px; flex-wrap: wrap; }
+    
+    .opp-actions { display: flex; gap: 8px; }
+    .opp-action-link { font-size: 11px; color: var(--blue); text-decoration: none; cursor: pointer; }
+    .opp-action-link:hover { text-decoration: underline; }
+    .opp-action-btn { font-size: 11px; padding: 5px 10px; background: var(--blue); color: var(--white); border: none; border-radius: 4px; cursor: pointer; }
+    .opp-action-btn:hover { background: #235a8e; }
+    
+    .note { background: var(--blue-light); border: 1px solid var(--blue-mid); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--blue); margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-logo-area">
+        <a class="logo" href="explore.html"><span class="logo-mark">Sponsor<span>AI</span></span></a>
+        <div class="brand-chip"><span class="brand-chip-dot"></span><span class="brand-chip-name">Apex Performance Gear</span></div>
+      </div>
+      <div class="sidebar-nav-scroll">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Discover</div>
+          <a class="sidebar-link" href="explore.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+            Explore
+          </a>
+          <a class="sidebar-link" href="explore.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="10" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
+            Browse All
+          </a>
+          <a class="sidebar-link" href="watchlist.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.1l-3.8 2.2.7-4.3-3.1-3 4.3-.6L8 1.5z" fill="currentColor" opacity=".5"/></svg>
+            Watchlist <span class="sidebar-count">4</span>
+          </a>
+          <a class="sidebar-link" href="compare.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="6" height="9" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="1" width="6" height="12" rx="1.5" fill="currentColor"/></svg>
+            Compare
+          </a>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">My Work</div>
+          <a class="sidebar-link" href="portfolio.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            Portfolio <span class="sidebar-count">2</span>
+          </a>
+          <a class="sidebar-link active" href="opportunities.html">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5"/></svg>
+            Opportunities
+          </a>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Intelligence</div>
+          <a class="sidebar-link" href="#"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 12 L5 7 L8 9 L11 4 L14 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>Methodology</a>
+          <a class="sidebar-link" href="#"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>Signal History</a>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content">
+      <div class="page-title">Opportunities</div>
+      <div class="page-subtitle">Declared sponsorship openings. Filtered to your budget range.</div>
+
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label class="filter-label">Budget range</label>
+          <select class="filter-input" id="budget-filter" onchange="updateFilters()">
+            <option value="">All budgets</option>
+            <option value="0-50">Under £50k</option>
+            <option value="50-100">£50k–£100k</option>
+            <option value="100-999">£100k+</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">FitScore</label>
+          <select class="filter-input" id="fitscore-filter" onchange="updateFilters()">
+            <option value="">All</option>
+            <option value="70">Strong (70+)</option>
+            <option value="60">Good (60-69)</option>
+            <option value="50">Moderate (50-59)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Sort</label>
+          <select class="filter-input" id="sort-filter" onchange="updateFilters()">
+            <option value="fitscore">FitScore ↓</option>
+            <option value="budget">Budget ↑</option>
+            <option value="date">Declared date ↓</option>
+          </select>
+        </div>
+        <div class="filter-count" id="count">7 opportunities · 5 within budget range</div>
+      </div>
+
+      <div class="opportunities-list" id="opportunities-list"></div>
+
+      <div class="note">Opportunities are property-declared. SponsorAI does not verify terms or guarantee availability. No recommendation is implied.</div>
+    </div>
+  </div>
+
+  <script>
+    const properties = [
+      { id:1, initials:"PR", name:"Prema Racing", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3 · FR Italian", fanScore:74, fanTier:"Tier B", fitScore:68, fitSub:"Good alignment", budget:"£95k", budgetNum:95, conf:"high", confDesc:"4/4 sources active. Data currency: 3 days.", fanNote:"Strong engagement momentum over 90 days. Audience growth 18% YoY.", fitNote:"Geographic and category match. Audience age skew aligned.", oppTitle:"Race suit & apparel partner — FIA F2 2025", oppMeta:"Minimum £95,000 · Declared 18 days ago · Expires in 43 days", dims:[80,72,65,88,54], watchlist:true, portfolio:true },
+      { id:2, initials:"ART", name:"ART Grand Prix", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3", fanScore:71, fanTier:"Tier B", fitScore:64, fitSub:"Good alignment", budget:"£110k", budgetNum:110, conf:"high", confDesc:"4/4 sources active. Data currency: 5 days.", fanNote:"Consistent engagement across platforms. Large international fanbase.", fitNote:"Category match strong. Geographic fit moderate — French team, European series.", oppTitle:"Technical partner — livery placement", oppMeta:"Minimum £110,000 · Declared 7 days ago", dims:[68,74,70,77,62], watchlist:false, portfolio:false },
+      { id:3, initials:"HI", name:"Hitech Grand Prix", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3", fanScore:62, fanTier:"Tier B", fitScore:71, fitSub:"Strong alignment", budget:"£75k", budgetNum:75, conf:"mod", confDesc:"3/4 sources active. Instagram data partial. Data currency: 9 days.", fanNote:"UK-based team with strong domestic audience. Growing international presence.", fitNote:"Excellent UK geographic fit. Category alignment high. Budget well within range.", oppTitle:"Apparel & accessories partner", oppMeta:"Minimum £75,000 · Declared 12 days ago · Expires in 18 days", dims:[91,78,68,95,49], watchlist:true, portfolio:false },
+      { id:4, initials:"TP", name:"Theo Pourchaire", type:"Formula 2 Driver", series:"FIA F2 Championship", fanScore:81, fanTier:"Tier B", fitScore:52, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"high", confDesc:"4/4 sources active. Data currency: 1 day.", fanNote:"Highest FanScore momentum in F2 grid. 90-day growth of +12 points.", fitNote:"Strong FanScore match. Geographic fit lower — French driver, limited UK activation.", oppTitle:null, oppMeta:null, dims:[55,60,72,40,48], watchlist:true, portfolio:false },
+      { id:5, initials:"CA", name:"Carlin Motorsport", type:"Multi-Series Constructor", series:"FIA F2 · FIA F3 · British F4", fanScore:69, fanTier:"Tier B", fitScore:66, fitSub:"Good alignment", budget:"£85k", budgetNum:85, conf:"high", confDesc:"4/4 sources active. Data currency: 4 days.", fanNote:"Steady engagement. Multi-series presence amplifies total reach.", fitNote:"UK-based. Strong automotive affinity in existing partner base.", oppTitle:"Multi-series branding package", oppMeta:"Minimum £85,000 · Declared 22 days ago", dims:[84,70,66,90,58], watchlist:true, portfolio:true },
+      { id:6, initials:"VR", name:"Virtuosi Racing", type:"F2 Constructor", series:"FIA F2 Championship", fanScore:58, fanTier:"Tier B", fitScore:73, fitSub:"Strong alignment", budget:"£70k", budgetNum:70, conf:"mod", confDesc:"3/4 sources active. TikTok data limited. Data currency: 7 days.", fanNote:"Moderate FanScore. Strong within-tier positioning.", fitNote:"UK team. Category alignment very strong — existing performance automotive adjacency.", oppTitle:"Technical apparel partner", oppMeta:"Minimum £70,000 · Declared 31 days ago · Expires in 9 days", dims:[88,82,62,93,52], watchlist:false, portfolio:false },
+      { id:7, initials:"WR", name:"WRT", type:"GT & LMP Constructor", series:"FIA WEC · GTWC Europe", fanScore:67, fanTier:"Tier B", fitScore:59, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"mod", confDesc:"3/4 sources active. YouTube data limited. Data currency: 6 days.", fanNote:"Strong FanScore growth in endurance. +9 points over 90 days.", fitNote:"Belgian team. Geographic fit weaker for UK-focused brand.", oppTitle:null, oppMeta:null, dims:[52,65,58,45,72], watchlist:false, portfolio:false },
+      { id:8, initials:"MP", name:"MP Motorsport", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3 · Euroformula", fanScore:55, fanTier:"Tier C", fitScore:60, fitSub:"Moderate alignment", budget:"£55k", budgetNum:55, conf:"lim", confDesc:"2/4 sources active. Instagram and YouTube data limited.", fanNote:"Limited data coverage. FanScore computed from partial signal set.", fitNote:"Dutch-based team. Geographic fit moderate. Budget entry point accessible.", oppTitle:"Driver kit & apparel partner", oppMeta:"Minimum £55,000 · Declared 44 days ago · Expires in 16 days", dims:[58,62,55,88,40], watchlist:false, portfolio:false },
+      { id:9, initials:"DS", name:"DAMS", type:"F2 Constructor", series:"FIA F2 Championship", fanScore:63, fanTier:"Tier B", fitScore:57, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"high", confDesc:"4/4 sources active. Data currency: 2 days.", fanNote:"Steady signals. FanScore stable over 90 days.", fitNote:"French team. Category alignment moderate.", oppTitle:null, oppMeta:null, dims:[50,60,58,42,61], watchlist:false, portfolio:false },
+      { id:10, initials:"FO", name:"Fortec Motorsports", type:"F3 & British GT Constructor", series:"FIA F3 · British GT · British F4", fanScore:51, fanTier:"Tier C", fitScore:67, fitSub:"Good alignment", budget:"£45k", budgetNum:45, conf:"mod", confDesc:"3/4 sources active. TikTok not tracked. Data currency: 11 days.", fanNote:"Smaller-scale property. FanScore appropriate to tier. Domestic UK presence strong.", fitNote:"UK team. Excellent geographic fit. Category alignment strong.", oppTitle:"Season livery & apparel partner", oppMeta:"Minimum £45,000 · Declared 8 days ago", dims:[92,75,60,99,43], watchlist:false, portfolio:false },
+    ];
+
+    const withOpps = properties.filter(p => p.oppTitle);
+    let filtered = [...withOpps];
+
+    function updateFilters() {
+      const budget = document.getElementById('budget-filter').value;
+      const fitscore = document.getElementById('fitscore-filter').value;
+      const sort = document.getElementById('sort-filter').value;
+
+      filtered = withOpps.filter(p => {
+        if (budget === '0-50' && p.budgetNum > 50 && p.budgetNum !== 0) return false;
+        if (budget === '50-100' && (p.budgetNum > 100 || (p.budgetNum < 50 && p.budgetNum !== 0))) return false;
+        if (budget === '100-999' && p.budgetNum <= 100) return false;
+
+        if (fitscore === '70' && p.fitScore < 70) return false;
+        if (fitscore === '60' && (p.fitScore < 60 || p.fitScore >= 70)) return false;
+        if (fitscore === '50' && (p.fitScore < 50 || p.fitScore >= 60)) return false;
+
+        return true;
+      });
+
+      if (sort === 'budget') {
+        filtered.sort((a, b) => (a.budgetNum || 999) - (b.budgetNum || 999));
+      } else if (sort === 'date') {
+        filtered.sort((a, b) => b.id - a.id);
+      } else {
+        filtered.sort((a, b) => b.fitScore - a.fitScore);
+      }
+
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById('opportunities-list');
+      list.innerHTML = '';
+
+      const inBudgetCount = filtered.filter(p => p.budgetNum >= 80 && p.budgetNum <= 150).length;
+      document.getElementById('count').textContent = `${filtered.length} opportunities · ${inBudgetCount} within budget range`;
+
+      filtered.forEach(p => {
+        const inBudget = p.budgetNum >= 80 && p.budgetNum <= 150;
+        const row = document.createElement('div');
+        row.className = 'opp-row' + (inBudget ? ' in-budget' : '');
+        row.innerHTML = `
+          <div class="opp-property">
+            <div class="opp-avatar">${p.initials}</div>
+            <div class="opp-property-text">
+              <a href="property.html?id=${p.id}" class="opp-property-name">${p.name}</a>
+              <div class="opp-property-type">${p.type}</div>
+            </div>
+          </div>
+          <div class="opp-details">
+            <div class="opp-title">${p.oppTitle}</div>
+            <div class="opp-meta">${p.oppMeta}</div>
+          </div>
+          <div class="opp-signals">
+            <span class="signal-pill signal-fit">${p.fitScore} <span class="signal-label">FitScore</span></span>
+            ${p.budget !== '—' ? `<span class="signal-pill signal-bud">${p.budget}</span>` : ''}
+          </div>
+          <div class="opp-actions">
+            <a href="property.html?id=${p.id}" class="opp-action-link">View property</a>
+            <button class="opp-action-btn">View opportunity</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>

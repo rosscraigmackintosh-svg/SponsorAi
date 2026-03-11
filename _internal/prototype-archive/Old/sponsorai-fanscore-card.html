@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — FanScore MetricCard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─────────────────────────────────────────────────
+   CALM ANALYTICAL SAAS DESIGN SYSTEM — v1.1
+   Semantic tokens only in component rules.
+   Reference values bound once at :root.
+───────────────────────────────────────────────── */
+:root {
+  --color-accent-primary:      #F05A28;
+  --color-accent-primary-soft: #FFF1EB;
+  --color-accent-positive:     #15803D;
+  --color-accent-warning:      #B45309;
+  --color-accent-danger:       #B91C1C;
+
+  --color-bg-page:    #FCFCFD;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle:  #F6F7F9;
+
+  --color-text-primary:   #111318;
+  --color-text-muted:     #6B7280;
+  --color-text-on-accent: #FFFFFF;
+
+  --color-border-subtle: #E6E8EC;
+  --color-border-strong: #C9CDD4;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 5px;
+  --radius-md: 8px;
+
+  --shadow-none: none;
+
+  --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  --text-xs:      11px;  /* captions, meta */
+  --text-sm:      12px;  /* labels, helper text — ConfidenceIndicator label */
+  --text-md:      14px;  /* body */
+  --text-lg:      17px;  /* supporting headings, metrics */
+  --text-xl:      20px;  /* section headings */
+  --text-display: 28px;  /* hero / large metric values */
+}
+
+html { font-size: var(--text-md); }
+body {
+  font-family: var(--font-stack);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  line-height: 1.55;
+  padding: var(--space-6);
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ─────────────────────────────────────────────────
+   METRICCARD — Composition Contract v1.1
+   Vertical layout order (must not be reordered):
+     1. Metric label
+     2. Primary value
+     3. Descriptor or delta (optional)
+     4. Divider (optional)
+     5. ConfidenceIndicator / metadata row
+
+   Compact density: padding = space.4
+   Border over shadow (shadow.none default)
+   Neutral surface — no heavy fills, no gradients
+───────────────────────────────────────────────── */
+.metric-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  width: 224px;
+  box-shadow: var(--shadow-none);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 1. Metric label
+   text.xs or text.sm, muted, uppercase.
+   Visually secondary to value. */
+.metric-card__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* 2. Primary value — visual anchor.
+   text.xl or larger (compact mode).
+   Weight 600. color.text.primary always.
+   FanScore Contract: no accent colours. */
+.metric-card__value {
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+/* 3a. Descriptor — calm and secondary.
+   Smaller than value. Muted. Non-predictive. */
+.metric-card__descriptor {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+/* 3b. Delta — state colour used sparingly.
+   Must not compete with metric value. */
+.metric-card__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  margin-bottom: var(--space-3);
+}
+.metric-card__delta--positive { color: var(--color-accent-positive); }
+.metric-card__delta--negative { color: var(--color-accent-danger); }
+.metric-card__delta--neutral  { color: var(--color-text-muted); }
+
+/* Delta arrow glyph */
+.delta-arrow {
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+}
+
+/* 4. Divider — organises, does not decorate.
+   color.border.subtle, minimal thickness. */
+.metric-card__divider {
+  height: 1px;
+  background: var(--color-border-subtle);
+  margin-bottom: var(--space-3);
+}
+
+/* ─────────────────────────────────────────────────
+   CONFIDENCE INDICATOR — Component Specification v1.1
+   Anatomy: [dot] Label … right-aligned source count
+
+   Rules:
+   - dot is sole carrier of confidence colour (softened)
+   - label: text.sm, weight 400, color.text.muted
+   - source count: right-aligned, text.xs, muted
+   - container: optional soft tint, no strong fill
+   - never larger or heavier than the metric value
+   - no animation, no gamification
+   - colour alone must not convey meaning
+───────────────────────────────────────────────── */
+.confidence-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  margin-top: auto; /* pins to card bottom when cards share height */
+}
+
+/* Left group: dot + label */
+.confidence-indicator__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Dot — sole colour carrier.
+   Softened with color-mix — avoids saturated traffic-light read. */
+.confidence-indicator__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.confidence-indicator__dot--high {
+  background: color-mix(in srgb, var(--color-accent-positive) 60%, var(--color-bg-subtle));
+}
+.confidence-indicator__dot--medium {
+  background: color-mix(in srgb, var(--color-accent-warning) 60%, var(--color-bg-subtle));
+}
+.confidence-indicator__dot--limited {
+  background: color-mix(in srgb, var(--color-accent-danger) 60%, var(--color-bg-subtle));
+}
+
+/* Label — text.sm per spec, weight 400, muted.
+   Confidence colour must not appear here. */
+.confidence-indicator__label {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Source count — right-aligned, quieter than label */
+.confidence-indicator__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Card 1: Strong signal, positive trend, high confidence ── -->
+<div class="metric-card">
+  <div class="metric-card__label">FanScore</div>
+  <div class="metric-card__value">74</div>
+  <div class="metric-card__delta metric-card__delta--positive">
+    <i class="delta-arrow" aria-hidden="true">▲</i>
+    +3 this period
+  </div>
+  <div class="metric-card__descriptor">Attention signal - descriptive, not predictive</div>
+  <div class="metric-card__divider"></div>
+  <div class="confidence-indicator" role="status" aria-label="High confidence, 5 of 5 sources">
+    <div class="confidence-indicator__left">
+      <span class="confidence-indicator__dot confidence-indicator__dot--high" aria-hidden="true"></span>
+      <span class="confidence-indicator__label">High confidence</span>
+    </div>
+    <span class="confidence-indicator__meta">5 / 5 sources</span>
+  </div>
+</div>
+
+<!-- ── Card 2: Mid signal, stable, medium confidence ── -->
+<div class="metric-card">
+  <div class="metric-card__label">FanScore</div>
+  <div class="metric-card__value">61</div>
+  <div class="metric-card__delta metric-card__delta--neutral">
+    No change
+  </div>
+  <div class="metric-card__descriptor">Attention signal - descriptive, not predictive</div>
+  <div class="metric-card__divider"></div>
+  <div class="confidence-indicator" role="status" aria-label="Medium confidence, 3 of 5 sources">
+    <div class="confidence-indicator__left">
+      <span class="confidence-indicator__dot confidence-indicator__dot--medium" aria-hidden="true"></span>
+      <span class="confidence-indicator__label">Medium confidence</span>
+    </div>
+    <span class="confidence-indicator__meta">3 / 5 sources</span>
+  </div>
+</div>
+
+<!-- ── Card 3: Low signal, declining, limited confidence ── -->
+<div class="metric-card">
+  <div class="metric-card__label">FanScore</div>
+  <div class="metric-card__value">48</div>
+  <div class="metric-card__delta metric-card__delta--negative">
+    <i class="delta-arrow" aria-hidden="true">▼</i>
+    −4 this period
+  </div>
+  <div class="metric-card__descriptor">Attention signal - descriptive, not predictive</div>
+  <div class="metric-card__divider"></div>
+  <div class="confidence-indicator" role="status" aria-label="Limited confidence, 1 of 5 sources">
+    <div class="confidence-indicator__left">
+      <span class="confidence-indicator__dot confidence-indicator__dot--limited" aria-hidden="true"></span>
+      <span class="confidence-indicator__label">Limited confidence</span>
+    </div>
+    <span class="confidence-indicator__meta">1 / 5 sources</span>
+  </div>
+</div>
+
+</body>
+</html>

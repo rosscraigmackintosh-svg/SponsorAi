@@ -1,0 +1,3623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- No external SDK — direct REST API via fetch -->
+<style>
+
+/* ─────────────────────────────────────────────────────────────────
+   TOKENS — Light mode
+───────────────────────────────────────────────────────────────── */
+:root {
+  --cp-w: max(420px, calc(100vw / 6));
+  --bg:              #F8F8F9;
+  --surface:         #FFFFFF;
+  --surface-muted:   #F1F2F4;
+
+  --border:          #E6E6E8;
+  --border-strong:   #D1D5DB;
+
+  --text-1:          var(--color-gray-700);  /* #414651 */
+  --text-2:          #6B7280;
+  --text-3:          #9CA3AF;
+
+  --accent:          var(--color-purple-600);  /* #6938EF */
+  --accent-hover:    var(--color-purple-700);  /* #5925DC */
+  --accent-soft:     var(--color-purple-50);   /* #F4F3FF */
+  --accent-border:   var(--color-purple-200);  /* #D9D6FE */
+
+  --positive:        #1F7A52;
+  --negative:        #A33A3A;
+
+  /* ── PROPERTY TYPE COLOR PRIMITIVES ── */
+  --blue-50: #EEF2FF; --blue-100: #DBEAFE; --blue-200: #BFDBFE; --blue-300: #7B9EF8; --blue-600: #3B5BDB; --blue-900: #1E3A8A; --blue-950: #1A1F3A;
+  --purple-50: #F3F0FF; --purple-100: #EDE9FE; --purple-200: #DDD6FE; --purple-300: #A78EF8; --purple-600: #7048E8; --purple-900: #4C1D95; --purple-950: #1E1A3A;
+  --green-50: #EBFAF3; --green-100: #D1FAE5; --green-200: #A7F3D0; --green-300: #50C090; --green-600: #1F7A52; --green-900: #14532D; --green-950: #141F1A;
+  --amber-100: #FEF3C7; --amber-200: #FDE68A; --amber-300: #E0A050; --amber-700: #B45309; --amber-900: #78350F; --amber-950: #221A0A;
+
+  --driver-bg: var(--blue-50);    --driver-fg: var(--blue-600);    --driver-score: var(--blue-900);    --driver-soft: var(--blue-200);
+  --team-bg:   var(--purple-50);  --team-fg:   var(--purple-600);  --team-score:   var(--purple-900);  --team-soft:   var(--purple-200);
+  --series-bg: var(--green-50);   --series-fg: var(--green-600);   --series-score: var(--green-900);   --series-soft: var(--green-200);
+  --event-bg:  var(--amber-100);  --event-fg:  var(--amber-700);   --event-score:  var(--amber-900);   --event-soft:  var(--amber-200);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  /* ── SPACING TOKENS (Mode 1.tokens.json) ── */
+  --spacing-none: 0px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 6px;
+  --spacing-md: 8px;
+  --spacing-lg: 12px;
+  --spacing-xl: 16px;
+  --spacing-2xl: 20px;
+  --spacing-3xl: 24px;
+  --spacing-4xl: 32px;
+  --spacing-5xl: 40px;
+  --spacing-6xl: 48px;
+  --spacing-7xl: 64px;
+  --spacing-8xl: 80px;
+  --spacing-9xl: 96px;
+  --spacing-10xl: 128px;
+  --spacing-11xl: 160px;
+
+  /* Floating bar */
+  --bar-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--border);
+
+  --font: Inter, system-ui, -apple-system, sans-serif;
+  --mono: 'DM Mono', 'SF Mono', monospace;
+
+  /* ── TYPOGRAPHY SCALE ── */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+
+  /* ── DESIGN TOKEN PALETTE (Style.tokens.json) ── */
+
+  /* Base */
+  --color-base-white: #FFFFFF;
+  --color-base-black: #000000;
+
+  /* Gray (light mode) */
+  --color-gray-25: #FDFDFD;
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F5F5F5;
+  --color-gray-200: #E9EAEB;
+  --color-gray-300: #D5D7DA;
+  --color-gray-400: #A4A7AE;
+  --color-gray-500: #717680;
+  --color-gray-600: #535862;
+  --color-gray-700: #414651;
+  --color-gray-800: #252B37;
+  --color-gray-900: #181D27;
+  --color-gray-950: #0A0D12;
+
+  /* Brand */
+  --color-brand-25: #FCFAFF;
+  --color-brand-50: #F9F5FF;
+  --color-brand-100: #F4EBFF;
+  --color-brand-200: #E9D7FE;
+  --color-brand-300: #D6BBFB;
+  --color-brand-400: #B692F6;
+  --color-brand-500: #9E77ED;
+  --color-brand-600: #7F56D9;
+  --color-brand-700: #6941C6;
+  --color-brand-800: #53389E;
+  --color-brand-900: #42307D;
+  --color-brand-950: #2C1C5F;
+
+  /* Error */
+  --color-error-25: #FFFBFA;
+  --color-error-50: #FEF3F2;
+  --color-error-100: #FEE4E2;
+  --color-error-200: #FECDCA;
+  --color-error-300: #FDA29B;
+  --color-error-400: #F97066;
+  --color-error-500: #F04438;
+  --color-error-600: #D92D20;
+  --color-error-700: #B42318;
+  --color-error-800: #912018;
+  --color-error-900: #7A271A;
+  --color-error-950: #55160C;
+
+  /* Warning */
+  --color-warning-25: #FFFCF5;
+  --color-warning-50: #FFFAEB;
+  --color-warning-100: #FEF0C7;
+  --color-warning-200: #FEDF89;
+  --color-warning-300: #FEC84B;
+  --color-warning-400: #FDB022;
+  --color-warning-500: #F79009;
+  --color-warning-600: #DC6803;
+  --color-warning-700: #B54708;
+  --color-warning-800: #93370D;
+  --color-warning-900: #7A2E0E;
+  --color-warning-950: #4E1D09;
+
+  /* Success */
+  --color-success-25: #F6FEF9;
+  --color-success-50: #ECFDF3;
+  --color-success-100: #DCFAE6;
+  --color-success-200: #ABEFC6;
+  --color-success-300: #75E0A7;
+  --color-success-400: #47CD89;
+  --color-success-500: #17B26A;
+  --color-success-600: #079455;
+  --color-success-700: #067647;
+  --color-success-800: #085D3A;
+  --color-success-900: #074D31;
+  --color-success-950: #053321;
+
+  /* Blue */
+  --color-blue-25: #F5FAFF;
+  --color-blue-50: #EFF8FF;
+  --color-blue-100: #D1E9FF;
+  --color-blue-200: #B2DDFF;
+  --color-blue-300: #84CAFF;
+  --color-blue-400: #53B1FD;
+  --color-blue-500: #2E90FA;
+  --color-blue-600: #1570EF;
+  --color-blue-700: #175CD3;
+  --color-blue-800: #1849A9;
+  --color-blue-900: #194185;
+  --color-blue-950: #102A56;
+
+  /* Indigo */
+  --color-indigo-25: #F5F8FF;
+  --color-indigo-50: #EEF4FF;
+  --color-indigo-100: #E0EAFF;
+  --color-indigo-200: #C7D7FE;
+  --color-indigo-300: #A4BCFD;
+  --color-indigo-400: #8098F9;
+  --color-indigo-500: #6172F3;
+  --color-indigo-600: #444CE7;
+  --color-indigo-700: #3538CD;
+  --color-indigo-800: #2D31A6;
+  --color-indigo-900: #2D3282;
+  --color-indigo-950: #1F235B;
+
+  /* Violet */
+  --color-violet-25: #FBFAFF;
+  --color-violet-50: #F5F3FF;
+  --color-violet-100: #ECE9FE;
+  --color-violet-200: #DDD6FE;
+  --color-violet-300: #C3B5FD;
+  --color-violet-400: #A48AFB;
+  --color-violet-500: #875BF7;
+  --color-violet-600: #7839EE;
+  --color-violet-700: #6927DA;
+  --color-violet-800: #5720B7;
+  --color-violet-900: #491C96;
+  --color-violet-950: #2E125E;
+
+  /* Purple */
+  --color-purple-25: #FAFAFF;
+  --color-purple-50: #F4F3FF;
+  --color-purple-100: #EBE9FE;
+  --color-purple-200: #D9D6FE;
+  --color-purple-300: #BDB4FE;
+  --color-purple-400: #9B8AFB;
+  --color-purple-500: #7A5AF8;
+  --color-purple-600: #6938EF;
+  --color-purple-700: #5925DC;
+  --color-purple-800: #4A1FB8;
+  --color-purple-900: #3E1C96;
+  --color-purple-950: #27115F;
+
+  /* Fuchsia */
+  --color-fuchsia-25: #FEFAFF;
+  --color-fuchsia-50: #FDF4FF;
+  --color-fuchsia-100: #FBE8FF;
+  --color-fuchsia-200: #F6D0FE;
+  --color-fuchsia-300: #EEAAFD;
+  --color-fuchsia-400: #E478FA;
+  --color-fuchsia-500: #D444F1;
+  --color-fuchsia-600: #BA24D5;
+  --color-fuchsia-700: #9F1AB1;
+  --color-fuchsia-800: #821890;
+  --color-fuchsia-900: #6F1877;
+  --color-fuchsia-950: #47104C;
+
+  /* Pink */
+  --color-pink-25: #FEF6FB;
+  --color-pink-50: #FDF2FA;
+  --color-pink-100: #FCE7F6;
+  --color-pink-200: #FCCEEE;
+  --color-pink-300: #FAA7E0;
+  --color-pink-400: #F670C7;
+  --color-pink-500: #EE46BC;
+  --color-pink-600: #DD2590;
+  --color-pink-700: #C11574;
+  --color-pink-800: #9E165F;
+  --color-pink-900: #851651;
+  --color-pink-950: #4E0D30;
+
+  /* Rose */
+  --color-rose-25: #FFF5F6;
+  --color-rose-50: #FFF1F3;
+  --color-rose-100: #FFE4E8;
+  --color-rose-200: #FECDD6;
+  --color-rose-300: #FEA3B4;
+  --color-rose-400: #FD6F8E;
+  --color-rose-500: #F63D68;
+  --color-rose-600: #E31B54;
+  --color-rose-700: #C01048;
+  --color-rose-800: #A11043;
+  --color-rose-900: #89123E;
+  --color-rose-950: #510B24;
+
+  /* Orange */
+  --color-orange-25: #FEFAF5;
+  --color-orange-50: #FEF6EE;
+  --color-orange-100: #FDEAD7;
+  --color-orange-200: #F9DBAF;
+  --color-orange-300: #F7B27A;
+  --color-orange-400: #F38744;
+  --color-orange-500: #EF6820;
+  --color-orange-600: #E04F16;
+  --color-orange-700: #B93815;
+  --color-orange-800: #932F19;
+  --color-orange-900: #772917;
+  --color-orange-950: #511C10;
+
+  /* Yellow */
+  --color-yellow-25: #FEFDF0;
+  --color-yellow-50: #FEFBE8;
+  --color-yellow-100: #FEF7C3;
+  --color-yellow-200: #FEEE95;
+  --color-yellow-300: #FDE272;
+  --color-yellow-400: #FAC515;
+  --color-yellow-500: #EAAA08;
+  --color-yellow-600: #CA8504;
+  --color-yellow-700: #A15C07;
+  --color-yellow-800: #854A0E;
+  --color-yellow-900: #713B12;
+  --color-yellow-950: #542C0D;
+
+  /* Green */
+  --color-green-25: #F6FEF9;
+  --color-green-50: #EDFCF2;
+  --color-green-100: #D3F8DF;
+  --color-green-200: #AAF0C4;
+  --color-green-300: #73E2A3;
+  --color-green-400: #3CCB7F;
+  --color-green-500: #16B364;
+  --color-green-600: #099250;
+  --color-green-700: #087443;
+  --color-green-800: #095C37;
+  --color-green-900: #084C2E;
+  --color-green-950: #052E1C;
+
+  /* Teal */
+  --color-teal-25: #F6FEFC;
+  --color-teal-50: #F0FDF9;
+  --color-teal-100: #CCFBEF;
+  --color-teal-200: #99F6E0;
+  --color-teal-300: #5FE9D0;
+  --color-teal-400: #2ED3B7;
+  --color-teal-500: #15B79E;
+  --color-teal-600: #0E9384;
+  --color-teal-700: #107569;
+  --color-teal-800: #125D56;
+  --color-teal-900: #134E48;
+  --color-teal-950: #0A2926;
+
+  /* Cyan */
+  --color-cyan-25: #F5FEFF;
+  --color-cyan-50: #ECFDFF;
+  --color-cyan-100: #CFF9FE;
+  --color-cyan-200: #A5F0FC;
+  --color-cyan-300: #67E3F9;
+  --color-cyan-400: #22CCEE;
+  --color-cyan-500: #06AED4;
+  --color-cyan-600: #088AB2;
+  --color-cyan-700: #0E7090;
+  --color-cyan-800: #155B75;
+  --color-cyan-900: #164C63;
+  --color-cyan-950: #0D2D3A;
+
+  /* ── SEMANTIC TOKENS — Light mode (Light mode.tokens.json) ── */
+  --colors-text-text-primary: #181D27;
+  --colors-text-text-primary_on-brand: #FFFFFF;
+  --colors-text-text-secondary: #414651;
+  --colors-text-text-secondary_hover: #252B37;
+  --colors-text-text-secondary_on-brand: #E9D7FE;
+  --colors-text-text-tertiary: #535862;
+  --colors-text-text-tertiary_hover: #414651;
+  --colors-text-text-tertiary_on-brand: #E9D7FE;
+  --colors-text-text-quaternary: #717680;
+  --colors-text-text-quaternary_on-brand: #D6BBFB;
+  --colors-text-text-white: #FFFFFF;
+  --colors-text-text-disabled: #717680;
+  --colors-text-text-placeholder: #717680;
+  --colors-text-text-placeholder_subtle: #D5D7DA;
+  --colors-text-text-brand-primary: #42307D;
+  --colors-text-text-brand-secondary: #6941C6;
+  --colors-text-text-brand-tertiary: #7F56D9;
+  --colors-text-text-brand-tertiary_alt: #7F56D9;
+  --colors-text-text-error-primary: #D92D20;
+  --colors-text-text-error-primary_hover: #B42318;
+  --colors-text-text-warning-primary: #DC6803;
+  --colors-text-text-success-primary: #079455;
+  --colors-border-border-primary: #D5D7DA;
+  --colors-border-border-secondary: #E9EAEB;
+  --colors-border-border-secondary_alt: #000000;
+  --colors-border-border-tertiary: #F5F5F5;
+  --colors-border-border-disabled: #D5D7DA;
+  --colors-border-border-disabled_subtle: #E9EAEB;
+  --colors-border-border-brand: #9E77ED;
+  --colors-border-border-brand_alt: #7F56D9;
+  --colors-border-border-error: #F04438;
+  --colors-border-border-error_subtle: #FDA29B;
+  --colors-foreground-fg-primary: #181D27;
+  --colors-foreground-fg-secondary: #414651;
+  --colors-foreground-fg-secondary_hover: #252B37;
+  --colors-foreground-fg-tertiary: #535862;
+  --colors-foreground-fg-tertiary_hover: #414651;
+  --colors-foreground-fg-quaternary: #A4A7AE;
+  --colors-foreground-fg-quaternary_hover: #717680;
+  --colors-foreground-fg-white: #FFFFFF;
+  --colors-foreground-fg-disabled: #A4A7AE;
+  --colors-foreground-fg-disabled_subtle: #D5D7DA;
+  --colors-foreground-fg-brand-primary: #7F56D9;
+  --colors-foreground-fg-brand-primary_alt: {Colors.Foreground.fg-brand-primary (600)};
+  --colors-foreground-fg-brand-secondary: #9E77ED;
+  --colors-foreground-fg-brand-secondary_alt: {Colors.Foreground.fg-brand-secondary (500)};
+  --colors-foreground-fg-brand-secondary_hover: #7F56D9;
+  --colors-foreground-fg-error-primary: #D92D20;
+  --colors-foreground-fg-error-secondary: #F04438;
+  --colors-foreground-fg-warning-primary: #DC6803;
+  --colors-foreground-fg-warning-secondary: #F79009;
+  --colors-foreground-fg-success-primary: #079455;
+  --colors-foreground-fg-success-secondary: #17B26A;
+  --colors-background-bg-primary: #FFFFFF;
+  --colors-background-bg-primary_alt: #FFFFFF;
+  --colors-background-bg-primary_hover: #FAFAFA;
+  --colors-background-bg-primary-solid: #0A0D12;
+  --colors-background-bg-secondary: #FAFAFA;
+  --colors-background-bg-secondary_alt: #FAFAFA;
+  --colors-background-bg-secondary_hover: #F5F5F5;
+  --colors-background-bg-secondary_subtle: #FDFDFD;
+  --colors-background-bg-secondary-solid: #535862;
+  --colors-background-bg-tertiary: #F5F5F5;
+  --colors-background-bg-quaternary: #E9EAEB;
+  --colors-background-bg-active: #FAFAFA;
+  --colors-background-bg-disabled: #F5F5F5;
+  --colors-background-bg-disabled_subtle: #FAFAFA;
+  --colors-background-bg-overlay: #0A0D12;
+  --colors-background-bg-brand-primary: #F9F5FF;
+  --colors-background-bg-brand-primary_alt: #F9F5FF;
+  --colors-background-bg-brand-secondary: #F4EBFF;
+  --colors-background-bg-brand-solid: #7F56D9;
+  --colors-background-bg-brand-solid_hover: #6941C6;
+  --colors-background-bg-brand-section: #53389E;
+  --colors-background-bg-brand-section_subtle: #6941C6;
+  --colors-background-bg-error-primary: #FEF3F2;
+  --colors-background-bg-error-secondary: #FEE4E2;
+  --colors-background-bg-error-solid: #D92D20;
+  --colors-background-bg-error-solid_hover: #B42318;
+  --colors-background-bg-warning-primary: #FFFAEB;
+  --colors-background-bg-warning-secondary: #FEF0C7;
+  --colors-background-bg-warning-solid: #DC6803;
+  --colors-background-bg-success-primary: #ECFDF3;
+  --colors-background-bg-success-secondary: #DCFAE6;
+  --colors-background-bg-success-solid: #079455;
+  --colors-effects-focus-rings-focus-ring: #9E77ED;
+  --colors-effects-focus-rings-focus-ring-error: #F04438;
+  --colors-effects-shadows-shadow-xs: #0A0D12;
+  --colors-effects-shadows-shadow-sm_01: #0A0D12;
+  --colors-effects-shadows-shadow-sm_02: #0A0D12;
+  --colors-effects-shadows-shadow-md_01: #0A0D12;
+  --colors-effects-shadows-shadow-md_02: #0A0D12;
+  --colors-effects-shadows-shadow-lg_01: #0A0D12;
+  --colors-effects-shadows-shadow-lg_02: #0A0D12;
+  --colors-effects-shadows-shadow-lg_03: #0A0D12;
+  --colors-effects-shadows-shadow-xl_01: #0A0D12;
+  --colors-effects-shadows-shadow-xl_02: #0A0D12;
+  --colors-effects-shadows-shadow-xl_03: #0A0D12;
+  --colors-effects-shadows-shadow-2xl_01: #0A0D12;
+  --colors-effects-shadows-shadow-2xl_02: #0A0D12;
+  --colors-effects-shadows-shadow-3xl_01: #0A0D12;
+  --colors-effects-shadows-shadow-3xl_02: #0A0D12;
+  --colors-effects-shadows-shadow-skeumorphic-inner: #0A0D12;
+  --colors-effects-shadows-shadow-skeumorphic-inner-border: #0A0D12;
+  --colors-effects-portfolio-mockups-shadow-main-centre-md: #0A0D12;
+  --colors-effects-portfolio-mockups-shadow-main-centre-lg: #0A0D12;
+  --colors-effects-portfolio-mockups-shadow-overlay-lg: #0A0D12;
+  --colors-effects-portfolio-mockups-shadow-grid-md: #0A0D12;
+  --component-colors-alpha-alpha-white-10: #FFFFFF;
+  --component-colors-alpha-alpha-white-20: #FFFFFF;
+  --component-colors-alpha-alpha-white-30: #FFFFFF;
+  --component-colors-alpha-alpha-white-40: #FFFFFF;
+  --component-colors-alpha-alpha-white-50: #FFFFFF;
+  --component-colors-alpha-alpha-white-60: #FFFFFF;
+  --component-colors-alpha-alpha-white-70: #FFFFFF;
+  --component-colors-alpha-alpha-white-80: #FFFFFF;
+  --component-colors-alpha-alpha-white-90: #FFFFFF;
+  --component-colors-alpha-alpha-white-100: #FFFFFF;
+  --component-colors-alpha-alpha-black-10: #000000;
+  --component-colors-alpha-alpha-black-20: #000000;
+  --component-colors-alpha-alpha-black-30: #000000;
+  --component-colors-alpha-alpha-black-40: #000000;
+  --component-colors-alpha-alpha-black-50: #000000;
+  --component-colors-alpha-alpha-black-60: #000000;
+  --component-colors-alpha-alpha-black-70: #000000;
+  --component-colors-alpha-alpha-black-80: #000000;
+  --component-colors-alpha-alpha-black-90: #000000;
+  --component-colors-alpha-alpha-black-100: #000000;
+  --component-colors-utility-gray-utility-gray-50: #FAFAFA;
+  --component-colors-utility-gray-utility-gray-100: #F5F5F5;
+  --component-colors-utility-gray-utility-gray-200: #E9EAEB;
+  --component-colors-utility-gray-utility-gray-300: #D5D7DA;
+  --component-colors-utility-gray-utility-gray-400: #A4A7AE;
+  --component-colors-utility-gray-utility-gray-500: #717680;
+  --component-colors-utility-gray-utility-gray-600: #535862;
+  --component-colors-utility-gray-utility-gray-700: #414651;
+  --component-colors-utility-gray-utility-gray-800: #252B37;
+  --component-colors-utility-gray-utility-gray-900: #181D27;
+  --component-colors-utility-brand-utility-brand-50: #F9F5FF;
+  --component-colors-utility-brand-utility-brand-50_alt: #F9F5FF;
+  --component-colors-utility-brand-utility-brand-100: #F4EBFF;
+  --component-colors-utility-brand-utility-brand-100_alt: #F4EBFF;
+  --component-colors-utility-brand-utility-brand-200: #E9D7FE;
+  --component-colors-utility-brand-utility-brand-200_alt: #E9D7FE;
+  --component-colors-utility-brand-utility-brand-300: #D6BBFB;
+  --component-colors-utility-brand-utility-brand-300_alt: #D6BBFB;
+  --component-colors-utility-brand-utility-brand-400: #B692F6;
+  --component-colors-utility-brand-utility-brand-400_alt: #B692F6;
+  --component-colors-utility-brand-utility-brand-500: #9E77ED;
+  --component-colors-utility-brand-utility-brand-500_alt: #9E77ED;
+  --component-colors-utility-brand-utility-brand-600: #7F56D9;
+  --component-colors-utility-brand-utility-brand-600_alt: #7F56D9;
+  --component-colors-utility-brand-utility-brand-700: #6941C6;
+  --component-colors-utility-brand-utility-brand-700_alt: #6941C6;
+  --component-colors-utility-brand-utility-brand-800: #53389E;
+  --component-colors-utility-brand-utility-brand-800_alt: #53389E;
+  --component-colors-utility-brand-utility-brand-900: #42307D;
+  --component-colors-utility-brand-utility-brand-900_alt: #42307D;
+  --component-colors-utility-error-utility-error-50: #FEF3F2;
+  --component-colors-utility-error-utility-error-100: #FEE4E2;
+  --component-colors-utility-error-utility-error-200: #FECDCA;
+  --component-colors-utility-error-utility-error-300: #FDA29B;
+  --component-colors-utility-error-utility-error-400: #F97066;
+  --component-colors-utility-error-utility-error-500: #F04438;
+  --component-colors-utility-error-utility-error-600: #D92D20;
+  --component-colors-utility-error-utility-error-700: #B42318;
+  --component-colors-utility-warning-utility-warning-50: #FFFAEB;
+  --component-colors-utility-warning-utility-warning-100: #FEF0C7;
+  --component-colors-utility-warning-utility-warning-200: #FEDF89;
+  --component-colors-utility-warning-utility-warning-300: #FEC84B;
+  --component-colors-utility-warning-utility-warning-400: #FDB022;
+  --component-colors-utility-warning-utility-warning-500: #F79009;
+  --component-colors-utility-warning-utility-warning-600: #DC6803;
+  --component-colors-utility-warning-utility-warning-700: #B54708;
+  --component-colors-utility-success-utility-success-50: #ECFDF3;
+  --component-colors-utility-success-utility-success-100: #DCFAE6;
+  --component-colors-utility-success-utility-success-200: #ABEFC6;
+  --component-colors-utility-success-utility-success-300: #75E0A7;
+  --component-colors-utility-success-utility-success-400: #47CD89;
+  --component-colors-utility-success-utility-success-500: #17B26A;
+  --component-colors-utility-success-utility-success-600: #079455;
+  --component-colors-utility-success-utility-success-700: #067647;
+  --component-colors-utility-gray-blue-utility-gray-blue-50: #F8F9FC;
+  --component-colors-utility-gray-blue-utility-gray-blue-100: #EAECF5;
+  --component-colors-utility-gray-blue-utility-gray-blue-200: #D5D9EB;
+  --component-colors-utility-gray-blue-utility-gray-blue-300: #B3B8DB;
+  --component-colors-utility-gray-blue-utility-gray-blue-400: #717BBC;
+  --component-colors-utility-gray-blue-utility-gray-blue-500: #4E5BA6;
+  --component-colors-utility-gray-blue-utility-gray-blue-600: #3E4784;
+  --component-colors-utility-gray-blue-utility-gray-blue-700: #363F72;
+  --component-colors-utility-green-utility-green-50: #EDFCF2;
+  --component-colors-utility-green-utility-green-100: #D3F8DF;
+  --component-colors-utility-green-utility-green-200: #AAF0C4;
+  --component-colors-utility-green-utility-green-300: #73E2A3;
+  --component-colors-utility-green-utility-green-400: #3CCB7F;
+  --component-colors-utility-green-utility-green-500: #16B364;
+  --component-colors-utility-green-utility-green-600: #099250;
+  --component-colors-utility-green-utility-green-700: #087443;
+  --component-colors-utility-blue-light-utility-blue-light-50: #F0F9FF;
+  --component-colors-utility-blue-light-utility-blue-light-100: #E0F2FE;
+  --component-colors-utility-blue-light-utility-blue-light-200: #B9E6FE;
+  --component-colors-utility-blue-light-utility-blue-light-300: #7CD4FD;
+  --component-colors-utility-blue-light-utility-blue-light-400: #36BFFA;
+  --component-colors-utility-blue-light-utility-blue-light-500: #0BA5EC;
+  --component-colors-utility-blue-light-utility-blue-light-600: #0086C9;
+  --component-colors-utility-blue-light-utility-blue-light-700: #026AA2;
+  --component-colors-utility-blue-utility-blue-50: #EFF8FF;
+  --component-colors-utility-blue-utility-blue-100: #D1E9FF;
+  --component-colors-utility-blue-utility-blue-200: #B2DDFF;
+  --component-colors-utility-blue-utility-blue-300: #84CAFF;
+  --component-colors-utility-blue-utility-blue-400: #53B1FD;
+  --component-colors-utility-blue-utility-blue-500: #2E90FA;
+  --component-colors-utility-blue-utility-blue-600: #1570EF;
+  --component-colors-utility-blue-utility-blue-700: #175CD3;
+  --component-colors-utility-blue-dark-utility-blue-dark-50: #EFF4FF;
+  --component-colors-utility-blue-dark-utility-blue-dark-100: #D1E0FF;
+  --component-colors-utility-blue-dark-utility-blue-dark-200: #B2CCFF;
+  --component-colors-utility-blue-dark-utility-blue-dark-300: #84ADFF;
+  --component-colors-utility-blue-dark-utility-blue-dark-400: #528BFF;
+  --component-colors-utility-blue-dark-utility-blue-dark-500: #2970FF;
+  --component-colors-utility-blue-dark-utility-blue-dark-600: #155EEF;
+  --component-colors-utility-blue-dark-utility-blue-dark-700: #004EEB;
+  --component-colors-utility-indigo-utility-indigo-50: #EEF4FF;
+  --component-colors-utility-indigo-utility-indigo-100: #E0EAFF;
+  --component-colors-utility-indigo-utility-indigo-200: #C7D7FE;
+  --component-colors-utility-indigo-utility-indigo-300: #A4BCFD;
+  --component-colors-utility-indigo-utility-indigo-400: #8098F9;
+  --component-colors-utility-indigo-utility-indigo-500: #6172F3;
+  --component-colors-utility-indigo-utility-indigo-600: #444CE7;
+  --component-colors-utility-indigo-utility-indigo-700: #3538CD;
+  --component-colors-utility-purple-utility-purple-50: #F4F3FF;
+  --component-colors-utility-purple-utility-purple-100: #EBE9FE;
+  --component-colors-utility-purple-utility-purple-200: #D9D6FE;
+  --component-colors-utility-purple-utility-purple-300: #BDB4FE;
+  --component-colors-utility-purple-utility-purple-400: #9B8AFB;
+  --component-colors-utility-purple-utility-purple-500: #7A5AF8;
+  --component-colors-utility-purple-utility-purple-600: #6938EF;
+  --component-colors-utility-purple-utility-purple-700: #5925DC;
+  --component-colors-utility-fuchsia-utility-fuchsia-50: #FDF4FF;
+  --component-colors-utility-fuchsia-utility-fuchsia-100: #FBE8FF;
+  --component-colors-utility-fuchsia-utility-fuchsia-200: #F6D0FE;
+  --component-colors-utility-fuchsia-utility-fuchsia-300: #EEAAFD;
+  --component-colors-utility-fuchsia-utility-fuchsia-400: #E478FA;
+  --component-colors-utility-fuchsia-utility-fuchsia-500: #D444F1;
+  --component-colors-utility-fuchsia-utility-fuchsia-600: #BA24D5;
+  --component-colors-utility-fuchsia-utility-fuchsia-700: #9F1AB1;
+  --component-colors-utility-pink-utility-pink-50: #FDF2FA;
+  --component-colors-utility-pink-utility-pink-100: #FCE7F6;
+  --component-colors-utility-pink-utility-pink-200: #FCCEEE;
+  --component-colors-utility-pink-utility-pink-300: #FAA7E0;
+  --component-colors-utility-pink-utility-pink-400: #F670C7;
+  --component-colors-utility-pink-utility-pink-500: #EE46BC;
+  --component-colors-utility-pink-utility-pink-600: #DD2590;
+  --component-colors-utility-pink-utility-pink-700: #C11574;
+  --component-colors-utility-orange-dark-utility-orange-dark-50: #FFF4ED;
+  --component-colors-utility-orange-dark-utility-orange-dark-100: #FFE6D5;
+  --component-colors-utility-orange-dark-utility-orange-dark-200: #FFD6AE;
+  --component-colors-utility-orange-dark-utility-orange-dark-300: #FF9C66;
+  --component-colors-utility-orange-dark-utility-orange-dark-400: #FF692E;
+  --component-colors-utility-orange-dark-utility-orange-dark-500: #FF4405;
+  --component-colors-utility-orange-dark-utility-orange-dark-600: #E62E05;
+  --component-colors-utility-orange-dark-utility-orange-dark-700: #BC1B06;
+  --component-colors-utility-orange-utility-orange-50: #FEF6EE;
+  --component-colors-utility-orange-utility-orange-100: #FDEAD7;
+  --component-colors-utility-orange-utility-orange-200: #F9DBAF;
+  --component-colors-utility-orange-utility-orange-300: #F7B27A;
+  --component-colors-utility-orange-utility-orange-400: #F38744;
+  --component-colors-utility-orange-utility-orange-500: #EF6820;
+  --component-colors-utility-orange-utility-orange-600: #E04F16;
+  --component-colors-utility-orange-utility-orange-700: #B93815;
+  --component-colors-utility-yellow-utility-yellow-50: #FEFBE8;
+  --component-colors-utility-yellow-utility-yellow-100: #FEF7C3;
+  --component-colors-utility-yellow-utility-yellow-200: #FEEE95;
+  --component-colors-utility-yellow-utility-yellow-300: #FDE272;
+  --component-colors-utility-yellow-utility-yellow-400: #FAC515;
+  --component-colors-utility-yellow-utility-yellow-500: #EAAA08;
+  --component-colors-utility-yellow-utility-yellow-600: #CA8504;
+  --component-colors-utility-yellow-utility-yellow-700: #A15C07;
+  --component-colors-components-app-store-badges-app-store-badge-border: #A6A6A6;
+  --component-colors-components-avatars-avatar-styles-bg-neutral: #E0E0E0;
+  --component-colors-components-buttons-button-primary-icon: #D6BBFB;
+  --component-colors-components-buttons-button-primary-icon_hover: #E9D7FE;
+  --component-colors-components-buttons-button-destructive-primary-icon: #FDA29B;
+  --component-colors-components-buttons-button-destructive-primary-icon_hover: #FECDCA;
+  --component-colors-components-footers-footer-button-fg: #E9D7FE;
+  --component-colors-components-footers-footer-button-fg_hover: #FFFFFF;
+  --component-colors-components-icons-icons-icon-fg-brand: #7F56D9;
+  --component-colors-components-icons-icons-icon-fg-brand_on-brand: #E9D7FE;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-brand: #7F56D9;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-gray: #717680;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-error: #D92D20;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-warning: #DC6803;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-success: #079455;
+  --component-colors-components-mockups-screen-mockup-border: #181D27;
+  --component-colors-components-sliders-slider-handle-bg: #FFFFFF;
+  --component-colors-components-sliders-slider-handle-border: #7F56D9;
+  --component-colors-components-toggles-toggle-button-fg_disabled: #FAFAFA;
+  --component-colors-components-toggles-toggle-border: #D5D7DA;
+  --component-colors-components-toggles-toggle-slim-border_pressed: {Colors.Background.bg-brand-solid};
+  --component-colors-components-toggles-toggle-slim-border_pressed-hover: {Colors.Background.bg-brand-solid_hover};
+  --component-colors-components-tooltips-tooltip-supporting-text: #D5D7DA;
+  --component-colors-components-text-editor-text-editor-icon-fg: #A4A7AE;
+  --component-colors-components-text-editor-text-editor-icon-fg_active: #717680;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TOKENS — Dark mode
+───────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:              #0F1115;
+  --surface:         #171A21;
+  --surface-muted:   #1E2230;
+
+  --border:          #2A2F3A;
+  --border-strong:   #3A4050;
+
+  --text-1:          #E5E7EB;
+  --text-2:          #9CA3AF;
+  --text-3:          #6B7280;
+
+  --accent:          var(--color-purple-400);  /* #9B8AFB */
+  --accent-hover:    var(--color-purple-500);  /* #7A5AF8 */
+  --accent-soft:     var(--color-purple-950);  /* #27115F */
+  --accent-border:   var(--color-purple-800);  /* #4A1FB8 */
+
+  --positive:        #34A370;
+  --negative:        #C05050;
+
+  --driver-bg: var(--blue-950);   --driver-fg: var(--blue-300);    --driver-score: var(--blue-300);
+  --team-bg:   var(--purple-950); --team-fg:   var(--purple-300);  --team-score:   var(--purple-300);
+  --series-bg: var(--green-950);  --series-fg: var(--green-300);   --series-score: var(--green-300);
+  --event-bg:  var(--amber-950);  --event-fg:  var(--amber-300);   --event-score:  var(--amber-300);
+
+  --bar-shadow: 0 1px 3px rgba(0,0,0,0.28), 0 0 0 1px var(--border);
+
+  /* ── SEMANTIC TOKENS — Dark mode (Dark mode.tokens.json) ── */
+  --colors-text-text-primary: #F7F7F7;
+  --colors-text-text-primary_on-brand: #F7F7F7;
+  --colors-text-text-secondary: #CECFD2;
+  --colors-text-text-secondary_hover: #ECECED;
+  --colors-text-text-secondary_on-brand: #CECFD2;
+  --colors-text-text-tertiary: #94979C;
+  --colors-text-text-tertiary_hover: #CECFD2;
+  --colors-text-text-tertiary_on-brand: #94979C;
+  --colors-text-text-quaternary: #94979C;
+  --colors-text-text-quaternary_on-brand: #94979C;
+  --colors-text-text-white: #FFFFFF;
+  --colors-text-text-disabled: #85888E;
+  --colors-text-text-placeholder: #85888E;
+  --colors-text-text-placeholder_subtle: #373A41;
+  --colors-text-text-brand-primary: #F7F7F7;
+  --colors-text-text-brand-secondary: #CECFD2;
+  --colors-text-text-brand-tertiary: #94979C;
+  --colors-text-text-brand-tertiary_alt: #F7F7F7;
+  --colors-text-text-error-primary: #F97066;
+  --colors-text-text-error-primary_hover: #FDA29B;
+  --colors-text-text-warning-primary: #FDB022;
+  --colors-text-text-success-primary: #47CD89;
+  --colors-border-border-primary: #373A41;
+  --colors-border-border-secondary: #22262F;
+  --colors-border-border-secondary_alt: #22262F;
+  --colors-border-border-tertiary: #22262F;
+  --colors-border-border-disabled: #373A41;
+  --colors-border-border-disabled_subtle: #22262F;
+  --colors-border-border-brand: #B692F6;
+  --colors-border-border-brand_alt: #373A41;
+  --colors-border-border-error: #F97066;
+  --colors-border-border-error_subtle: #F04438;
+  --colors-foreground-fg-primary: #FFFFFF;
+  --colors-foreground-fg-secondary: #CECFD2;
+  --colors-foreground-fg-secondary_hover: #ECECED;
+  --colors-foreground-fg-tertiary: #94979C;
+  --colors-foreground-fg-tertiary_hover: #CECFD2;
+  --colors-foreground-fg-quaternary: #61656C;
+  --colors-foreground-fg-quaternary_hover: #85888E;
+  --colors-foreground-fg-white: #FFFFFF;
+  --colors-foreground-fg-disabled: #85888E;
+  --colors-foreground-fg-disabled_subtle: #61656C;
+  --colors-foreground-fg-brand-primary: #9E77ED;
+  --colors-foreground-fg-brand-primary_alt: #CECFD2;
+  --colors-foreground-fg-brand-secondary: #9E77ED;
+  --colors-foreground-fg-brand-secondary_alt: #61656C;
+  --colors-foreground-fg-brand-secondary_hover: #85888E;
+  --colors-foreground-fg-error-primary: #F04438;
+  --colors-foreground-fg-error-secondary: #F97066;
+  --colors-foreground-fg-warning-primary: #F79009;
+  --colors-foreground-fg-warning-secondary: #FDB022;
+  --colors-foreground-fg-success-primary: #17B26A;
+  --colors-foreground-fg-success-secondary: #47CD89;
+  --colors-background-bg-primary: #0C0E12;
+  --colors-background-bg-primary_alt: {Colors.Background.bg-secondary};
+  --colors-background-bg-primary_hover: #22262F;
+  --colors-background-bg-primary-solid: {Colors.Background.bg-secondary};
+  --colors-background-bg-secondary: #13161B;
+  --colors-background-bg-secondary_alt: {Colors.Background.bg-primary};
+  --colors-background-bg-secondary_hover: #22262F;
+  --colors-background-bg-secondary_subtle: #13161B;
+  --colors-background-bg-secondary-solid: #61656C;
+  --colors-background-bg-tertiary: #22262F;
+  --colors-background-bg-quaternary: #373A41;
+  --colors-background-bg-active: #22262F;
+  --colors-background-bg-disabled: #22262F;
+  --colors-background-bg-disabled_subtle: #13161B;
+  --colors-background-bg-overlay: #22262F;
+  --colors-background-bg-brand-primary: #9E77ED;
+  --colors-background-bg-brand-primary_alt: {Colors.Background.bg-secondary};
+  --colors-background-bg-brand-secondary: #7F56D9;
+  --colors-background-bg-brand-solid: #7F56D9;
+  --colors-background-bg-brand-solid_hover: #9E77ED;
+  --colors-background-bg-brand-section: {Colors.Background.bg-secondary};
+  --colors-background-bg-brand-section_subtle: {Colors.Background.bg-primary};
+  --colors-background-bg-error-primary: #55160C;
+  --colors-background-bg-error-secondary: #D92D20;
+  --colors-background-bg-error-solid: #D92D20;
+  --colors-background-bg-error-solid_hover: #F04438;
+  --colors-background-bg-warning-primary: #4E1D09;
+  --colors-background-bg-warning-secondary: #DC6803;
+  --colors-background-bg-warning-solid: #DC6803;
+  --colors-background-bg-success-primary: #053321;
+  --colors-background-bg-success-secondary: #079455;
+  --colors-background-bg-success-solid: #079455;
+  --colors-effects-focus-rings-focus-ring: #9E77ED;
+  --colors-effects-focus-rings-focus-ring-error: #F04438;
+  --colors-effects-shadows-shadow-xs: #FFFFFF;
+  --colors-effects-shadows-shadow-sm_01: #FFFFFF;
+  --colors-effects-shadows-shadow-sm_02: #FFFFFF;
+  --colors-effects-shadows-shadow-md_01: #FFFFFF;
+  --colors-effects-shadows-shadow-md_02: #FFFFFF;
+  --colors-effects-shadows-shadow-lg_01: #FFFFFF;
+  --colors-effects-shadows-shadow-lg_02: #FFFFFF;
+  --colors-effects-shadows-shadow-lg_03: #FFFFFF;
+  --colors-effects-shadows-shadow-xl_01: #FFFFFF;
+  --colors-effects-shadows-shadow-xl_02: #FFFFFF;
+  --colors-effects-shadows-shadow-xl_03: #FFFFFF;
+  --colors-effects-shadows-shadow-2xl_01: #FFFFFF;
+  --colors-effects-shadows-shadow-2xl_02: #FFFFFF;
+  --colors-effects-shadows-shadow-3xl_01: #FFFFFF;
+  --colors-effects-shadows-shadow-3xl_02: #FFFFFF;
+  --colors-effects-shadows-shadow-skeumorphic-inner: #0C0E12;
+  --colors-effects-shadows-shadow-skeumorphic-inner-border: #0C0E12;
+  --colors-effects-portfolio-mockups-shadow-main-centre-md: #FFFFFF;
+  --colors-effects-portfolio-mockups-shadow-main-centre-lg: #FFFFFF;
+  --colors-effects-portfolio-mockups-shadow-overlay-lg: #FFFFFF;
+  --colors-effects-portfolio-mockups-shadow-grid-md: #FFFFFF;
+  --component-colors-alpha-alpha-white-10: #0C0E12;
+  --component-colors-alpha-alpha-white-20: #0C0E12;
+  --component-colors-alpha-alpha-white-30: #0C0E12;
+  --component-colors-alpha-alpha-white-40: #0C0E12;
+  --component-colors-alpha-alpha-white-50: #0C0E12;
+  --component-colors-alpha-alpha-white-60: #0C0E12;
+  --component-colors-alpha-alpha-white-70: #0C0E12;
+  --component-colors-alpha-alpha-white-80: #0C0E12;
+  --component-colors-alpha-alpha-white-90: #0C0E12;
+  --component-colors-alpha-alpha-white-100: #0C0E12;
+  --component-colors-alpha-alpha-black-10: #FFFFFF;
+  --component-colors-alpha-alpha-black-20: #FFFFFF;
+  --component-colors-alpha-alpha-black-30: #FFFFFF;
+  --component-colors-alpha-alpha-black-40: #FFFFFF;
+  --component-colors-alpha-alpha-black-50: #FFFFFF;
+  --component-colors-alpha-alpha-black-60: #FFFFFF;
+  --component-colors-alpha-alpha-black-70: #FFFFFF;
+  --component-colors-alpha-alpha-black-80: #FFFFFF;
+  --component-colors-alpha-alpha-black-90: #FFFFFF;
+  --component-colors-alpha-alpha-black-100: #FFFFFF;
+  --component-colors-utility-gray-utility-gray-50: #13161B;
+  --component-colors-utility-gray-utility-gray-100: #22262F;
+  --component-colors-utility-gray-utility-gray-200: #373A41;
+  --component-colors-utility-gray-utility-gray-300: #373A41;
+  --component-colors-utility-gray-utility-gray-400: #61656C;
+  --component-colors-utility-gray-utility-gray-500: #85888E;
+  --component-colors-utility-gray-utility-gray-600: #94979C;
+  --component-colors-utility-gray-utility-gray-700: #CECFD2;
+  --component-colors-utility-gray-utility-gray-800: #ECECED;
+  --component-colors-utility-gray-utility-gray-900: #F0F0F1;
+  --component-colors-utility-brand-utility-brand-50: #2C1C5F;
+  --component-colors-utility-brand-utility-brand-50_alt: {Component colors.Utility.Gray.utility-gray-50};
+  --component-colors-utility-brand-utility-brand-100: #42307D;
+  --component-colors-utility-brand-utility-brand-100_alt: {Component colors.Utility.Gray.utility-gray-100};
+  --component-colors-utility-brand-utility-brand-200: #53389E;
+  --component-colors-utility-brand-utility-brand-200_alt: {Component colors.Utility.Gray.utility-gray-200};
+  --component-colors-utility-brand-utility-brand-300: #6941C6;
+  --component-colors-utility-brand-utility-brand-300_alt: {Component colors.Utility.Gray.utility-gray-300};
+  --component-colors-utility-brand-utility-brand-400: #7F56D9;
+  --component-colors-utility-brand-utility-brand-400_alt: {Component colors.Utility.Gray.utility-gray-400};
+  --component-colors-utility-brand-utility-brand-500: #9E77ED;
+  --component-colors-utility-brand-utility-brand-500_alt: {Component colors.Utility.Gray.utility-gray-500};
+  --component-colors-utility-brand-utility-brand-600: #B692F6;
+  --component-colors-utility-brand-utility-brand-600_alt: {Component colors.Utility.Gray.utility-gray-600};
+  --component-colors-utility-brand-utility-brand-700: #D6BBFB;
+  --component-colors-utility-brand-utility-brand-700_alt: {Component colors.Utility.Gray.utility-gray-700};
+  --component-colors-utility-brand-utility-brand-800: #E9D7FE;
+  --component-colors-utility-brand-utility-brand-800_alt: {Component colors.Utility.Gray.utility-gray-800};
+  --component-colors-utility-brand-utility-brand-900: #F4EBFF;
+  --component-colors-utility-brand-utility-brand-900_alt: {Component colors.Utility.Gray.utility-gray-900};
+  --component-colors-utility-error-utility-error-50: #55160C;
+  --component-colors-utility-error-utility-error-100: #7A271A;
+  --component-colors-utility-error-utility-error-200: #912018;
+  --component-colors-utility-error-utility-error-300: #B42318;
+  --component-colors-utility-error-utility-error-400: #D92D20;
+  --component-colors-utility-error-utility-error-500: #F04438;
+  --component-colors-utility-error-utility-error-600: #F97066;
+  --component-colors-utility-error-utility-error-700: #FDA29B;
+  --component-colors-utility-warning-utility-warning-50: #4E1D09;
+  --component-colors-utility-warning-utility-warning-100: #7A2E0E;
+  --component-colors-utility-warning-utility-warning-200: #93370D;
+  --component-colors-utility-warning-utility-warning-300: #B54708;
+  --component-colors-utility-warning-utility-warning-400: #DC6803;
+  --component-colors-utility-warning-utility-warning-500: #F79009;
+  --component-colors-utility-warning-utility-warning-600: #FDB022;
+  --component-colors-utility-warning-utility-warning-700: #FEC84B;
+  --component-colors-utility-success-utility-success-50: #053321;
+  --component-colors-utility-success-utility-success-100: #074D31;
+  --component-colors-utility-success-utility-success-200: #085D3A;
+  --component-colors-utility-success-utility-success-300: #067647;
+  --component-colors-utility-success-utility-success-400: #079455;
+  --component-colors-utility-success-utility-success-500: #17B26A;
+  --component-colors-utility-success-utility-success-600: #47CD89;
+  --component-colors-utility-success-utility-success-700: #75E0A7;
+  --component-colors-utility-gray-blue-utility-gray-blue-50: #0D0F1C;
+  --component-colors-utility-gray-blue-utility-gray-blue-100: #101323;
+  --component-colors-utility-gray-blue-utility-gray-blue-200: #293056;
+  --component-colors-utility-gray-blue-utility-gray-blue-300: #363F72;
+  --component-colors-utility-gray-blue-utility-gray-blue-400: #3E4784;
+  --component-colors-utility-gray-blue-utility-gray-blue-500: #4E5BA6;
+  --component-colors-utility-gray-blue-utility-gray-blue-600: #717BBC;
+  --component-colors-utility-gray-blue-utility-gray-blue-700: #B3B8DB;
+  --component-colors-utility-green-utility-green-50: #052E1C;
+  --component-colors-utility-green-utility-green-100: #084C2E;
+  --component-colors-utility-green-utility-green-200: #095C37;
+  --component-colors-utility-green-utility-green-300: #087443;
+  --component-colors-utility-green-utility-green-400: #099250;
+  --component-colors-utility-green-utility-green-500: #16B364;
+  --component-colors-utility-green-utility-green-600: #3CCB7F;
+  --component-colors-utility-green-utility-green-700: #73E2A3;
+  --component-colors-utility-blue-light-utility-blue-light-50: #062C41;
+  --component-colors-utility-blue-light-utility-blue-light-100: #0B4A6F;
+  --component-colors-utility-blue-light-utility-blue-light-200: #065986;
+  --component-colors-utility-blue-light-utility-blue-light-300: #026AA2;
+  --component-colors-utility-blue-light-utility-blue-light-400: #0086C9;
+  --component-colors-utility-blue-light-utility-blue-light-500: #0BA5EC;
+  --component-colors-utility-blue-light-utility-blue-light-600: #36BFFA;
+  --component-colors-utility-blue-light-utility-blue-light-700: #7CD4FD;
+  --component-colors-utility-blue-utility-blue-50: #102A56;
+  --component-colors-utility-blue-utility-blue-100: #194185;
+  --component-colors-utility-blue-utility-blue-200: #1849A9;
+  --component-colors-utility-blue-utility-blue-300: #175CD3;
+  --component-colors-utility-blue-utility-blue-400: #1570EF;
+  --component-colors-utility-blue-utility-blue-500: #2E90FA;
+  --component-colors-utility-blue-utility-blue-600: #53B1FD;
+  --component-colors-utility-blue-utility-blue-700: #84CAFF;
+  --component-colors-utility-blue-dark-utility-blue-dark-50: #002266;
+  --component-colors-utility-blue-dark-utility-blue-dark-100: #00359E;
+  --component-colors-utility-blue-dark-utility-blue-dark-200: #0040C1;
+  --component-colors-utility-blue-dark-utility-blue-dark-300: #004EEB;
+  --component-colors-utility-blue-dark-utility-blue-dark-400: #155EEF;
+  --component-colors-utility-blue-dark-utility-blue-dark-500: #2970FF;
+  --component-colors-utility-blue-dark-utility-blue-dark-600: #528BFF;
+  --component-colors-utility-blue-dark-utility-blue-dark-700: #84ADFF;
+  --component-colors-utility-indigo-utility-indigo-50: #1F235B;
+  --component-colors-utility-indigo-utility-indigo-100: #2D3282;
+  --component-colors-utility-indigo-utility-indigo-200: #2D31A6;
+  --component-colors-utility-indigo-utility-indigo-300: #3538CD;
+  --component-colors-utility-indigo-utility-indigo-400: #444CE7;
+  --component-colors-utility-indigo-utility-indigo-500: #6172F3;
+  --component-colors-utility-indigo-utility-indigo-600: #8098F9;
+  --component-colors-utility-indigo-utility-indigo-700: #A4BCFD;
+  --component-colors-utility-purple-utility-purple-50: #27115F;
+  --component-colors-utility-purple-utility-purple-100: #3E1C96;
+  --component-colors-utility-purple-utility-purple-200: #4A1FB8;
+  --component-colors-utility-purple-utility-purple-300: #5925DC;
+  --component-colors-utility-purple-utility-purple-400: #6938EF;
+  --component-colors-utility-purple-utility-purple-500: #7A5AF8;
+  --component-colors-utility-purple-utility-purple-600: #9B8AFB;
+  --component-colors-utility-purple-utility-purple-700: #BDB4FE;
+  --component-colors-utility-fuchsia-utility-fuchsia-50: #47104C;
+  --component-colors-utility-fuchsia-utility-fuchsia-100: #6F1877;
+  --component-colors-utility-fuchsia-utility-fuchsia-200: #821890;
+  --component-colors-utility-fuchsia-utility-fuchsia-300: #9F1AB1;
+  --component-colors-utility-fuchsia-utility-fuchsia-400: #BA24D5;
+  --component-colors-utility-fuchsia-utility-fuchsia-500: #D444F1;
+  --component-colors-utility-fuchsia-utility-fuchsia-600: #E478FA;
+  --component-colors-utility-fuchsia-utility-fuchsia-700: #EEAAFD;
+  --component-colors-utility-pink-utility-pink-50: #4E0D30;
+  --component-colors-utility-pink-utility-pink-100: #851651;
+  --component-colors-utility-pink-utility-pink-200: #9E165F;
+  --component-colors-utility-pink-utility-pink-300: #C11574;
+  --component-colors-utility-pink-utility-pink-400: #DD2590;
+  --component-colors-utility-pink-utility-pink-500: #EE46BC;
+  --component-colors-utility-pink-utility-pink-600: #F670C7;
+  --component-colors-utility-pink-utility-pink-700: #FAA7E0;
+  --component-colors-utility-orange-dark-utility-orange-dark-50: #57130A;
+  --component-colors-utility-orange-dark-utility-orange-dark-100: #771A0D;
+  --component-colors-utility-orange-dark-utility-orange-dark-200: #97180C;
+  --component-colors-utility-orange-dark-utility-orange-dark-300: #BC1B06;
+  --component-colors-utility-orange-dark-utility-orange-dark-400: #E62E05;
+  --component-colors-utility-orange-dark-utility-orange-dark-500: #FF4405;
+  --component-colors-utility-orange-dark-utility-orange-dark-600: #FF692E;
+  --component-colors-utility-orange-dark-utility-orange-dark-700: #FF9C66;
+  --component-colors-utility-orange-utility-orange-50: #511C10;
+  --component-colors-utility-orange-utility-orange-100: #772917;
+  --component-colors-utility-orange-utility-orange-200: #932F19;
+  --component-colors-utility-orange-utility-orange-300: #B93815;
+  --component-colors-utility-orange-utility-orange-400: #E04F16;
+  --component-colors-utility-orange-utility-orange-500: #EF6820;
+  --component-colors-utility-orange-utility-orange-600: #F38744;
+  --component-colors-utility-orange-utility-orange-700: #F7B27A;
+  --component-colors-utility-yellow-utility-yellow-50: #542C0D;
+  --component-colors-utility-yellow-utility-yellow-100: #713B12;
+  --component-colors-utility-yellow-utility-yellow-200: #854A0E;
+  --component-colors-utility-yellow-utility-yellow-300: #A15C07;
+  --component-colors-utility-yellow-utility-yellow-400: #CA8504;
+  --component-colors-utility-yellow-utility-yellow-500: #EAAA08;
+  --component-colors-utility-yellow-utility-yellow-600: #FAC515;
+  --component-colors-utility-yellow-utility-yellow-700: #FDE272;
+  --component-colors-components-app-store-badges-app-store-badge-border: #FFFFFF;
+  --component-colors-components-avatars-avatar-styles-bg-neutral: #E0E0E0;
+  --component-colors-components-buttons-button-primary-icon: #D6BBFB;
+  --component-colors-components-buttons-button-primary-icon_hover: #E9D7FE;
+  --component-colors-components-buttons-button-destructive-primary-icon: #FDA29B;
+  --component-colors-components-buttons-button-destructive-primary-icon_hover: #FECDCA;
+  --component-colors-components-footers-footer-button-fg: #CECFD2;
+  --component-colors-components-footers-footer-button-fg_hover: #F0F0F1;
+  --component-colors-components-icons-icons-icon-fg-brand: #94979C;
+  --component-colors-components-icons-icons-icon-fg-brand_on-brand: #94979C;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-brand: #E9D7FE;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-gray: #ECECED;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-error: #FECDCA;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-warning: #FEDF89;
+  --component-colors-components-icons-featured-icons-featured-icon-light-fg-success: #ABEFC6;
+  --component-colors-components-mockups-screen-mockup-border: #373A41;
+  --component-colors-components-sliders-slider-handle-bg: {Colors.Foreground.fg-brand-primary (600)};
+  --component-colors-components-sliders-slider-handle-border: {Colors.Background.bg-primary};
+  --component-colors-components-toggles-toggle-button-fg_disabled: #61656C;
+  --component-colors-components-toggles-toggle-border: #FFFFFF;
+  --component-colors-components-toggles-toggle-slim-border_pressed: #FFFFFF;
+  --component-colors-components-toggles-toggle-slim-border_pressed-hover: #FFFFFF;
+  --component-colors-components-tooltips-tooltip-supporting-text: #CECFD2;
+  --component-colors-components-text-editor-text-editor-icon-fg: #94979C;
+  --component-colors-components-text-editor-text-editor-icon-fg_active: #FFFFFF;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RESET + BASE
+───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SKIP LINK
+───────────────────────────────────────────────────────────────── */
+.skip-link {
+  position: absolute; top: -100px; left: 24px; z-index: 300;
+  padding: var(--spacing-md) var(--spacing-xl); background: var(--surface);
+  border: 1px solid var(--accent); border-radius: var(--radius-sm);
+  color: var(--accent); font-size: 13px; font-weight: 500;
+  text-decoration: none; transition: top 0.1s;
+}
+.skip-link:focus { top: 24px; outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   FLOATING BAR — shared base
+   Both bars sit at 24px from their respective edges.
+───────────────────────────────────────────────────────────────── */
+.float-bar {
+  position: fixed;
+  top: 24px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--color-base-white);
+  background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
+  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 3px 1px rgba(0, 0, 0, 0.08);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LEFT BAR — logo + divider + menu icon
+───────────────────────────────────────────────────────────────── */
+.bar-left {
+  left: 24px;
+  padding: 0 var(--spacing-xl) 0 var(--spacing-md);
+  gap: var(--spacing-xs);
+}
+.bar-page-title {
+  font-size: 15px; font-weight: 600; color: var(--text-1);
+  letter-spacing: -0.2px; white-space: nowrap;
+  margin-left: var(--spacing-md);
+}
+.bar-meta {
+  margin-left: auto;
+  padding-left: var(--spacing-xl); /* 16px gap from page title */
+  padding-right: var(--spacing-xl);
+  font-size: 12px; color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* Brand logo */
+.brand-logo {
+  height: 18px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  margin-right: var(--spacing-md);
+}
+
+/* Divider between wordmark and menu icon */
+.bar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RIGHT BAR — chat icon + profile icon
+───────────────────────────────────────────────────────────────── */
+.bar-right {
+  right: 24px;
+  padding: 0 var(--spacing-md) 0 var(--spacing-md);
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+.bar-divider-v {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   BAR ICON BUTTONS — shared
+───────────────────────────────────────────────────────────────── */
+.bar-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  position: relative;
+  flex-shrink: 0;
+  font-family: var(--font);
+}
+.bar-btn:hover { background: var(--surface-muted); color: var(--text-1); }
+.bar-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Active state matches profile button — circular, same fill */
+.bar-btn.active { background: var(--accent-soft); color: var(--accent); border-radius: 50%; }
+
+/* Menu button — suppress color change on hover, keep bg only */
+#menu-btn:hover { background: var(--surface-muted); }
+
+/* Profile button — circular */
+.bar-btn-profile {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  flex-shrink: 0;
+  font-family: var(--font);
+}
+.bar-btn-profile:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.bar-btn-profile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   NAV MENU DROPDOWN
+   Opens below the left bar on menu icon click.
+───────────────────────────────────────────────────────────────── */
+.nav-menu {
+  position: fixed;
+  top: 73px; /* 24px bar top + 44px bar height + 5px gap */
+  left: 24px;
+  z-index: 201;
+  background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
+  border: 1px solid var(--color-base-white);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 3px 1px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-md);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-origin: top left;
+}
+.nav-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* Menu sections */
+.menu-cols, .menu-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-col-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-md) 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--spacing-xl);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text-2);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.menu-item:hover { background: var(--surface-muted); color: var(--text-1); }
+.menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.menu-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.menu-divider { height: 1px; background: var(--border); margin: var(--spacing-md) 0; }
+
+/* Theme toggle row inside menu */
+.menu-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3xl);
+  padding: var(--spacing-xs) var(--spacing-xl) var(--spacing-md);
+}
+.menu-theme-label {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.theme-toggle-pill {
+  display: flex;
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: var(--spacing-xxs);
+  gap: 1px;
+}
+.theme-opt {
+  width: 28px; height: 22px;
+  border-radius: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3);
+  transition: background 0.12s, color 0.12s;
+}
+.theme-opt.active { background: var(--surface); color: var(--text-1); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.theme-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   PROFILE DROPDOWN
+───────────────────────────────────────────────────────────────── */
+.profile-menu {
+  position: fixed;
+  top: 78px;
+  right: 24px;
+  z-index: 201;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+  padding: 11px var(--spacing-xl) var(--spacing-lg) var(--spacing-xl);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-origin: top right;
+}
+.profile-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+.profile-header {
+  padding: 0 var(--spacing-xxs) 9px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-sm);
+}
+.profile-name { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 1px; }
+.profile-email { font-size: 11px; color: var(--text-3); }
+.profile-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-2); cursor: pointer;
+  background: none; border: none; width: 100%; text-align: left;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+.profile-item:hover { background: var(--surface-muted); color: var(--text-1); }
+.profile-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   CHAT PANEL
+   Full height below the right bar, slides in from the right edge.
+   Integrated decision panel — column, not floating card.
+   Structure comes from typography and spacing, not borders.
+───────────────────────────────────────────────────────────────── */
+.chat-panel {
+  position: fixed;
+  /* Clears the floating bar */
+  top: 88px;
+  bottom: 0;
+  /* Hidden off-screen to the left */
+  left: calc(-1 * var(--cp-w) - 48px);
+  width: var(--cp-w);
+  z-index: 99;
+
+  /* Match primary app background — embedded, not isolated */
+  background: var(--bg);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.22s ease, opacity 0.18s ease;
+}
+.chat-panel.open {
+  left: 0;
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Scroll fades */
+.chat-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: linear-gradient(to bottom, var(--bg) 10%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+.cp-fade-bottom {
+  position: absolute;
+  bottom: 100px; left: 0; right: 0;
+  height: 48px;
+  background: linear-gradient(to top, var(--bg) 10%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.cp-fade-bottom.visible { opacity: 1; }
+
+.grid-fade-bottom {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, var(--bg) 10%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.grid-fade-bottom.visible { opacity: 1; }
+
+/* Push content left when chat is open */
+body.chat-open .content {
+  padding-left: calc(var(--cp-w) + var(--spacing-6xl)); /* panel width + gap */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DETAIL PANEL — slides in from the right on card select
+───────────────────────────────────────────────────────────────── */
+.detail-panel {
+  position: fixed;
+  top: 88px;
+  bottom: 0;
+  right: calc(-1 * var(--cp-w) - 48px);
+  width: var(--cp-w);
+  z-index: 98;
+  background: var(--bg);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: right 0.22s ease, opacity 0.18s ease;
+}
+.detail-panel.open {
+  right: 0;
+  opacity: 1;
+  pointer-events: all;
+}
+/* Left-edge separator — removed */
+/* Push content right when detail is open */
+body.detail-open .content {
+  padding-right: calc(var(--cp-w) + var(--spacing-6xl));
+}
+
+/* Scrollable inner */
+.dp-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Hero — card style: white mat border, 16px radius, card shadow */
+.dp-hero {
+  margin: var(--spacing-xl) var(--spacing-xl) 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 16px;
+  border: 8px solid var(--color-base-white);
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.10);
+}
+.dp-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.dp-hero-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+.dp-hero-placeholder svg { width: 48%; height: 48%; opacity: 0.22; }
+
+/* Close button — offset to sit within the hero card margin */
+.dp-close {
+  position: absolute;
+  top: calc(var(--spacing-xl) + var(--spacing-md));
+  right: calc(var(--spacing-xl) + var(--spacing-md));
+  z-index: 10;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.18);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.dp-close:hover { background: rgba(0,0,0,0.34); }
+
+/* Body */
+.dp-body {
+  padding: var(--spacing-xl) var(--spacing-6xl) var(--spacing-7xl) var(--spacing-3xl);
+}
+
+/* Card-style header block in detail panel */
+.dp-card-header {
+  margin-bottom: var(--spacing-lg);
+}
+.dp-card-name-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--spacing-md); margin-bottom: var(--spacing-xxs);
+}
+.dp-card-name {
+  font-size: 24px; font-weight: 800; color: var(--text-1);
+  line-height: 1.25; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dp-card-flag {
+  font-size: 24px; width: 24px; height: 24px;
+  line-height: 24px; text-align: center; flex-shrink: 0;
+}
+.dp-card-sub {
+  display: flex; align-items: center; gap: var(--spacing-sm);
+  flex-wrap: wrap; margin-top: var(--spacing-xs);
+}
+.dp-card-context {
+  font-size: 13px; color: var(--text-3);
+}
+
+/* Divider */
+.dp-divider { height: 1px; background: var(--border); margin: var(--spacing-lg) 0; }
+
+/* Bio */
+.dp-bio {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.65;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Primary score */
+.dp-score-primary {
+  display: flex; align-items: baseline; gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+.dp-score-val { font-size: 36px; font-weight: 600; line-height: 1; }
+.dp-score-label { font-size: var(--text-sm); color: var(--text-3); }
+.dp-trend { font-size: var(--text-sm); margin-bottom: var(--spacing-xs); }
+.dp-conf  { font-size: var(--text-xs); color: var(--text-3); margin-bottom: var(--spacing-xl); }
+
+/* 30 / 60 / 90 windows */
+.dp-windows {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+.dp-window {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-align: center;
+}
+.dp-window-val   { font-size: var(--text-md); font-weight: 600; color: var(--text-1); }
+.dp-window-label { font-size: var(--text-xs); color: var(--text-3); margin-top: 2px; }
+
+/* ── Detail panel extended components ───────────────────────────── */
+
+/* Section label — muted uppercase caps */
+.dp-section { }
+.dp-section-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-3);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Header meta — timestamp */
+.dp-header-meta {
+  font-size: var(--text-xs); color: var(--text-3);
+  margin-top: var(--spacing-xs);
+}
+
+/* External links row */
+.dp-links { display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-md); }
+.dp-link {
+  font-size: var(--text-xs); color: var(--text-3);
+  text-decoration: none; display: inline-flex; align-items: center; gap: 3px;
+}
+.dp-link:hover { color: var(--text-2); }
+
+/* Action buttons */
+.dp-actions { display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+.dp-action-btn {
+  flex: 1; padding: 7px var(--spacing-sm);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text-2);
+  font-size: var(--text-xs); font-weight: 500; cursor: pointer;
+  text-align: center; transition: border-color 0.15s, color 0.15s;
+}
+.dp-action-btn:hover { border-color: var(--border-strong); color: var(--text-1); }
+.dp-action-btn.disabled { opacity: 0.36; cursor: not-allowed; pointer-events: none; }
+
+/* FanScore explanation toggle */
+.dp-expand-toggle {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--text-xs); color: var(--text-3);
+  background: none; border: none; cursor: pointer; padding: 0;
+  margin-top: var(--spacing-sm);
+}
+.dp-expand-toggle:hover { color: var(--text-2); }
+.dp-expand-content {
+  display: none; margin-top: var(--spacing-sm);
+  font-size: var(--text-xs); color: var(--text-3); line-height: 1.65;
+  background: var(--surface-muted); border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+.dp-expand-content.open { display: block; }
+
+/* Signal groups — engagement snapshot */
+.dp-signal-group { margin-bottom: var(--spacing-lg); }
+.dp-signal-group:last-child { margin-bottom: 0; }
+.dp-signal-group-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-3); margin-bottom: var(--spacing-xs);
+}
+.dp-signal-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+}
+.dp-signal-row:last-child { border-bottom: none; }
+.dp-signal-name { font-size: var(--text-xs); color: var(--text-3); }
+.dp-signal-val  { font-size: var(--text-xs); color: var(--text-2); font-weight: 500; text-align: right; }
+.dp-signal-val.na { color: var(--text-3); font-style: italic; font-weight: 400; }
+.dp-integrity-notice {
+  font-size: var(--text-xs); color: var(--text-2); line-height: 1.55;
+  border-left: 2px solid var(--border-strong);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+/* Full bio */
+.dp-full-bio { font-size: var(--text-sm); color: var(--text-2); line-height: 1.65; }
+
+/* Key facts table */
+.dp-fact-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 6px 0; border-bottom: 1px solid var(--border); gap: var(--spacing-md);
+}
+.dp-fact-row:last-child { border-bottom: none; }
+.dp-fact-label { font-size: var(--text-xs); color: var(--text-3); flex-shrink: 0; }
+.dp-fact-val   { font-size: var(--text-xs); color: var(--text-2); font-weight: 500; text-align: right; }
+.dp-fact-val.na { color: var(--text-3); font-style: italic; font-weight: 400; }
+
+/* Score history trend note */
+.dp-trend-note {
+  font-size: var(--text-xs); color: var(--text-3);
+  margin-top: var(--spacing-md); line-height: 1.55;
+}
+
+/* Related properties */
+.dp-related-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.dp-related-item {
+  display: flex; align-items: center; gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface); border-radius: var(--radius-sm);
+  cursor: pointer; border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+.dp-related-item:hover { border-color: var(--border-strong); }
+.dp-related-icon {
+  font-size: 18px; flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+}
+.dp-related-info { flex: 1; min-width: 0; }
+.dp-related-name { font-size: var(--text-xs); font-weight: 500; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dp-related-reason { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.dp-related-score { font-size: var(--text-sm); font-weight: 600; color: var(--text-2); flex-shrink: 0; }
+
+/* Data coverage bar */
+.dp-cov-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.dp-cov-fill { height: 100%; background: var(--text-3); border-radius: 2px; }
+
+/* Report link */
+.dp-report-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--text-xs); color: var(--text-3);
+  background: none; border: none; cursor: pointer; padding: var(--spacing-sm) 0;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.dp-report-link:hover { color: var(--text-2); }
+
+/* Messages — vertical rhythm creates structure, not borders */
+.cp-msgs {
+  flex: 1; overflow-y: auto; padding: 28px var(--spacing-3xl) var(--spacing-lg) var(--spacing-6xl);
+  display: flex; flex-direction: column; gap: 22px;
+  overscroll-behavior: contain;
+}
+.cp-spacer { flex: 1; }
+
+/* AI messages — flat, no container. Typography and space carry hierarchy. */
+.msg-ai {
+  align-self: flex-start; max-width: 97%;
+  font-size: 15px; color: var(--text-1); line-height: 1.7;
+}
+/* Introductory / opener spans sit at slightly reduced presence */
+.msg-ai > span:first-child {
+  color: var(--text-2);
+}
+/* Subsequent prose blocks (after a QR row) restore full weight */
+.msg-ai > span:not(:first-child) {
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+/* User messages — right-aligned, distinguished by surface only, no border */
+.msg-user {
+  align-self: flex-end; max-width: 78%;
+  background: var(--surface);
+  border-radius: 4px;
+  padding: var(--spacing-sm) 11px; font-size: 15px; color: var(--text-2); line-height: 1.5;
+}
+
+/* Quick reply option rows — space is intentional, not packed */
+.quick-replies {
+  display: flex; flex-wrap: wrap; gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg); margin-bottom: 0;
+}
+/* +24px before each new question block that follows a QR row */
+.quick-replies + span {
+  display: block;
+  margin-top: 18px;
+}
+
+/* Buttons — carry clarity on their own without container support */
+.qr-btn {
+  font-size: 12px; font-weight: 500;
+  padding: 5px 13px; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--text-2);
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s, opacity 0.15s;
+}
+.qr-btn:hover:not([disabled]) {
+  background: var(--surface-muted); color: var(--text-1);
+  border-color: var(--border-strong);
+}
+/* Selected — deliberate, calm, not alert-like */
+.qr-btn.selected {
+  background: var(--accent-soft); color: var(--accent);
+  border-color: var(--accent-border);
+  cursor: default;
+}
+/* Sibling buttons after a choice is made — quietly recede */
+.qr-btn.used {
+  opacity: 0.3; cursor: default;
+}
+
+.typing { display: flex; gap: var(--spacing-xs); padding: var(--spacing-xxs) 0; align-items: center; }
+.dot-t {
+  width: 4px; height: 4px; border-radius: 50%; background: var(--text-3);
+  animation: bounce 1.1s ease-in-out infinite;
+}
+.dot-t:nth-child(2) { animation-delay: 0.16s; }
+.dot-t:nth-child(3) { animation-delay: 0.32s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+/* Input row */
+.cp-input-row {
+  padding: var(--spacing-lg) var(--spacing-3xl) var(--spacing-3xl) var(--spacing-6xl);
+  flex-shrink: 0;
+}
+/* Wrapper gives the button an anchor point inside the textarea */
+.cp-input-wrap {
+  position: relative; display: block;
+}
+.cp-input {
+  width: 100%; border: none; border-radius: 12px;
+  padding: 10px 52px 10px 14px; font-size: 15px; font-family: var(--font);
+  color: var(--text-1); background: var(--surface); outline: none;
+  box-shadow: var(--bar-shadow);
+  transition: box-shadow 0.1s;
+  height: 72px; resize: none; line-height: 1.55; display: block;
+}
+.cp-input:focus { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--border-strong); }
+.cp-input::placeholder { color: var(--text-3); }
+.cp-send {
+  position: absolute; bottom: 10px; right: 10px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s;
+}
+.cp-send:hover { background: var(--accent-hover); }
+.cp-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   MAIN CONTENT
+───────────────────────────────────────────────────────────────── */
+.main { width: 100%; }
+
+.content {
+  /* Top padding doubled for grid/masonry breathing room */
+  padding: 184px var(--spacing-6xl) var(--spacing-5xl);
+  transition: padding-left 0.22s ease, padding-right 0.22s ease;
+}
+/* List view keeps original top padding */
+.content:has(.card-grid.list) { padding-top: 92px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   PAGE HEADER
+───────────────────────────────────────────────────────────────── */
+.page-header  { display: none; }
+.page-title   { font-size: 20px; font-weight: 600; color: var(--text-1); letter-spacing: -0.3px; margin-bottom: 3px; }
+.page-meta    { font-size: 12px; color: var(--text-3); }
+
+/* ─────────────────────────────────────────────────────────────────
+   FILTER BAR
+───────────────────────────────────────────────────────────────── */
+.btn-group {
+  display: inline-flex;
+  height: 40px;
+  border: 1px solid var(--color-base-white);
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
+  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 3px 1px rgba(0, 0, 0, 0.08);
+}
+.bar-centre {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+}
+.chip {
+  font-size: 12px; padding: 0 var(--spacing-xl); cursor: pointer;
+  border: none; border-right: 1px solid var(--color-gray-300);
+  background: transparent; color: var(--text-2);
+  transition: background 0.1s, color 0.1s; white-space: nowrap;
+  font-family: var(--font); display: flex; align-items: center;
+}
+.chip:last-child { border-right: none; }
+.chip:hover  { background: var(--surface-muted); color: var(--text-1); }
+.chip.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* ─────────────────────────────────────────────────────────────────
+   LAYOUT TOGGLE (right bar)
+───────────────────────────────────────────────────────────────── */
+.layout-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+/* Override the circular active style for layout buttons — use rounded rect */
+.layout-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CARD GRID — base (Grid view)
+───────────────────────────────────────────────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-3xl);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CARD GRID — Masonry view
+   CSS columns: DOM order preserved, cards fill columns top-to-bottom.
+   No tier bands, no rank numbers, no score-based reordering.
+───────────────────────────────────────────────────────────────── */
+.card-grid.masonry {
+  display: block !important;  /* override display:grid so CSS gap doesn't interfere */
+  position: relative;
+  /* width × height managed by layoutMasonry() */
+}
+
+/* Allow long names to wrap so the full name is readable */
+.card-grid.masonry .card-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CARD GRID — List view
+   Dense single-column horizontal layout.
+   Cards preserve DOM order. No ranking signals added.
+───────────────────────────────────────────────────────────────── */
+.card-grid.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.card-grid.list .fanscore-card {
+  flex-direction: row;
+  align-items: stretch;
+  border-radius: 10px;
+}
+.card-grid.list .card-hero {
+  width: 72px;
+  min-width: 72px;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+.card-grid.list .card-body {
+  flex-direction: row;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-xl);
+  gap: var(--spacing-2xl);
+}
+.card-grid.list .card-header {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.card-grid.list .card-name-row {
+  margin-bottom: 0;
+}
+.card-grid.list .card-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.card-grid.list .team-plain {
+  margin-top: 0;
+  font-size: 12px;
+}
+.card-grid.list .card-badges { display: none; }
+.card-grid.list .rel-row     { display: none; }
+.card-grid.list .score-row {
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  gap: var(--spacing-xxs);
+}
+.card-grid.list .score-aside { text-align: right; }
+.card-grid.list .card-actions { flex-shrink: 0; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes card-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(40px); }
+}
+
+.fanscore-card {
+  background: var(--surface);
+  border: 8px solid var(--color-base-white);
+  border-radius: 16px;
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.10);
+  cursor: pointer; overflow: hidden;
+  transition: box-shadow 0.15s;
+  display: flex; flex-direction: column;
+  animation: card-in 0.22s ease both;
+}
+.card-hero {
+  width: 100%; aspect-ratio: 1 / 1;
+  overflow: hidden; flex-shrink: 0;
+  background: var(--surface-muted);
+  position: relative;
+  border-radius: 0 0 8px 8px;
+}
+.card-hero img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
+  display: block;
+}
+.card-hero-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-hero-placeholder svg {
+  width: 48%; height: 48%;
+  opacity: 0.22;
+}
+.card-header { margin-bottom: var(--spacing-lg); }
+.card-body { padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl); display: flex; flex-direction: column; flex: 1; }
+.fanscore-card:hover { box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.13); }
+.fanscore-card.selected { box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.10), 0 0 0 4px var(--card-type-soft, var(--accent)); }
+.fanscore-card.card-leaving {
+  animation: card-out 0.22s ease both !important;
+  pointer-events: none;
+}
+
+.card-name   {
+  font-size: 24px; font-weight: 800; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.25; margin-bottom: var(--spacing-xxs);
+}
+.card-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.type-badge  {
+  display: none;
+  align-items: center;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.card-name-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); margin-bottom: var(--spacing-xs); }
+.country-tag { font-size: 24px; width: 24px; height: 24px; line-height: 24px; text-align: center; flex-shrink: 0; }
+.team-plain  { font-size: 13px; color: var(--text-3); margin-top: var(--spacing-xxs); visibility: visible; }
+.team-plain.empty { visibility: hidden; }
+.card-grid.masonry .team-plain.empty { display: none; }
+
+.rel-row    { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); margin-top: 5px; }
+.rel-tag    { font-size: 10px; font-weight: 500; padding: var(--spacing-xxs) 7px; border-radius: 4px;
+              border: 1px solid; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.rel-team   { background: var(--surface-muted); color: var(--text-2); border-color: var(--border); }
+
+.score-row   { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--spacing-lg); }
+.score-val   { font-size: 30px; font-weight: 600; font-family: var(--font); color: var(--text-1); line-height: 1; letter-spacing: -1px; }
+.score-val.dim { color: var(--text-3); font-size: 22px; }
+.score-lbl   { font-size: 12px; color: var(--color-gray-500); margin-top: 3px; }
+.score-aside { text-align: right; }
+.trend-line  { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
+.conf-line   { font-size: 12.5px; color: var(--color-gray-500); margin-top: var(--spacing-xxs); }
+
+.sup-notice {
+  font-size: 10.5px; color: var(--accent); background: var(--accent-soft);
+  border-radius: 4px; padding: 5px var(--spacing-md); margin-top: 10px; line-height: 1.45;
+}
+
+.card-bio {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
+  /* Hard cap at 3 lines as a safety net */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Masonry: let bio run fully so cards have natural height variation */
+.card-grid.masonry .card-bio {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* Masonry ghost placeholder -- holds page meta, no card chrome */
+.masonry-ghost {
+  height: auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: var(--spacing-xl);
+  box-sizing: border-box;
+}
+.ghost-meta-count {
+  display: block;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.ghost-meta-label {
+  display: block;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-2);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.ghost-meta-detail {
+  display: block;
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* Hide the page-header bar when masonry is active (meta lives in ghost card) */
+.masonry-mode .page-header { display: none; }
+
+.card-actions {
+  display: flex; margin-top: 14px; justify-content: space-between; align-items: center;
+}
+.card-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border: none; background: none; color: var(--text-3);
+  cursor: pointer; flex-shrink: 0;
+  transition: color 0.12s;
+  padding: 0;
+}
+.card-btn svg { width: 24px; height: 24px; display: block; }
+.card-btn:hover { color: var(--text-1); }
+.card-btn.active { color: var(--accent); }
+
+/* ─────────────────────────────────────────────────────────────────
+   STATES
+───────────────────────────────────────────────────────────────── */
+.state-msg { padding: 60px var(--spacing-2xl); text-align: center; color: var(--text-3); font-size: 13px; grid-column: 1/-1; }
+.spinner   {
+  width: 22px; height: 22px; border: 2px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.7s linear infinite; margin: 0 auto var(--spacing-lg);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─────────────────────────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ─────────────────────────────────────────────────────────────────
+   RESPONSIVE — Mobile
+───────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .brand-logo { height: 14px; }
+  .bar-left { padding: 0 var(--spacing-sm); }
+  .content  { padding: 88px var(--spacing-xl) 60px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .card-grid.list .card-hero { width: 56px; min-width: 56px; }
+  /* On mobile the panel goes full-width, no push */
+  .chat-panel {
+    left: -100vw;
+    right: 0;
+    width: 100%;
+    top: 88px;
+    bottom: 0;
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+  .chat-panel.open {
+    left: 0;
+  }
+  body.chat-open .content { padding-left: var(--spacing-xl); }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+  .content   { padding: 92px var(--spacing-4xl) var(--spacing-5xl); }
+}
+
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<!-- ────────────────── CENTRE FLOATING BAR — filters ────────────────── -->
+<div class="btn-group bar-centre" role="group" aria-label="Filter properties">
+  <div class="chip active" data-filter="all"    onclick="setFilter(this)" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')setFilter(this)">All</div>
+  <div class="chip"        data-filter="driver" onclick="setFilter(this)" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')setFilter(this)">Drivers</div>
+  <div class="chip"        data-filter="team"   onclick="setFilter(this)" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')setFilter(this)">Teams</div>
+  <div class="chip"        data-filter="series" onclick="setFilter(this)" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')setFilter(this)">Series</div>
+  <div class="chip"        data-filter="event"  onclick="setFilter(this)" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')setFilter(this)">Events</div>
+</div>
+
+<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
+<div class="float-bar bar-left" role="banner">
+
+  <button class="bar-btn" id="menu-btn"
+    onclick="toggleNavMenu()"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="nav-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <g filter="url(#filter0_i_18_100)">
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+        <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="1"/>
+          <feGaussianBlur stdDeviation="0.5"/>
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+          <feBlend mode="normal" in2="shape" result="effect1_innerShadow_18_100"/>
+        </filter>
+      </defs>
+    </svg>
+  </button>
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+      <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+      <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+      <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+      <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+      <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+      <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+      <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_linear_21_11)"/>
+      <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_linear_21_11)"/>
+      <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="paint0_linear_21_11" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_21_11" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+  <div class="bar-divider"></div>
+  <span class="bar-page-title" id="page-view-title">Explore</span>
+  <span class="bar-meta" id="page-meta">Loading properties&hellip;</span>
+
+</div>
+
+<!-- Nav dropdown (opens below left bar) -->
+<nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
+
+  <div class="menu-cols">
+
+    <div class="menu-col">
+
+      <button class="menu-item active" data-nav="Explore" onclick="setNavActive('Explore'); closeNavMenu()" aria-current="page">Explore</button>
+      <button class="menu-item" data-nav="Portfolio" onclick="setNavActive('Portfolio'); closeNavMenu()">Portfolio</button>
+      <button class="menu-item" data-nav="Compare" onclick="setNavActive('Compare'); closeNavMenu()">Compare</button>
+    </div>
+
+    <div class="menu-col">
+      <div class="menu-col-divider"></div>
+
+      <button class="menu-item" data-nav="Scenarios" onclick="setNavActive('Scenarios'); closeNavMenu()">Scenarios</button>
+      <button class="menu-item" data-nav="Reports" onclick="setNavActive('Reports'); closeNavMenu()">Reports</button>
+    </div>
+
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <!-- Theme toggle inline in menu -->
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">Appearance</span>
+    <div class="theme-toggle-pill" role="group" aria-label="Theme">
+      <button class="theme-opt" id="theme-light" onclick="setTheme('light')" aria-label="Light mode" title="Light">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="2.2"/>
+          <line x1="6.5" y1="1"    x2="6.5" y2="2.2"/>
+          <line x1="6.5" y1="10.8" x2="6.5" y2="12"/>
+          <line x1="1"   y1="6.5"  x2="2.2" y2="6.5"/>
+          <line x1="10.8" y1="6.5" x2="12"  y2="6.5"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="theme-dark" onclick="setTheme('dark')" aria-label="Dark mode" title="Dark">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M10.5 7.5A4.5 4.5 0 0 1 4.5 1.5c0-.27.03-.54.07-.8A4.5 4.5 0 1 0 10.8 8.43 4.5 4.5 0 0 1 10.5 7.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat toggle inline in menu -->
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">AI Chat</span>
+    <div class="theme-toggle-pill" role="group" aria-label="AI Chat">
+      <button class="theme-opt" id="chat-toggle-on" onclick="openChat()" aria-label="Enable chat" title="On">
+        <svg width="12" height="12" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11.5 7.5A4.5 4.5 0 0 1 7.17 11.5L4 12.5l.83-2.83A4.5 4.5 0 1 1 11.5 7.5Z"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="chat-toggle-off" onclick="closeChat()" aria-label="Disable chat" title="Off">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <line x1="1" y1="1" x2="10" y2="10"/>
+          <line x1="10" y1="1" x2="1" y2="10"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</nav>
+
+<!-- ────────────────── RIGHT FLOATING BAR — layout + profile ───────────────── -->
+<div class="float-bar bar-right">
+
+  <!-- Layout toggle group -->
+  <div class="layout-toggle" role="group" aria-label="Layout view">
+    <button class="bar-btn layout-btn" id="layout-grid"
+      onclick="setLayout('grid')"
+      aria-label="Grid view"
+      aria-pressed="true"
+      title="Grid view">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="1" y="1" width="5.5" height="5.5" rx="1"/>
+        <rect x="8.5" y="1" width="5.5" height="5.5" rx="1"/>
+        <rect x="1" y="8.5" width="5.5" height="5.5" rx="1"/>
+        <rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1"/>
+      </svg>
+    </button>
+    <button class="bar-btn layout-btn" id="layout-masonry"
+      onclick="setLayout('masonry')"
+      aria-label="Masonry view"
+      aria-pressed="false"
+      title="Masonry view">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="1"    y="1" width="3.5" height="9"  rx="1"/>
+        <rect x="5.75" y="1" width="3.5" height="13" rx="1"/>
+        <rect x="10.5" y="1" width="3.5" height="6"  rx="1"/>
+      </svg>
+    </button>
+    <button class="bar-btn layout-btn" id="layout-list"
+      onclick="setLayout('list')"
+      aria-label="List view"
+      aria-pressed="false"
+      title="List view">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="1" y1="3.5"  x2="14" y2="3.5"/>
+        <line x1="1" y1="7.5"  x2="14" y2="7.5"/>
+        <line x1="1" y1="11.5" x2="14" y2="11.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Divider -->
+  <div class="bar-divider-v" aria-hidden="true"></div>
+
+  <!-- Profile -->
+  <button class="bar-btn-profile" id="profile-btn"
+    onclick="toggleProfileMenu()"
+    aria-label="Account menu"
+    aria-expanded="false"
+    aria-controls="profile-menu">
+    RS
+  </button>
+
+</div>
+
+<!-- Profile dropdown -->
+<div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
+  <div class="profile-header">
+    <div class="profile-name">Ross Mackintosh</div>
+    <div class="profile-email">rosscraigmackintosh@gmail.com</div>
+  </div>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="4.5" r="2.5"/>
+      <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+    </svg>
+    Profile settings
+  </button>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="2"/>
+      <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12M2.8 2.8l.85.85M9.35 9.35l.85.85M9.35 3.65l.85-.85M3.65 9.35l-.85.85"/>
+    </svg>
+    Workspace settings
+  </button>
+  <div class="menu-divider"></div>
+  <button class="profile-item" role="menuitem" style="color:var(--negative)">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <path d="M8.5 4.5L12 6.5l-3.5 2"/>
+      <line x1="12" y1="6.5" x2="5" y2="6.5"/>
+      <path d="M5 1.5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3"/>
+    </svg>
+    Sign out
+  </button>
+</div>
+
+<!-- ────────────────── CHAT SLIDE PANEL ──────────────────────────────────── -->
+<!-- Panel -->
+<aside class="chat-panel" id="chat-panel" role="dialog" aria-label="AI Search" aria-modal="true">
+  <div class="cp-fade-bottom" id="cp-fade-bottom"></div>
+
+  <div class="cp-msgs" id="cp-msgs">
+    <div class="cp-spacer"></div>
+  </div>
+
+  <div class="cp-input-row">
+    <div class="cp-input-wrap">
+      <textarea class="cp-input" id="cp-input"
+        placeholder="e.g. show drivers, who has highest score..."
+        aria-label="Chat input"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+      <button class="cp-send" onclick="sendChat()" aria-label="Send">
+        <svg width="12" height="12" viewBox="0 0 13 13" fill="white" aria-hidden="true">
+          <path d="M11.5 6.5L1 1l2.5 5.5L1 12l10.5-5.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ────────────────── DETAIL SLIDE PANEL ─────────────────────────────────── -->
+<aside class="detail-panel" id="detail-panel" role="dialog" aria-label="Property detail" aria-modal="true">
+  <button class="dp-close" id="dp-close" onclick="closeDetail()" aria-label="Close">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/>
+    </svg>
+  </button>
+  <div class="dp-scroll" id="dp-scroll">
+    <div class="dp-hero" id="dp-hero"></div>
+    <div class="dp-body">
+      <div id="dp-content"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ─────────────────────────────── MAIN ─────────────────────────────────── -->
+<main class="main" id="main-content" tabindex="-1">
+  <div class="content">
+
+    <div class="page-header" id="page-header"></div>
+
+
+    <div class="card-grid" id="card-grid">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        Connecting to database&hellip;
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="grid-fade-bottom" id="grid-fade-bottom"></div>
+
+<!-- ─────────────────────────────── SCRIPT ───────────────────────────────── -->
+<script>
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+var activeLayout = 'grid';
+
+/* JS masonry engine — places cards absolutely into the shortest column.
+   DOM order is preserved. No rank/tier signals are introduced. */
+function layoutMasonry() {
+  var grid = document.getElementById('card-grid');
+  if (!grid || !grid.classList.contains('masonry')) return;
+
+  /* Inject ghost placeholder at position 0 if not already present */
+  if (!grid.querySelector('.masonry-ghost')) {
+    var ghost = document.createElement('div');
+    ghost.className = 'fanscore-card masonry-ghost';
+    ghost.innerHTML = '<div id="ghost-meta-wrap"></div>';
+    grid.insertBefore(ghost, grid.firstChild);
+    /* Populate immediately if meta is already available */
+    updateGhostMeta();
+  }
+
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.fanscore-card'));
+  if (!cards.length) return;
+
+  var gap      = 24;
+  var gridW    = grid.offsetWidth;
+  var minColW  = 300;  /* match grid's minmax(300px, 1fr) */
+  var cols     = Math.max(1, Math.floor((gridW + gap) / (minColW + gap)));
+  var colW     = Math.floor((gridW - (cols - 1) * gap) / cols);
+
+  /* Set card widths and make them static for height measurement */
+  cards.forEach(function(c) {
+    c.style.position = 'static';
+    c.style.left     = '';
+    c.style.top      = '';
+    c.style.width    = colW + 'px';
+  });
+
+  /* Force a synchronous reflow so all width changes are applied
+     before we read heights — prevents stale layout measurements */
+  void grid.offsetHeight;
+
+  /* Read heights after reflow */
+  var heights = cards.map(function(c) { return c.offsetHeight; });
+
+  /* Initialise column cursors */
+  var colH = [];
+  for (var i = 0; i < cols; i++) colH.push(0);
+
+  /* Place each card into the shortest column */
+  grid.style.position = 'relative';
+  cards.forEach(function(c, idx) {
+    var col = 0;
+    for (var j = 1; j < cols; j++) {
+      if (colH[j] < colH[col]) col = j;
+    }
+    c.style.position = 'absolute';
+    c.style.left     = (col * (colW + gap)) + 'px';
+    c.style.top      = colH[col] + 'px';
+    colH[col] += heights[idx] + gap;
+  });
+
+  grid.style.height = Math.max.apply(null, colH) + 'px';
+}
+
+function clearMasonryPositions() {
+  var grid = document.getElementById('card-grid');
+  if (!grid) return;
+  /* Remove ghost placeholder */
+  Array.prototype.forEach.call(grid.querySelectorAll('.masonry-ghost'), function(g) {
+    g.parentNode.removeChild(g);
+  });
+  grid.style.position = '';
+  grid.style.height   = '';
+  Array.prototype.forEach.call(grid.querySelectorAll('.fanscore-card'), function(c) {
+    c.style.position = '';
+    c.style.left     = '';
+    c.style.top      = '';
+    c.style.width    = '';
+  });
+}
+
+function setLayout(mode) {
+  /* Clear masonry positioning before switching away */
+  if (activeLayout === 'masonry' && mode !== 'masonry') {
+    clearMasonryPositions();
+  }
+
+  activeLayout = mode;
+  var grid = document.getElementById('card-grid');
+  if (grid) {
+    grid.classList.remove('masonry', 'list');
+    if (mode === 'masonry') grid.classList.add('masonry');
+    if (mode === 'list')    grid.classList.add('list');
+  }
+
+  /* Toggle masonry-mode class on .content so CSS can hide page-header */
+  var content = document.querySelector('.content');
+  if (content) content.classList.toggle('masonry-mode', mode === 'masonry');
+
+  /* Sync button states */
+  ['grid', 'masonry', 'list'].forEach(function(m) {
+    var btn = document.getElementById('layout-' + m);
+    if (btn) {
+      var on = m === mode;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', String(on));
+    }
+  });
+
+  localStorage.setItem('sai-layout', mode);
+
+  if (mode === 'masonry') {
+    setTimeout(layoutMasonry, 100);
+    setTimeout(layoutMasonry, 500);
+  }
+}
+
+(function initLayout() {
+  var saved = localStorage.getItem('sai-layout') || 'grid';
+  setLayout(saved);
+})();
+
+/* ── Theme ─────────────────────────────────────────────────────────────── */
+(function initTheme() {
+  var saved = localStorage.getItem('sai-theme');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = saved || (prefersDark ? 'dark' : 'light');
+  applyTheme(theme);
+})();
+
+function setTheme(theme) {
+  applyTheme(theme);
+  localStorage.setItem('sai-theme', theme);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  var tl = document.getElementById('theme-light');
+  var td = document.getElementById('theme-dark');
+  if (tl) tl.classList.toggle('active', theme === 'light');
+  if (td) td.classList.toggle('active', theme === 'dark');
+}
+
+/* ── Nav menu (left bar) ─────────────────────────────────────────────── */
+var navMenuOpen = false;
+
+function toggleNavMenu() {
+  navMenuOpen ? closeNavMenu() : openNavMenu();
+}
+function openNavMenu() {
+  navMenuOpen = true;
+  document.getElementById('nav-menu').classList.add('open');
+  document.getElementById('menu-btn').setAttribute('aria-expanded', 'true');
+  document.getElementById('menu-btn').classList.add('active');
+}
+function closeNavMenu() {
+  navMenuOpen = false;
+  document.getElementById('nav-menu').classList.remove('open');
+  document.getElementById('menu-btn').setAttribute('aria-expanded', 'false');
+  document.getElementById('menu-btn').classList.remove('active');
+}
+
+/* ── Profile menu ────────────────────────────────────────────────────── */
+var profileMenuOpen = false;
+
+function toggleProfileMenu() {
+  profileMenuOpen ? closeProfileMenu() : openProfileMenu();
+}
+function openProfileMenu() {
+  profileMenuOpen = true;
+  document.getElementById('profile-menu').classList.add('open');
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'true');
+}
+function closeProfileMenu() {
+  profileMenuOpen = false;
+  document.getElementById('profile-menu').classList.remove('open');
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
+}
+
+/* ── Chat panel ──────────────────────────────────────────────────────── */
+var chatOpen = false;
+
+function toggleChat() {
+  chatOpen ? closeChat() : openChat();
+}
+function updateChatToggle(isOpen) {
+  var on  = document.getElementById('chat-toggle-on');
+  var off = document.getElementById('chat-toggle-off');
+  if (on)  on.classList.toggle('active', isOpen);
+  if (off) off.classList.toggle('active', !isOpen);
+}
+function openChat() {
+  chatOpen = true;
+  document.body.classList.add('chat-open');
+  document.getElementById('chat-panel').classList.add('open');
+  updateChatToggle(true);
+  setTimeout(function() { document.getElementById('cp-input').focus(); }, 300);
+  _masonryReflow();
+  /* Fire greeting on first open */
+  if (!chatState.greeted) {
+    chatState.greeted = true;
+    setTimeout(function() {
+      addMsg("Hi! I'm here to help you find the right sponsorship properties. What brings you here today — are you looking for new opportunities, reviewing a portfolio, or researching the market?", 'ai');
+    }, 450);
+  }
+}
+function closeChat() {
+  chatOpen = false;
+  document.body.classList.remove('chat-open');
+  document.getElementById('chat-panel').classList.remove('open');
+  updateChatToggle(false);
+  _masonryReflow();
+}
+
+/* ── Close menus on outside click ────────────────────────────────────── */
+document.addEventListener('click', function(e) {
+  var navMenu   = document.getElementById('nav-menu');
+  var menuBtn   = document.getElementById('menu-btn');
+  var profMenu  = document.getElementById('profile-menu');
+  var profBtn   = document.getElementById('profile-btn');
+
+  if (navMenuOpen && !navMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+    closeNavMenu();
+  }
+  if (profileMenuOpen && !profMenu.contains(e.target) && !profBtn.contains(e.target)) {
+    closeProfileMenu();
+  }
+});
+
+/* ── Escape key closes all panels ───────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (detailOpen)      closeDetail();
+  if (chatOpen)        closeChat();
+  if (navMenuOpen)     closeNavMenu();
+  if (profileMenuOpen) closeProfileMenu();
+});
+
+/* ── Nav active state ────────────────────────────────────────────────── */
+function setNavActive(name) {
+  document.querySelectorAll('.menu-item').forEach(function(el) {
+    var isActive = el.dataset.nav === name;
+    el.classList.toggle('active', isActive);
+    if (isActive) el.setAttribute('aria-current', 'page');
+    else          el.removeAttribute('aria-current');
+  });
+  var titleEl = document.getElementById('page-view-title');
+  if (titleEl) titleEl.textContent = name;
+}
+
+/* ── Config ─────────────────────────────────────────────────────────── */
+var API_URL = 'https://kyjpxxyaebxvpprugmof.supabase.co/rest/v1';
+var API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5anB4eHlhZWJ4dnBwcnVnbW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODMxNjAsImV4cCI6MjA4Nzg1OTE2MH0.Cw77x1rFkJQiEwbI9APniikFPOT7k7M8CsdC1NDhNNc';
+var MODEL = 'v1.0';
+
+var HERO_ICONS = {
+  driver: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="20" r="11" stroke="currentColor" stroke-width="3.5"/><path d="M10 54c0-12.15 9.85-22 22-22s22 9.85 22 22" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>',
+  team:   '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 36h48" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M12 36l4-10h32l4 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 26l3-8h26l3 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="41" r="5" stroke="currentColor" stroke-width="3"/><circle cx="44" cy="41" r="5" stroke="currentColor" stroke-width="3"/><path d="M25 36h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/></svg>',
+  event:  '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="34" rx="22" ry="14" stroke="currentColor" stroke-width="3.5"/><path d="M32 20v28M10 34h44" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/><ellipse cx="32" cy="34" rx="11" ry="14" stroke="currentColor" stroke-width="2.5" opacity="0.5"/><path d="M18 22.5c3.8 2 8.7 3.2 14 3.2s10.2-1.2 14-3.2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/><path d="M18 45.5c3.8-2 8.7-3.2 14-3.2s10.2 1.2 14 3.2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/></svg>',
+  series: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 12h24v18c0 8-6 14-12 16-6-2-12-8-12-16V12z" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 18H10c0 8 4 13 10 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 18h10c0 8-4 13-10 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 46v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 52h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
+};
+
+function countryFlag(code) {
+  if (!code) return '';
+  var aliases = { UK:'GB', ENG:'GB', SCO:'GB', WAL:'GB', NIR:'GB' };
+  var c = code.trim().toUpperCase();
+  c = aliases[c] || c;
+  if (c.length !== 2) return '';
+  return String.fromCodePoint(c.charCodeAt(0)+127397, c.charCodeAt(1)+127397);
+}
+
+function apiFetch(path) {
+  return fetch(API_URL + path, {
+    headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.message || r.statusText); });
+    return r.json();
+  });
+}
+
+/* ── State ───────────────────────────────────────────────────────────── */
+var allCards     = [];
+var activeFilter = 'all';
+
+/* ── Type config (uses CSS variables for dark mode compatibility) ─────── */
+var TYPE = {
+  driver: { label:'Driver', bgVar:'var(--driver-bg)', fgVar:'var(--driver-fg)', scoreVar:'var(--driver-score)', softVar:'var(--driver-soft)' },
+  team:   { label:'Team',   bgVar:'var(--team-bg)',   fgVar:'var(--team-fg)',   scoreVar:'var(--team-score)',   softVar:'var(--team-soft)'   },
+  series: { label:'Series', bgVar:'var(--series-bg)', fgVar:'var(--series-fg)', scoreVar:'var(--series-score)', softVar:'var(--series-soft)' },
+  event:  { label:'Event',  bgVar:'var(--event-bg)',  fgVar:'var(--event-fg)',  scoreVar:'var(--event-score)',  softVar:'var(--event-soft)'  },
+};
+
+/* ── Utilities ────────────────────────────────────────────────────────── */
+function n(v)      { if (v==null) return null; var x=Number(v); return isNaN(x)?null:x; }
+function fmt(v,dp) { if (v==null) return '--'; return Number(v).toFixed(dp!=null?dp:1); }
+function arr(v)    { return v==null?'':v>0.1?'\u2191':v<-0.1?'\u2193':'\u2192'; }
+function arrC(v)   { return v==null?'var(--text-3)':v>0.1?'var(--positive)':v<-0.1?'var(--negative)':'var(--text-3)'; }
+
+/* ── Sparkline ────────────────────────────────────────────────────────── */
+
+/* ── Data fetch ───────────────────────────────────────────────────────── */
+function loadGrid() {
+  var cols='property_id,property_name,property_type,country,bio,as_of_day,model_version,'
+    +'avg_score_30d,trend_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,'
+    +'avg_score_60d,avg_score_90d,trend_value_90d,'
+    +'team_id,team_name,driver_ids,driver_names';
+
+  return apiFetch('/v_property_summary_current?select='+cols
+    +'&order=property_name.asc&limit=200')
+    .then(function(rows){
+      var ids=rows.map(function(r){return r.property_id;});
+      var since=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+      var idList=ids.join(',');
+      return apiFetch('/fanscore_daily'
+        +'?select=property_id,metric_date,fanscore_value,suppression_reason'
+        +'&property_id=in.('+idList+')'
+        +'&model_version=eq.'+MODEL
+        +'&metric_date=gte.'+since
+        +'&order=property_id.asc,metric_date.asc'
+        +'&limit=2000')
+        .then(function(sparkData){
+          var sparkMap={};
+          (sparkData||[]).forEach(function(r){
+            (sparkMap[r.property_id]=sparkMap[r.property_id]||[]).push({
+              d:r.metric_date,
+              v:r.suppression_reason?null:n(r.fanscore_value)
+            });
+          });
+          return rows.map(function(r){
+            return {
+              id:r.property_id, name:r.property_name, type:r.property_type, country:r.country,
+              bio:r.bio||null,
+              asOf:r.as_of_day, model:r.model_version,
+              s30:n(r.avg_score_30d), s60:n(r.avg_score_60d), s90:n(r.avg_score_90d),
+              t30:n(r.trend_value_30d), t90:n(r.trend_value_90d),
+              cov30:n(r.completeness_pct_30d), conf30:r.confidence_band_30d,
+              sup30:r.suppression_reason_30d,
+              sparks:sparkMap[r.property_id]||[],
+              teamId:r.team_id||null, teamName:r.team_name||null,
+              driverIds:r.driver_ids||null, driverNames:r.driver_names||null
+            };
+          });
+        });
+    });
+}
+
+/* ── Card render ──────────────────────────────────────────────────────── */
+function renderCard(c, idx) {
+  var cfg=TYPE[c.type]||{label:c.type,bgVar:'var(--surface-muted)',fgVar:'var(--text-2)',softVar:'var(--accent)'};
+  var sup=!!c.sup30;
+  var delayVal = idx > 0 ? 'animation-delay:' + (Math.min(idx, 24) * 0.022).toFixed(3) + 's;' : '';
+  var delay = ' style="--card-type-fg:' + cfg.fgVar + ';--card-type-soft:' + (cfg.softVar||cfg.fgVar) + ';' + delayVal + '"';
+
+  var heroHtml = '<div class="card-hero" style="background:'+cfg.bgVar+'">'
+    +(c.image_url
+      ? '<img src="'+c.image_url+'" alt="'+c.name+'" loading="lazy">'
+      : '<div class="card-hero-placeholder" style="color:'+cfg.fgVar+'">'+(HERO_ICONS[c.type]||HERO_ICONS.series)+'</div>'
+    )+'</div>';
+
+  return '<div class="fanscore-card"' + delay + ' data-type="'+c.type+'" data-id="'+c.id
+    +'" onclick="selectCard(\''+c.id+'\')" tabindex="0" role="article"'
+    +' onkeydown="if(event.key===\'Enter\'||event.key===\' \')selectCard(\''+c.id+'\')">'
+
+    +heroHtml
+
+    +'<div class="card-body">'
+    +'<div class="card-header">'
+    +'<div class="card-name-row">'
+    +'<div class="card-name" title="'+c.name+'">'+c.name+'</div>'
+    +(c.country?'<span class="country-tag">'+countryFlag(c.country)+'</span>':'<span class="country-tag" style="visibility:hidden">&#127988;</span>')
+    +'</div>'
+    +'<div class="card-badges">'
+    +'<span class="type-badge" style="background:'+cfg.bgVar+';color:'+cfg.fgVar+';border-color:'+cfg.fgVar+'33">'+cfg.label+'</span>'
+    +'</div>'
+    +(c.type==='driver'&&c.teamName
+      ?'<div class="team-plain">'+c.teamName+'</div>'
+      :c.type==='team'&&c.driverNames&&c.driverNames.length
+        ?'<div class="team-plain">'+c.driverNames.join(' | ')+'</div>'
+        :'<div class="team-plain empty">&nbsp;</div>'
+    )
+    +'</div>'
+
+    +'<div class="score-row">'
+    +'<div class="score-main">'
+    +'<div class="score-val'+(sup?' dim':'')+'"'+(sup?'':' style="color:'+cfg.scoreVar+'"')+'>'+( sup?'--':fmt(c.s30,1))+'</div>'
+    +'<div class="score-lbl">FanScore &middot; 30d avg</div>'
+    +'</div>'
+    +'<div class="score-aside">'
+    +(!sup&&c.t30!=null?'<div class="trend-line" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+' '+Math.abs(c.t30).toFixed(2)+'/d</div>':'')
+    +(c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
+    +(c.cov30!=null?'<div class="conf-line">'+(c.cov30*100).toFixed(0)+'% coverage</div>':'')
+    +'</div></div>'
+
+
+
+    +(c.bio ? '<div class="card-bio">'+c.bio.slice(0,240)+'</div>' : '')
+
+    +(sup?'<div class="sup-notice">'+c.sup30+'</div>':'')
+
+    +'<div class="card-actions">'
+    +'<button class="card-btn" data-action="watchlist" data-id="'+c.id+'" title="Add to watchlist"><i data-lucide="bookmark"></i></button>'
+    +'<button class="card-btn" data-action="compare"   data-id="'+c.id+'" title="Compare"><i data-lucide="check-check"></i></button>'
+    +'<button class="card-btn" data-action="portfolio" data-id="'+c.id+'" title="Add to portfolio"><i data-lucide="briefcase"></i></button>'
+    +'</div>'
+
+    +'</div>'  // .card-body
+    +'</div>';
+}
+
+/* ── Filter & render ──────────────────────────────────────────────────── */
+/* Cached parts so ghost can be repopulated after layoutMasonry() runs */
+var _metaNumber     = '';   /* e.g. "120" or "50 of 120" */
+var _metaFiltered   = false;
+var _metaDetail     = '';   /* "sorted A–Z · model v1.0 · as of 2026-02-28" */
+var _metaSort       = 'alpha'; /* current sort key — never defaults to score */
+
+function sortLabel(sort) {
+  if (sort === 'score')      return 'sorted by FanScore';
+  if (sort === 'trend')      return 'sorted by trend';
+  if (sort === 'confidence') return 'sorted by confidence';
+  return 'sorted A\u2013Z';  /* alpha is the neutral default */
+}
+
+function updateGhostMeta() {
+  var wrap = document.getElementById('ghost-meta-wrap');
+  if (!wrap) return;
+  var html = '';
+  if (_metaFiltered) {
+    html += '<span class="ghost-meta-label">Showing</span>';
+    html += '<span class="ghost-meta-count">' + _metaNumber + '</span>';
+  } else {
+    html += '<span class="ghost-meta-count">' + _metaNumber + '</span>';
+  }
+  html += '<span class="ghost-meta-label ghost-meta-properties">Properties</span>';
+  html += '<span class="ghost-meta-detail">' + _metaDetail + '</span>';
+  wrap.innerHTML = html;
+}
+
+function updateMeta(shown, total) {
+  var asOf        = allCards[0] && allCards[0].asOf ? allCards[0].asOf : '--';
+  _metaFiltered   = shown !== total;
+  _metaNumber     = _metaFiltered ? shown + ' of ' + total : String(total);
+  _metaDetail     = sortLabel(_metaSort) + ' \u00B7 model ' + MODEL + ' \u00B7 as of ' + asOf;
+
+  var countText   = _metaFiltered
+    ? 'Showing ' + shown + ' of ' + total + ' properties'
+    : total + ' properties';
+  var el = document.getElementById('page-meta');
+  if (el) el.textContent = countText + ' \u00B7 ' + _metaDetail;
+
+  updateGhostMeta();
+}
+
+/* Animate existing cards out, then swap grid content */
+function setGridContent(html) {
+  var grid = document.getElementById('card-grid');
+  var existing = grid.querySelectorAll('.fanscore-card');
+  if (!existing.length) {
+    grid.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+    if (activeLayout === 'masonry') {
+      setTimeout(layoutMasonry, 100);
+      setTimeout(layoutMasonry, 500);
+    }
+    return;
+  }
+  var stagger = 18; /* ms between each card */
+  var baseDuration = 220; /* matches card-out animation */
+  var maxTotal = 380; /* cap so large grids don't drag */
+  existing.forEach(function(el, i) {
+    el.style.animationDelay = (i * stagger) + 'ms';
+    el.classList.add('card-leaving');
+  });
+  var total = Math.min(baseDuration + (existing.length * stagger), maxTotal);
+  setTimeout(function() {
+    grid.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+    if (activeLayout === 'masonry') {
+      setTimeout(layoutMasonry, 100);
+      setTimeout(layoutMasonry, 500);
+    }
+  }, total);
+}
+
+function renderGrid(filter) {
+  var grid=document.getElementById('card-grid');
+  var vis=filter==='all'?allCards:allCards.filter(function(c){return c.type===filter;});
+  if (!vis.length){setGridContent('<div class="state-msg">No properties found.</div>');return;}
+  setGridContent(vis.map(renderCard).join(''));
+  updateMeta(vis.length, allCards.length);
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.chip[data-filter]').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+  activeFilter=el.dataset.filter;
+  window.scrollTo({ top: 0 });
+  renderGrid(activeFilter);
+}
+
+/* ── Masonry transition reflow helper ────────────────────────────────── */
+/* Spreads layoutMasonry calls evenly across the panel slide duration (220ms)
+   so absolute positions track the smooth padding-right/left transition. */
+function _masonryReflow() {
+  if (activeLayout !== 'masonry') return;
+  [0, 55, 110, 165, 230].forEach(function(t) { setTimeout(layoutMasonry, t); });
+}
+
+/* ── Detail panel ────────────────────────────────────────────────────── */
+var detailOpen   = false;
+var detailCardId = null;
+
+function openDetail(c) {
+  detailCardId = c.id;
+  populateDetail(c);
+  detailOpen = true;
+  document.body.classList.add('detail-open');
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('dp-scroll').scrollTop = 0;
+  _masonryReflow();
+}
+
+function closeDetail() {
+  detailOpen   = false;
+  detailCardId = null;
+  document.body.classList.remove('detail-open');
+  document.getElementById('detail-panel').classList.remove('open');
+  document.querySelectorAll('.fanscore-card').forEach(function(el) { el.classList.remove('selected'); });
+  _masonryReflow();
+}
+
+function populateDetail(c) {
+  var cfg = TYPE[c.type] || { label: c.type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)', scoreVar: 'var(--text-1)', softVar: 'var(--accent)' };
+  var sup = !!c.sup30;
+  var scoreColor = sup ? 'var(--text-3)' : (cfg.scoreVar || cfg.fgVar);
+
+  /* ── Hero image ── */
+  var heroEl = document.getElementById('dp-hero');
+  heroEl.style.background = cfg.bgVar;
+  heroEl.innerHTML = c.image_url
+    ? '<img src="' + c.image_url + '" alt="' + escHtml(c.name) + '">'
+    : '<div class="dp-hero-placeholder" style="color:' + cfg.fgVar + '">' + (HERO_ICONS[c.type] || HERO_ICONS.series) + '</div>';
+
+  var h = '';
+
+  /* ───────────────────────────────────────────────────────────────
+     1. HEADER — mirrors card layout: name + flag, type badge, context
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section dp-card-header">';
+  /* Name row — name left, flag right (matches .card-name-row) */
+  h += '<div class="dp-card-name-row">';
+  h += '<div class="dp-card-name">' + escHtml(c.name) + '</div>';
+  if (c.country) h += '<span class="dp-card-flag">' + countryFlag(c.country) + '</span>';
+  h += '</div>';
+  /* Type badge + team context on same sub-row */
+  h += '<div class="dp-card-sub">';
+  h += '<span class="type-badge" style="display:inline-flex;background:' + cfg.bgVar + ';color:' + cfg.fgVar + ';border-color:' + cfg.fgVar + '33">' + cfg.label + '</span>';
+  var ctx = '';
+  if      (c.type === 'driver' && c.teamName)                            ctx = c.teamName;
+  else if (c.type === 'team'   && c.driverNames && c.driverNames.length) ctx = c.driverNames.join(' \u00B7 ');
+  if (ctx) h += '<span class="dp-card-context">' + escHtml(ctx) + '</span>';
+  h += '</div>';
+  h += '</div>'; /* /section */
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     2. HERO BLOCK — FanScore, confidence, short description, actions
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">FanScore</div>';
+  if (sup) {
+    h += '<div class="dp-score-primary"><span class="dp-score-val" style="color:var(--text-3)">--</span><span class="dp-score-label">Suppressed</span></div>';
+    h += '<div class="dp-conf" style="margin-top:var(--spacing-xs)">' + escHtml(c.sup30) + '</div>';
+  } else {
+    h += '<div class="dp-score-primary">';
+    h += '<span class="dp-score-val" style="color:' + scoreColor + '">' + (c.s30 != null ? fmt(c.s30, 1) : '--') + '</span>';
+    h += '<span class="dp-score-label">30-day average</span>';
+    h += '</div>';
+    if (c.t30 != null) h += '<div class="dp-trend" style="color:' + arrC(c.t30) + ';margin-bottom:var(--spacing-xs)">' + arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '\u2009/\u2009day</div>';
+    if (c.conf30) h += '<div class="dp-conf">' + c.conf30 + ' confidence</div>';
+  }
+  /* Short description */
+  if (c.bio) {
+    var shortDesc = c.bio.length > 160 ? c.bio.slice(0, 160).replace(/\s+\S+$/, '') + '\u2026' : c.bio;
+    h += '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;margin-top:var(--spacing-md)">' + escHtml(shortDesc) + '</div>';
+  }
+  /* Actions */
+  h += '<div class="dp-actions">';
+  h += '<button class="dp-action-btn" onclick="dpAction(\'watch\',\'' + c.id + '\')">Watch</button>';
+  h += '<button class="dp-action-btn" onclick="dpAction(\'portfolio\',\'' + c.id + '\')">Portfolio</button>';
+  h += '<button class="dp-action-btn disabled" title="Select another property first to enable compare">Compare</button>';
+  h += '</div>';
+  h += '</div>'; /* /section */
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     3. SCORE EXPLANATION
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">About this score</div>';
+  h += '<div style="font-size:var(--text-xs);color:var(--text-2);line-height:1.65">FanScore reflects fan passion and engagement health across digital platforms. It does not indicate brand fit, sponsorship value, or ROI.</div>';
+  h += '<button class="dp-expand-toggle" onclick="dpToggleExpand(this)">How FanScore is calculated <span>&#9660;</span></button>';
+  h += '<div class="dp-expand-content">FanScore is derived from signals across social and digital platforms including post volume, audience interaction, reach consistency, and engagement quality. Signals are normalised, weighted by platform, and averaged over the selected time window. The model applies suppression when data integrity thresholds are not met.</div>';
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     4. ENGAGEMENT SNAPSHOT
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">Engagement snapshot</div>';
+  h += dpSignalGroup('Audience', [
+    { label: 'Total audience size', val: null },
+    { label: 'Platform reach', val: null }
+  ]);
+  h += dpSignalGroup('Engagement', [
+    { label: 'Engagement rate', val: null },
+    { label: 'Interaction volume', val: null }
+  ]);
+  h += dpSignalGroup('Growth', [
+    { label: '30-day trend', val: c.t30 != null ? (arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '/day') : null, color: c.t30 != null ? arrC(c.t30) : null },
+    { label: '90-day trend', val: c.t90 != null ? (arr(c.t90) + '\u2009' + Math.abs(c.t90).toFixed(2) + '/day') : null, color: c.t90 != null ? arrC(c.t90) : null }
+  ]);
+  h += dpSignalGroup('Loyalty & stability', [
+    { label: 'Repeat engagement', val: null },
+    { label: 'Audience consistency', val: null }
+  ]);
+  if (sup) {
+    h += '<div class="dp-integrity-notice">Unusual activity detected and adjusted in the FanScore calculation.</div>';
+  } else if (c.cov30 != null && c.cov30 < 80) {
+    h += '<div class="dp-integrity-notice">Data coverage for this window is ' + Math.round(c.cov30) + '%. Score reliability may be reduced.</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     5. PROPERTY DESCRIPTION
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">About this property</div>';
+  h += '<div class="dp-full-bio">' + (c.bio ? escHtml(c.bio) : '<span style="color:var(--text-3);font-style:italic">No description available.</span>') + '</div>';
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     6. KEY FACTS
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">Key facts</div>';
+  h += '<div class="dp-facts">';
+  h += dpFact('Country',             c.country ? countryFlag(c.country) + '\u2009' + c.country : null);
+  h += dpFact('Property type',       cfg.label || null);
+  h += dpFact('Competition / league', null);
+  h += dpFact('Sport category',       null);
+  h += dpFact('Season timing',        null);
+  h += dpFact('Primary region',       null);
+  h += '</div>';
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     7. SCORE HISTORY
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">Score history</div>';
+  h += '<div class="dp-windows">';
+  h += dpWindow(c.s30, '30d', scoreColor);
+  h += dpWindow(c.s60, '60d', null);
+  h += dpWindow(c.s90, '90d', null);
+  h += '</div>';
+  if (!sup && c.t30 != null) {
+    var note = c.t30 > 0.2 ? 'Fan engagement is tracking upward over the 30-day window.'
+             : c.t30 < -0.2 ? 'Fan engagement is tracking downward over the 30-day window.'
+             : 'Fan engagement is broadly stable over the 30-day window.';
+    h += '<div class="dp-trend-note">' + note + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     8. RELATED PROPERTIES
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">Related properties</div>';
+  var related = dpRelated(c);
+  if (related.length) {
+    h += '<div class="dp-related-list">';
+    related.forEach(function(r) {
+      var rCfg = TYPE[r.card.type] || { bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)', scoreVar: 'var(--text-1)' };
+      h += '<div class="dp-related-item" onclick="selectCard(\'' + r.card.id + '\')" tabindex="0" role="button">';
+      h += '<div class="dp-related-icon" style="background:' + rCfg.bgVar + ';color:' + rCfg.fgVar + '">' + (HERO_ICONS[r.card.type] || HERO_ICONS.series) + '</div>';
+      h += '<div class="dp-related-info"><div class="dp-related-name">' + escHtml(r.card.name) + '</div>';
+      h += '<div class="dp-related-reason">' + r.reason + '</div></div>';
+      h += '<div class="dp-related-score" style="color:' + (rCfg.scoreVar || rCfg.fgVar) + '">' + (r.card.s30 != null ? fmt(r.card.s30, 1) : '--') + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div style="font-size:var(--text-xs);color:var(--text-3);font-style:italic">No related properties found.</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="dp-divider"></div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     9. DATA & TRANSPARENCY
+  ─────────────────────────────────────────────────────────────── */
+  h += '<div class="dp-section">';
+  h += '<div class="dp-section-label">Data & transparency</div>';
+  h += '<div class="dp-facts">';
+  h += dpFact('Model version',       c.model  || null);
+  h += dpFact('Data as of',          c.asOf   || null);
+  h += dpFact('Confidence band',     c.conf30 || null);
+  h += dpFact('Coverage (30d)',      c.cov30  != null ? Math.round(c.cov30) + '% of days' : null);
+  h += dpFact('Source platforms',    null);
+  h += '</div>';
+  if (c.cov30 != null) {
+    h += '<div class="dp-cov-bar" style="margin-top:var(--spacing-sm)"><div class="dp-cov-fill" style="width:' + Math.min(100, Math.round(c.cov30)) + '%"></div></div>';
+  }
+  h += '<button class="dp-report-link" onclick="dpAction(\'report\',\'' + c.id + '\')">Report a data issue</button>';
+  h += '</div>';
+
+  document.getElementById('dp-content').innerHTML = h;
+}
+
+function dpWindow(val, label, color) {
+  return '<div class="dp-window">'
+    + '<div class="dp-window-val"' + (color ? ' style="color:' + color + '"' : '') + '>' + (val != null ? fmt(val, 1) : '--') + '</div>'
+    + '<div class="dp-window-label">' + label + '</div>'
+    + '</div>';
+}
+
+function dpSignalGroup(groupLabel, signals) {
+  var h = '<div class="dp-signal-group">';
+  h += '<div class="dp-signal-group-label">' + groupLabel + '</div>';
+  signals.forEach(function(s) {
+    h += '<div class="dp-signal-row">';
+    h += '<span class="dp-signal-name">' + s.label + '</span>';
+    h += s.val != null
+      ? '<span class="dp-signal-val"' + (s.color ? ' style="color:' + s.color + '"' : '') + '>' + s.val + '</span>'
+      : '<span class="dp-signal-val na">not available</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function dpFact(label, val) {
+  return '<div class="dp-fact-row">'
+    + '<span class="dp-fact-label">' + label + '</span>'
+    + (val != null
+       ? '<span class="dp-fact-val">' + val + '</span>'
+       : '<span class="dp-fact-val na">Data not available</span>')
+    + '</div>';
+}
+
+function dpRelated(c) {
+  var results = [];
+  var candidates = allCards.filter(function(r) { return r.id !== c.id && !r.sup30; });
+  /* Same type — sort by proximity of score */
+  var sameType = candidates.filter(function(r) { return r.type === c.type; })
+    .sort(function(a, b) { return Math.abs((a.s30 || 0) - (c.s30 || 0)) - Math.abs((b.s30 || 0) - (c.s30 || 0)); })
+    .slice(0, 2);
+  sameType.forEach(function(r) {
+    var reason = 'Same property type';
+    if (c.type === 'driver' && r.teamName && r.teamName === c.teamName) reason = 'Same team';
+    results.push({ card: r, reason: reason });
+  });
+  /* Comparable score — different type */
+  if (results.length < 3 && c.s30 != null) {
+    var similar = candidates.filter(function(r) {
+      return r.type !== c.type && r.s30 != null && Math.abs(r.s30 - c.s30) <= 6;
+    }).sort(function(a, b) { return Math.abs(a.s30 - c.s30) - Math.abs(b.s30 - c.s30); }).slice(0, 1);
+    similar.forEach(function(r) { results.push({ card: r, reason: 'Comparable engagement profile' }); });
+  }
+  return results.slice(0, 3);
+}
+
+function dpToggleExpand(btn) {
+  var content = btn.nextElementSibling;
+  content.classList.toggle('open');
+  var arrow = btn.querySelector('span');
+  if (arrow) arrow.innerHTML = content.classList.contains('open') ? '&#9650;' : '&#9660;';
+}
+
+function dpAction(action, id) {
+  /* Placeholder — future implementation */
+  console.log('[SponsorAI] panel action:', action, id);
+}
+
+function selectCard(id) {
+  /* Toggle off if same card re-selected */
+  if (detailCardId === id) { closeDetail(); return; }
+  document.querySelectorAll('.fanscore-card').forEach(function(el) { el.classList.remove('selected'); });
+  var el = document.querySelector('.fanscore-card[data-id="' + id + '"]');
+  if (el) el.classList.add('selected');
+  var card = allCards.filter(function(c) { return c.id === id; })[0];
+  if (card) openDetail(card);
+}
+
+/* ── Claude API Chat Engine ────────────────────────────────────────────── */
+
+var ANTHROPIC_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+var conversationHistory = [];
+
+var chatState = {
+  greeted:   false,
+  prefTypes: [],
+  prefSort:  'alpha',   /* neutral default — never score */
+  prefLimit: null
+};
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function makeQRRow(tokens) {
+  var qr = document.createElement('div');
+  qr.className = 'quick-replies';
+  tokens.forEach(function(label) {
+    var btn = document.createElement('button');
+    btn.className = 'qr-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', function() { sendQuickReply(label, btn); });
+    qr.appendChild(btn);
+  });
+  return qr;
+}
+
+function addMsg(text, who) {
+  var msgs = document.getElementById('cp-msgs');
+  var div  = document.createElement('div');
+  div.className = who === 'ai' ? 'msg-ai' : 'msg-user';
+
+  if (who !== 'ai') {
+    div.textContent = text;
+  } else {
+    /*
+     * Process lines in order so that quick-reply rows appear in-place
+     * directly after the question they belong to, not all lumped at the end.
+     *
+     * A quick-reply line is one composed entirely of [Label] tokens.
+     * Prose lines are buffered into a <span> and flushed whenever a QR line
+     * (or the end of the message) is reached.
+     */
+    var lines = text.split('\n');
+    var proseHtml  = '';
+    var pendingGap = false;
+
+    function flushProse() {
+      if (!proseHtml) return;
+      var span = document.createElement('span');
+      span.innerHTML = proseHtml;
+      div.appendChild(span);
+      proseHtml  = '';
+      pendingGap = false;
+    }
+
+    lines.forEach(function(line) {
+      var t = line.trim();
+      if (t && /^(\[[^\]]+\]\s*)+$/.test(t)) {
+        /* Quick-reply line — flush any buffered prose, then add chips in-place */
+        flushProse();
+        var tokens = (t.match(/\[([^\]]+)\]/g) || []).map(function(tok) { return tok.slice(1, -1); });
+        div.appendChild(makeQRRow(tokens));
+      } else if (t === '') {
+        pendingGap = true;
+      } else {
+        /* Prose line — buffer it */
+        if (proseHtml) proseHtml += pendingGap ? '<br><br>' : '<br>';
+        proseHtml += escHtml(t);
+        pendingGap = false;
+      }
+    });
+
+    flushProse(); /* flush any remaining prose after the last line */
+  }
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendQuickReply(label, btn) {
+  /* Mark the chosen option and quietly recede the rest in this row */
+  if (btn) {
+    var row = btn.parentNode;
+    Array.prototype.forEach.call(row.querySelectorAll('.qr-btn'), function(b) {
+      b.classList.add(b === btn ? 'selected' : 'used');
+      b.disabled = true;
+    });
+  }
+  document.getElementById('cp-input').value = label;
+  sendChat();
+}
+
+function addTyping() {
+  var msgs = document.getElementById('cp-msgs');
+  var div  = document.createElement('div');
+  div.className = 'msg-ai'; div.id = 'typing';
+  div.innerHTML = '<div class="typing"><div class="dot-t"></div><div class="dot-t"></div><div class="dot-t"></div></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* Apply a personalised card view driven by the AI */
+function applyAIView(opts) {
+  opts = opts || {};
+  var cards = allCards.slice();
+  /* Specific ID filter takes priority over type filter */
+  if (opts.ids && opts.ids.length) {
+    cards = cards.filter(function(c) { return opts.ids.indexOf(c.id) >= 0; });
+  } else if (opts.types && opts.types.length) {
+    cards = cards.filter(function(c) { return opts.types.indexOf(c.type) >= 0; });
+  }
+  if (opts.excludeSuppressed) {
+    cards = cards.filter(function(c) { return !c.sup30; });
+  }
+  if (opts.positiveOnly) {
+    cards = cards.filter(function(c) { return c.t30 > 0; });
+  }
+  var sort = opts.sort || chatState.prefSort;
+  if (sort === 'score') {
+    cards.sort(function(a,b) { return (b.s30||0) - (a.s30||0); });
+  } else if (sort === 'trend') {
+    cards.sort(function(a,b) { return (b.t30||0) - (a.t30||0); });
+  } else if (sort === 'confidence') {
+    var co = {High:0, Medium:1, Low:2};
+    cards.sort(function(a,b) { return (co[a.conf30]||3) - (co[b.conf30]||3); });
+  } else {
+    /* alpha — restore neutral A–Z order from the source dataset */
+    cards.sort(function(a,b) { return a.name.localeCompare(b.name); });
+  }
+  if (opts.limit && opts.limit > 0) {
+    cards = cards.slice(0, opts.limit);
+  }
+  var grid = document.getElementById('card-grid');
+  if (!cards.length) { setGridContent('<div class="state-msg">No matching properties found.</div>'); return 0; }
+  setGridContent(cards.map(renderCard).join(''));
+  document.querySelectorAll('.chip[data-filter]').forEach(function(c) { c.classList.remove('active'); });
+  updateMeta(cards.length, allCards.length);
+  return cards.length;
+}
+
+/* Execute CMD tags returned by Claude */
+function executeCmds(cmds) {
+  var types      = chatState.prefTypes.slice();
+  var sort       = chatState.prefSort;
+  var limit      = chatState.prefLimit;
+  var excludeSup  = false;
+  var showSupOnly = false;
+  var positiveOnly = false;
+  var showIds     = null;
+
+  console.log('[SponsorAI] executeCmds:', cmds);
+  cmds.forEach(function(cmd) {
+    if (cmd === 'all')                { types = []; showIds = null; limit = null; positiveOnly = false; sort = 'alpha'; }
+    else if (cmd.indexOf('show:') === 0) {
+      showIds = cmd.slice(5).split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      console.log('[SponsorAI] show IDs parsed:', showIds);
+      console.log('[SponsorAI] matching cards:', allCards.filter(function(c){ return showIds.indexOf(c.id)>=0; }).map(function(c){ return c.name; }));
+    }
+    else if (cmd.indexOf('limit:') === 0) {
+      var n = parseInt(cmd.slice(6), 10);
+      if (!isNaN(n) && n > 0) limit = n;
+    }
+    else if (cmd === 'filter:driver') { types = ['driver']; showIds = null; }
+    else if (cmd === 'filter:team')   { types = ['team'];   showIds = null; }
+    else if (cmd === 'filter:series') { types = ['series']; showIds = null; }
+    else if (cmd === 'filter:event')  { types = ['event'];  showIds = null; }
+    else if (cmd === 'sort:score')      { sort = 'score'; }
+    else if (cmd === 'sort:trend')      { sort = 'trend'; }
+    else if (cmd === 'sort:confidence') { sort = 'confidence'; }
+    else if (cmd === 'clean')           { excludeSup = true; }
+    else if (cmd === 'positive')        { positiveOnly = true; sort = 'trend'; }
+    else if (cmd === 'suppressed')      { showSupOnly = true; }
+    else if (cmd === 'top')             { sort = 'score'; excludeSup = true; showIds = null; }
+  });
+
+  chatState.prefTypes = types;
+  chatState.prefSort  = sort;
+  chatState.prefLimit = limit;
+  _metaSort           = sort;  /* keep meta label in sync */
+
+  if (showSupOnly) {
+    var sup = allCards.filter(function(c) { return c.sup30; });
+    var g = document.getElementById('card-grid');
+    g.innerHTML = sup.length ? sup.map(renderCard).join('') : '<div class="state-msg">No suppressed properties.</div>';
+    document.querySelectorAll('.chip[data-filter]').forEach(function(c) { c.classList.remove('active'); });
+    updateMeta(sup.length, allCards.length);
+  } else {
+    applyAIView({ ids: showIds, types: types, sort: sort, excludeSuppressed: excludeSup, positiveOnly: positiveOnly, limit: limit });
+  }
+}
+
+/* Build dynamic system prompt with live data context */
+function buildSystemPrompt() {
+  var byT = {};
+  allCards.forEach(function(c) { byT[c.type] = (byT[c.type]||0)+1; });
+  var sup    = allCards.filter(function(c) { return c.sup30; }).length;
+  var top    = allCards.filter(function(c) { return !c.sup30 && c.s30 != null; })[0];
+  var rising = allCards.filter(function(c) { return !c.sup30 && c.t30 > 0.1; }).length;
+  var driversWithTeam = allCards.filter(function(c) { return c.type === 'driver' && c.teamName; }).length;
+
+  /* Build team roster directly from driver cards — guarantees IDs match card IDs exactly */
+  var rosterMap = {};
+  allCards.filter(function(c){ return c.type==='driver' && c.teamName; })
+    .forEach(function(d){
+      if (!rosterMap[d.teamName]) rosterMap[d.teamName] = [];
+      rosterMap[d.teamName].push(d.name + ' [' + d.id + ']');
+    });
+  var teamRoster = '';
+  Object.keys(rosterMap).sort().forEach(function(tName){
+    teamRoster += '\n  ' + tName + ': ' + rosterMap[tName].join(', ');
+  });
+
+  /* Build driver index: driver name + team + ID */
+  var driverIndex = '';
+  allCards.filter(function(c){ return c.type==='driver'; })
+    .sort(function(a,b){ return (a.teamName||'').localeCompare(b.teamName||''); })
+    .forEach(function(d){
+      driverIndex += '\n  ' + d.name + (d.teamName?' ('+d.teamName+')':'') + ' ['+d.id+']';
+    });
+
+  return [
+    'You are the SponsorAI assistant.',
+    'Your role is to help users make structured sponsorship decisions calmly and clearly.',
+    'You are not a chatbot. You are a guided analytical assistant.',
+    '',
+    '--- SYSTEM MODES ---',
+    'You operate in two internal modes. Default to Decision Mode unless the user explicitly requests deeper explanation.',
+    '',
+    'DECISION MODE (default):',
+    'Use quick reply options wherever possible. Ask a maximum of two clarifying questions at a time.',
+    'Keep responses tight and structured. Avoid long explanations. Progress the decision quickly. Focus on narrowing, not expanding.',
+    'Do not drift into essay-style responses in Decision Mode.',
+    '',
+    'IMPORTANT — questions with different decision outcomes must never be bundled together.',
+    'Wrong: asking "Are you exploring or deciding?" and "What category?" in the same message — each leads to a completely different path.',
+    'Right: ask one question, wait for the answer, then ask the next based on what the user said.',
+    'Only bundle two questions if they are tightly related and share the same option set.',
+    '',
+    'EXPLORE MODE:',
+    'Activates when the user explicitly asks for deeper explanation, methodology, reasoning, or trade-offs.',
+    'Provide structured explanations using short paragraphs. Maintain analytical tone. Do not expand beyond what was asked.',
+    '',
+    '--- CORE BEHAVIOUR ---',
+    'When structured input is required: present small, clearly defined choices as quick reply options. Keep it lightweight and fast.',
+    'Users may select an option or type freely. Treat both equally.',
+    '',
+    '--- FORMATTING RULES ---',
+    'When asking structured questions:',
+    '  - Start with a short calm intro line.',
+    '  - Number questions only if asking more than one (and only when tightly related).',
+    '  - Place each question on its own line.',
+    '  - Place the options directly under the question they belong to.',
+    '',
+    'Example (single question):',
+    '  Where are you in the process?',
+    '  [Exploring options] [Have candidates] [Not sure]',
+    '',
+    'Example (two tightly related questions):',
+    '  Two quick things:',
+    '  1) What market are you targeting?',
+    '  [Local] [National] [Global] [Not sure]',
+    '  2) What is your primary objective?',
+    '  [Awareness] [Consideration] [Sales] [Hospitality] [Not sure]',
+    '',
+    'Option rules: 1-3 words per option. No punctuation. Max 6 options. Include "Not sure" or "Other" where appropriate.',
+    'Default to single select. Only use multi-select when genuinely necessary — if so, include [Continue] and [None of these].',
+    '',
+    '--- CONTEXTUAL FOLLOW-ON LAYER ---',
+    'When the user is viewing or discussing a specific object (driver, team, series, event), anticipate 2-3 logical next questions they may have.',
+    'Present these as optional prompts under a short neutral heading: "You might also want to know:"',
+    '',
+    'Examples for a DRIVER: [Compare to similar drivers] [Regional fan breakdown] [Sponsorship inventory] [Growth trend] [Budget range]',
+    'Examples for a TEAM: [Grid position stability] [Manufacturer backing] [Hospitality footprint] [Digital vs live audience] [Season calendar]',
+    'Examples for a SERIES: [Audience profile] [Geographic strength] [Title sponsor history] [Media rights coverage] [Entry tier comparison]',
+    '',
+    'Rules: offer 2-3 suggestions max. Make them relevant to the object type. Do not repeat previously answered questions.',
+    'These should feel intelligent and anticipatory, not interrogative. Keep them optional, never forced.',
+    '',
+    '--- MOTORSPORT VOCABULARY ---',
+    'Use motorsport terminology naturally where relevant: series, championship, grid, paddock, race weekend, tier, works team, privateer, manufacturer-backed, trackside exposure, hospitality footprint, fanbase density, sponsorship inventory.',
+    'Do not use racing metaphors, fan language, or commentary tone. Maintain analytical clarity at all times.',
+    '',
+    '--- GUARDRAILS ---',
+    'Never present scores as verdicts. Never imply guaranteed outcomes or ROI certainty. Never declare winners in comparisons.',
+    'Never fabricate missing data. Never overstate confidence.',
+    'FanScore reflects audience strength — it is a signal, not a truth, and does not predict ROI.',
+    'FitScore indicates scenario-specific suitability — it is directional, not a valuation.',
+    'When data is limited or volatile: "Data coverage is limited." / "Treat this as directional."',
+    '',
+    'If asked for "the best" property: clarify intent first with a quick reply question, then present a short unranked shortlist with reasoning. Never declare a winner.',
+    'When comparing: highlight trade-offs neutrally. "Property A shows broader reach, while Property B demonstrates deeper engagement."',
+    '',
+    '--- TONE ---',
+    'Calm. Analytical. Neutral. Structured. Light but professional.',
+    'Avoid: over-enthusiasm, sales tone, exclamation marks, emoji, long paragraphs.',
+    'Do not use markdown, bullet points, or em dashes in responses.',
+    '',
+    '--- STRICT DISCIPLINE ---',
+    'Clarity over volume. Structure over personality. Progress over prose. Precision over hype.',
+    '',
+    '--- LIVE DATA CONTEXT ---',
+    'Current dataset: ' + allCards.length + ' properties — ' +
+      (byT.driver||0) + ' drivers, ' + (byT.team||0) + ' teams, ' +
+      (byT.series||0) + ' series, ' + (byT.event||0) + ' events. ' +
+      sup + ' have suppressed 30-day windows (low data coverage). ' +
+      rising + ' showing positive 30-day momentum. ' +
+      (top ? 'Highest FanScore: ' + top.name + ' at ' + fmt(top.s30,1) + '. ' : '') +
+      driversWithTeam + ' drivers have a linked team.',
+    '',
+    '--- TEAM ROSTERS (use IDs with [CMD:show:...]) ---' + teamRoster,
+    '',
+    '--- DRIVER INDEX ---' + driverIndex,
+    '',
+    '--- CARD GRID COMMANDS ---',
+    'To update the card grid, append silent commands at the very end of your response — invisible to the user, consumed by the frontend.',
+    '',
+    '[CMD:show:id1,id2,...] — show ONLY the specific properties with these IDs. Use this when the user asks about specific drivers, a team\'s roster, or any named set of properties. IDs come from the rosters above.',
+    '[CMD:limit:N] — after filtering and sorting, show only the top N cards. Use whenever the user asks for a specific number (e.g. "top 5", "show me 3"). Combine with sort and filter commands. Use [CMD:all] to clear the limit.',
+    '[CMD:all] — clear all filters, limits, and show all properties',
+    '[CMD:filter:driver] — show only drivers (all of them)',
+    '[CMD:filter:team] — show only teams',
+    '[CMD:filter:series] — show only series',
+    '[CMD:filter:event] — show only events',
+    '[CMD:sort:score] — sort by FanScore descending',
+    '[CMD:sort:trend] — sort by 30-day momentum',
+    '[CMD:sort:confidence] — sort by data confidence',
+    '[CMD:top] — top performers only (excludes suppressed)',
+    '[CMD:clean] — exclude suppressed windows',
+    '[CMD:positive] — show only properties with positive 30-day momentum (t30 > 0), sorted by trend. Use this when the user asks for rising/trending/gaining properties.',
+    '[CMD:suppressed] — show only suppressed properties',
+    '',
+    'Examples:',
+    '  "show me the top 5 drivers by momentum" → [CMD:filter:driver][CMD:sort:trend][CMD:limit:5]',
+    '  "show drivers with positive momentum" → [CMD:filter:driver][CMD:positive]',
+    '  "show the 2 drivers for Eclipse" → [CMD:show:driverId1,driverId2]',
+    '  "expand to top 10" → [CMD:filter:driver][CMD:sort:trend][CMD:limit:10]',
+    '  "show everything again" → [CMD:all]',
+    '',
+    'Combine freely. Update the grid proactively. Never mention or explain commands to the user.'
+  ].join('\n');
+}
+
+/* ── Claude API send ──────────────────────────────────────────────────── */
+
+function sendChat() {
+  var input = document.getElementById('cp-input');
+  var q = input.value.trim();
+  if (!q) return;
+
+  addMsg(q, 'user');
+  input.value = '';
+  addTyping();
+
+  conversationHistory.push({ role: 'user', content: q });
+
+  var MAX_ATTEMPTS = 3;
+  var RETRY_DELAYS = [1200, 2500]; /* ms between attempts 1→2 and 2→3 */
+
+  function attempt(n) {
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: buildSystemPrompt(),
+        messages: conversationHistory
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      /* Overloaded / server error — retry if attempts remain */
+      if (data.error) {
+        var retryable = data.error.type === 'overloaded_error' || (data.error.status >= 500);
+        if (retryable && n < MAX_ATTEMPTS) {
+          setTimeout(function() { attempt(n + 1); }, RETRY_DELAYS[n - 1] || 2000);
+          return;
+        }
+        /* Out of retries or non-retryable error */
+        var typing = document.getElementById('typing');
+        if (typing) typing.remove();
+        addMsg('Having trouble connecting right now. Please try again in a moment.', 'ai');
+        console.error('API error after ' + n + ' attempt(s):', data.error);
+        return;
+      }
+
+      var typing = document.getElementById('typing');
+      if (typing) typing.remove();
+
+      var raw = (data.content && data.content[0]) ? data.content[0].text : 'Sorry, something went wrong.';
+
+      /* Extract and execute CMD tags — strip them from display text */
+      var cmds = [];
+      var text = raw.replace(/\[CMD:([^\]]+)\]/g, function(_, cmd) {
+        cmds.push(cmd.trim());
+        return '';
+      }).trim();
+
+      if (cmds.length) executeCmds(cmds);
+
+      conversationHistory.push({ role: 'assistant', content: raw });
+      addMsg(text, 'ai');
+    })
+    .catch(function(err) {
+      /* Network / fetch failure — retry if attempts remain */
+      if (n < MAX_ATTEMPTS) {
+        setTimeout(function() { attempt(n + 1); }, RETRY_DELAYS[n - 1] || 2000);
+        return;
+      }
+      var typing = document.getElementById('typing');
+      if (typing) typing.remove();
+      addMsg('Having trouble connecting right now. Please try again in a moment.', 'ai');
+      console.error('Fetch error after ' + n + ' attempt(s):', err);
+    });
+  }
+
+  attempt(1);
+}
+
+/* ── Init ─────────────────────────────────────────────────────────────── */
+(function init(){
+  loadGrid()
+    .then(function(cards){
+      allCards=cards;
+      document.getElementById('page-meta').textContent=
+        cards.length+' properties \u00B7 model '+MODEL
+        +' \u00B7 as of '+(cards[0]&&cards[0].asOf?cards[0].asOf:'--');
+      renderGrid(activeFilter);
+    })
+    .catch(function(err){
+      document.getElementById('card-grid').innerHTML=
+        '<div class="state-msg" style="color:var(--negative)"><strong>Error loading data</strong><br>'+err.message+'</div>';
+      document.getElementById('page-meta').textContent='Connection error';
+    });
+
+  /* Open chat by default */
+  openChat();
+
+  /* Card action buttons — watchlist / compare / portfolio */
+  document.getElementById('card-grid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.card-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    btn.classList.toggle('active');
+  });
+
+  /* Chat bottom fade — show only when content is hidden below */
+  var cpMsgs = document.getElementById('cp-msgs');
+  var cpFade = document.getElementById('cp-fade-bottom');
+  function updateBottomFade() {
+    var atBottom = cpMsgs.scrollHeight - cpMsgs.scrollTop - cpMsgs.clientHeight < 8;
+    cpFade.classList.toggle('visible', !atBottom);
+  }
+  cpMsgs.addEventListener('scroll', updateBottomFade);
+
+  /* Grid bottom fade — always visible */
+  document.getElementById('grid-fade-bottom').classList.add('visible');
+
+  /* Recalculate masonry on window resize */
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    if (activeLayout !== 'masonry') return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layoutMasonry, 80);
+  });
+})();
+
+</script>
+</body>
+</html>

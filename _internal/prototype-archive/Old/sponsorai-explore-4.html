@@ -1,0 +1,2846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f9f9f8;
+    --surface: #ffffff;
+    --surface-alt: #f4f4f2;
+    --border: #e8e8e4;
+    --border-strong: #d0d0ca;
+    --text-primary: #0f0f0e;
+    --text-secondary: #5c5c58;
+    --text-tertiary: #9c9c96;
+    --accent: #e8521a;
+    --accent-soft: #fdf1eb;
+    --accent-hover: #d44614;
+    --green: #1a8a4a;
+    --green-soft: #edf7f2;
+    --blue: #1a5ce8;
+    --blue-soft: #edf2fd;
+    --amber: #b87010;
+    --amber-soft: #fdf6eb;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --nav-h: 58px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── FLOATING TOP BAR ── */
+
+  /*
+   * Layout strategy: pill is a flex row with three zones:
+   *   [left: shrink-0] [search-area: flex 1, width 0→auto] [right: shrink-0]
+   * Width grows by the search area expanding — right cluster never moves.
+   * We animate max-width on .ftb-search-area (not on the pill itself)
+   * to avoid any reflow on siblings.
+   */
+
+  .ftb {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 200;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    padding: 0 6px 0 10px;
+    /* pill width is driven entirely by its children — no transition here */
+  }
+
+  /*
+   * Contextual focus halo — driven by state classes on .ftb
+   * .search-active  → cool blue tint  (search open / input focused)
+   * .menu-active    → neutral grey     (menu open / focused)
+   * :focus-within   → neutral fallback (any other keyboard focus)
+   * No animation — appears and disappears instantly.
+   * Ring thickness: 3px across all states for visual consistency.
+   */
+  .ftb:focus-within {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 3px rgba(0,0,0,0.08);
+  }
+
+  /* Search active: cooler muted-blue tint */
+  .ftb.search-active {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 3px rgba(26,92,232,0.14);
+  }
+
+  /* Menu active: neutral grey tint */
+  .ftb.menu-active {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 3px rgba(0,0,0,0.09);
+  }
+
+  /* Left cluster — never moves */
+  .ftb-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .ftb-icon-mark {
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .ftb-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    /* label must never shift — it's outside the search area */
+  }
+
+  /*
+   * Search area: collapsed = max-width 0, expanded = max-width 480px.
+   * Overflow hidden so content clips cleanly during transition.
+   * expand: 180ms ease-out  |  collapse: 140ms ease-in
+   */
+  .ftb-search-area {
+    overflow: hidden;
+    max-width: 0;
+    /* expand timing (will be overridden on collapse via .ftb-collapsing) */
+    transition:
+      max-width 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .ftb-search-area.is-open {
+    max-width: 480px;
+  }
+
+  /* Collapse uses faster ease-in */
+  .ftb-search-area.is-collapsing {
+    transition:
+      max-width 140ms cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  /* Inner wrapper keeps a fixed comfortable width inside the clipping box */
+  .ftb-search-inner {
+    width: 340px;
+    max-width: calc(100vw - 200px);
+    display: flex;
+    align-items: center;
+    padding: 0 4px 0 12px;
+    position: relative;
+    /* Input reveal: opacity + tiny translateY */
+    opacity: 0;
+    transform: translateY(2px);
+    transition:
+      opacity 120ms ease-out 40ms,
+      transform 120ms ease-out 40ms;
+    pointer-events: none;
+  }
+
+  .ftb-search-area.is-open .ftb-search-inner {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* On collapse, hide input immediately — no linger */
+  .ftb-search-area.is-collapsing .ftb-search-inner {
+    opacity: 0;
+    transform: translateY(1px);
+    transition: opacity 80ms ease-in, transform 80ms ease-in;
+    pointer-events: none;
+  }
+
+  .ftb-search-input {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: -0.01em;
+    color: #1c1c1a;
+    caret-color: #5a7fd4;
+    padding: 10px 32px 10px 0;  /* top/bottom centers within pill; right clears X button */
+  }
+
+  .ftb-search-input::placeholder {
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #a8a8a2;
+  }
+
+  .ftb-search-input::selection {
+    background: rgba(90,127,212,0.14);
+    color: inherit;
+  }
+
+  /* Clear (X) button — absolutely positioned inside search inner */
+  .ftb-clear-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: none;          /* shown via JS when input has text */
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 100ms ease-out, color 100ms ease-out;
+    flex-shrink: 0;
+  }
+
+  .ftb-clear-btn.visible { display: flex; }
+  .ftb-clear-btn:hover { background: rgba(0,0,0,0.06); color: var(--text-secondary); }
+
+  /* Expand the hit target without affecting layout */
+  .ftb-clear-btn::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  /* Right cluster — flex-shrink 0, always pinned to right edge */
+  .ftb-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  /*
+   * Icon buttons
+   * hover: 120ms ease-out background tint
+   * press: background darkens + 1px down nudge for 80ms
+   * focus: soft ring, no animation
+   */
+  .ftb-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 120ms ease-out;
+  }
+
+  .ftb-btn:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--text-primary);
+  }
+
+  .ftb-btn:active {
+    background: rgba(0,0,0,0.09);
+    transform: translateY(1px);
+    transition: background 80ms ease-out, transform 80ms ease-out;
+  }
+
+  /* Focus ring handled by .ftb:focus-within halo above */
+  .ftb-btn:focus-visible {
+    outline: none;
+  }
+
+  .ftb-btn.active {
+    background: rgba(0,0,0,0.06);
+    color: var(--text-primary);
+  }
+
+  /* ── DROPDOWN MENU ── */
+
+  /*
+   * We avoid display:none toggling (kills close animation).
+   * Instead: always rendered, visibility + pointer-events toggled.
+   * Open:  opacity 0→1 + translateY 4px→0, 120ms ease-out
+   * Close: opacity 1→0 + translateY 0→2px, 100ms ease-in
+   */
+  .ftb-menu-anchor {
+    position: relative;
+  }
+
+  .ftb-menu {
+    position: fixed;
+    top: calc(24px + 48px + 6px);
+    left: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    /* Prefer border-first: tight shadow */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    min-width: 210px;
+    padding: 6px;
+    z-index: 300;
+    /* Closed state */
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    /* Close transition (default) */
+    transition:
+      opacity 100ms cubic-bezier(0.4, 0, 1, 1),
+      transform 100ms cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  /* Open state */
+  .ftb-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    /* Open transition */
+    transition:
+      opacity 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .ftb-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 120ms ease-out;
+    gap: 12px;
+    user-select: none;
+  }
+
+  .ftb-menu-item:hover { background: rgba(0,0,0,0.04); }
+  .ftb-menu-item:active { background: rgba(0,0,0,0.07); }
+  .ftb-menu-item.active-route { font-weight: 500; }
+
+  .ftb-menu-item.disabled {
+    color: var(--text-tertiary);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .ftb-menu-soon {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 1px 7px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .ftb-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 2px;
+  }
+
+  /* ── REDUCED MOTION: instant state changes, no transitions ── */
+  @media (prefers-reduced-motion: reduce) {
+    .ftb-search-area,
+    .ftb-search-area.is-collapsing,
+    .ftb-search-inner,
+    .ftb-search-area.is-collapsing .ftb-search-inner,
+    .ftb-divider,
+    .ftb-btn,
+    .ftb-btn:active,
+    .ftb-menu,
+    .ftb-menu.open,
+    .ftb-menu-item {
+      transition: none !important;
+      animation: none !important;
+    }
+    /* Ensure states still work, just without motion */
+    .ftb-search-area { max-width: 0; }
+    .ftb-search-area.is-open { max-width: 480px; }
+    .ftb-search-inner { opacity: 0; transform: none; }
+    .ftb-search-area.is-open .ftb-search-inner { opacity: 1; }
+    .ftb-menu { opacity: 0; transform: none; pointer-events: none; }
+    .ftb-menu.open { opacity: 1; pointer-events: auto; }
+  }
+
+  /* ── PAGE ── */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 96px 28px 64px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+  }
+
+  .page-subtitle {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ── FILTERS ── */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-pill {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 99px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .filter-pill:hover { border-color: var(--accent); color: var(--text-primary); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 500; }
+
+  .filter-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-strong);
+    margin: 0 4px;
+  }
+
+  /* ── PROPERTY IN FOCUS ── */
+  .focus-section {
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .section-label-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .section-label-badge {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(232,82,26,0.2);
+    border-radius: 99px;
+    padding: 1px 7px;
+  }
+
+  .focus-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.2s;
+    animation: fadeRise 0.4s ease both;
+  }
+
+  .focus-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+
+  .focus-image {
+    position: relative;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px;
+  }
+
+  .focus-image-inner {
+    /* Simulated sport hero visual */
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 60% 40%, rgba(232,82,26,0.25) 0%, transparent 60%),
+      linear-gradient(160deg, #0d1b2a 0%, #1a3a5c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    opacity: 0.6;
+  }
+
+  .focus-overlay {
+    position: relative;
+    z-index: 1;
+  }
+
+  .focus-category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 10px;
+    backdrop-filter: blur(4px);
+  }
+
+  .focus-property-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+  }
+
+  .focus-property-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 3px;
+  }
+
+  .focus-content {
+    padding: 28px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .focus-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .focus-insight {
+    flex: 1;
+  }
+
+  .focus-insight-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .focus-insight-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 380px;
+  }
+
+  .focus-insight-text strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .fanscore-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    min-width: 88px;
+    flex-shrink: 0;
+    margin-left: 20px;
+  }
+
+  .fanscore-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+
+  .fanscore-value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .fanscore-trend {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .focus-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .focus-metric {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .focus-metric-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .focus-metric-value {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .focus-metric-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .focus-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── MINI SPARKLINE ── */
+  .sparkline {
+    display: block;
+  }
+
+  /* ── ROW SECTION ── */
+  .row-section {
+    margin-bottom: 36px;
+    animation: fadeRise 0.4s ease both;
+  }
+
+  .row-section:nth-child(2) { animation-delay: 0.05s; }
+  .row-section:nth-child(3) { animation-delay: 0.1s; }
+  .row-section:nth-child(4) { animation-delay: 0.15s; }
+
+  .row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .row-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .row-count {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+
+  .row-show-all {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.15s;
+  }
+
+  .row-show-all:hover { color: var(--accent); }
+
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  /* ── PROPERTY CARD ── */
+  .prop-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+    position: relative;
+    animation: fadeRise 0.35s ease both;
+  }
+
+  .prop-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+  }
+
+  .prop-card-hero {
+    height: 110px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prop-card-hero-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+
+  .hero-f1   { background: linear-gradient(135deg, #1a0a2e 0%, #3d1a6e 100%); }
+  .hero-moto { background: linear-gradient(135deg, #0a1628 0%, #1a3a6e 100%); }
+  .hero-epl  { background: linear-gradient(135deg, #0a1e0a 0%, #1a4a1e 100%); }
+  .hero-golf { background: linear-gradient(135deg, #0a1a12 0%, #1a3a2a 100%); }
+  .hero-nfl  { background: linear-gradient(135deg, #1a0a0a 0%, #4a1a1a 100%); }
+  .hero-rugby{ background: linear-gradient(135deg, #1a100a 0%, #4a2a0a 100%); }
+  .hero-ten  { background: linear-gradient(135deg, #0a1620 0%, #0a3050 100%); }
+  .hero-cric { background: linear-gradient(135deg, #1c1a0a 0%, #3a380a 100%); }
+
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.3;
+  }
+
+  .prop-category-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(4px);
+    border-radius: 99px;
+    padding: 2px 8px;
+  }
+
+  .prop-seeking-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--green);
+    background: rgba(26,138,74,0.15);
+    border: 1px solid rgba(26,138,74,0.3);
+    backdrop-filter: blur(4px);
+    border-radius: 99px;
+    padding: 2px 8px;
+  }
+
+  .prop-card-body {
+    padding: 14px;
+  }
+
+  .prop-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .prop-card-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .meta-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    display: inline-block;
+  }
+
+  .prop-card-scores {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .score-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .score-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+  }
+
+  .score-value {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .score-trend {
+    font-size: 11px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .trend-up { color: var(--green); }
+  .trend-down { color: #d44614; }
+  .trend-flat { color: var(--text-tertiary); }
+
+  .sparkline-wrap {
+    width: 64px;
+    height: 32px;
+  }
+
+  .prop-card-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .card-btn {
+    font-family: var(--font);
+    font-size: 11.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-secondary);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .card-btn:hover { background: var(--surface-alt); color: var(--text-primary); border-color: var(--border-strong); }
+
+  .card-btn.watching { background: var(--blue-soft); border-color: rgba(26,92,232,0.25); color: var(--blue); }
+  .card-btn.shortlisted { background: var(--accent-soft); border-color: rgba(232,82,26,0.25); color: var(--accent); }
+  .card-btn.compare { background: var(--surface-alt); }
+
+  .card-btn-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ── DRAG HINT ── */
+  .drag-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: 22px;
+    font-size: 12.5px;
+    color: var(--text-tertiary);
+  }
+
+  /* ── SIDEBAR ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 28px;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar-widget {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+  }
+
+  .sidebar-widget-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .watchlist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .watchlist-item:last-child { border-bottom: none; }
+  .watchlist-item:hover { opacity: 0.75; }
+
+  .watchlist-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .watchlist-info { flex: 1; min-width: 0; }
+
+  .watchlist-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .watchlist-sub {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  .watchlist-score {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+
+  .sidebar-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-stat:last-child { border-bottom: none; }
+
+  .sidebar-stat-label {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  .sidebar-stat-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .sidebar-stat-trend {
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeRise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .cards-row { grid-template-columns: repeat(2, 1fr); }
+    .focus-card { grid-template-columns: 1fr; }
+    .focus-metrics { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 540px) {
+    .cards-row { grid-template-columns: 1fr; }
+    nav { padding: 0 16px; gap: 16px; }
+    .nav-links { display: none; }
+  }
+
+  /* SVG inline sparklines */
+  .spark-svg { overflow: visible; }
+
+  /* ── CARD: clickable ── */
+  .prop-card {
+    cursor: pointer;
+  }
+
+  /* ── CARD FRONT: icon-only actions ── */
+  .card-icon-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px 12px;
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover { color: var(--text-primary); background: var(--surface-alt); }
+  .icon-btn.active-watch { color: var(--blue); background: var(--blue-soft); border-color: rgba(26,92,232,0.25); }
+  .icon-btn.active-short { color: var(--accent); background: var(--accent-soft); border-color: rgba(232,82,26,0.25); }
+  .icon-btn.active-compare { color: var(--amber); background: var(--amber-soft); border-color: rgba(184,112,16,0.25); }
+
+  /* ── DETAIL MODAL ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,14,0.45);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    transform: translateY(12px);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-backdrop.open .modal {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal-backdrop, .modal { transition: none; }
+  }
+
+  .modal-hero {
+    height: 140px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 18px 20px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    overflow: hidden;
+  }
+
+  .modal-hero-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    opacity: 0.55;
+  }
+
+  .modal-hero-overlay { position: relative; z-index: 1; }
+
+  .modal-hero-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .modal-hero-sub {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 99px;
+    background: rgba(0,0,0,0.3);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background 0.15s;
+    z-index: 2;
+  }
+
+  .modal-close:hover { background: rgba(0,0,0,0.5); }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-section {
+    margin-bottom: 18px;
+  }
+
+  .modal-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-tertiary);
+    margin-bottom: 7px;
+  }
+
+  .modal-insight-text {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .modal-scores {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .modal-score-card {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+
+  .modal-score-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+  }
+
+  .modal-score-val {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .modal-score-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 3px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+  .modal-action-btn {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .modal-action-btn:hover { background: var(--surface-alt); color: var(--text-primary); }
+  /* ── TYPEAHEAD POPOVER ── */
+  .ftb-popover {
+    position: fixed;
+    top: calc(24px + 48px + 8px);  /* pill top + pill height + offset */
+    left: 24px;
+    z-index: 201;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    padding: 6px;
+    width: 420px;
+    max-width: calc(100vw - 48px);
+    /* Closed state */
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1),
+                transform 120ms cubic-bezier(0.2,0.8,0.2,1);
+  }
+
+  .ftb-popover.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1),
+                transform 120ms cubic-bezier(0.2,0.8,0.2,1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ftb-popover, .ftb-popover.open { transition: none; }
+  }
+
+  .ftb-popover-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 100ms ease-out;
+    text-decoration: none;
+  }
+
+  .ftb-popover-row:hover,
+  .ftb-popover-row.is-active {
+    background: rgba(0,0,0,0.04);
+  }
+
+  .ftb-popover-row.is-active {
+    background: rgba(0,0,0,0.06);
+  }
+
+  /* Sport emoji thumb */
+  .ftb-popover-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+  }
+
+  .ftb-popover-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ftb-popover-name {
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 18px;
+  }
+
+  /* Highlight matched characters */
+  .ftb-popover-name mark {
+    background: none;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgba(26,92,232,0.35);
+    text-underline-offset: 2px;
+  }
+
+  .ftb-popover-meta {
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 16px;
+    margin-top: 1px;
+  }
+
+  .ftb-popover-score {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  /* Empty / system rows */
+  .ftb-popover-empty {
+    padding: 10px 12px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+
+  .ftb-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 10px 4px;
+    margin-top: 2px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border-radius: 0 0 9px 9px;
+    transition: background 100ms ease-out;
+  }
+
+  .ftb-popover-footer:hover { background: rgba(0,0,0,0.03); color: var(--text-secondary); }
+  .ftb-popover-footer.is-active { background: rgba(0,0,0,0.05); }
+</style>
+</head>
+<body>
+
+<!-- FLOATING TOP BAR -->
+<div class="ftb" id="ftb" role="banner">
+
+  <!-- Left: logo + label -->
+  <div class="ftb-left">
+    <div class="ftb-icon-mark" aria-hidden="true">
+      <!-- Sparkle / radar icon -->
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/>
+        <circle cx="8" cy="8" r="2.5"/>
+      </svg>
+    </div>
+    <span class="ftb-label">SponsorAI</span>
+  </div>
+
+  <!-- Expanding search area (grows between left and right) -->
+  <div class="ftb-search-area" id="ftb-search-area">
+    <div class="ftb-search-inner" id="ftb-search-inner">
+      <input
+        class="ftb-search-input"
+        id="ftb-search-input"
+        type="text"
+        placeholder="Search properties…"
+        aria-label="Search properties"
+        autocomplete="off"
+      >
+      <button class="ftb-clear-btn" id="ftb-clear-btn" aria-label="Clear search" tabindex="-1">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M1 1l8 8M9 1L1 9"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: search + menu -->
+  <div class="ftb-right">
+    <button class="ftb-btn" id="ftb-search-btn" aria-label="Search" title="Search">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5L14 14"/>
+      </svg>
+    </button>
+
+    <div class="ftb-menu-anchor">
+      <button class="ftb-btn" id="ftb-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <path d="M2 4h12M2 8h12M2 12h12"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div class="ftb-menu" id="ftb-menu" role="menu">
+        <a class="ftb-menu-item active-route" href="#" role="menuitem">Explore</a>
+        <a class="ftb-menu-item" href="#" role="menuitem">Browse All Properties</a>
+        <div class="ftb-menu-divider"></div>
+        <a class="ftb-menu-item" href="#" role="menuitem">Portfolio</a>
+        <a class="ftb-menu-item" href="#" role="menuitem">Watchlist</a>
+        <a class="ftb-menu-item" href="#" role="menuitem">Compare</a>
+        <div class="ftb-menu-divider"></div>
+        <span class="ftb-menu-item disabled" role="menuitem" aria-disabled="true">
+          Opportunities
+          <span class="ftb-menu-soon">Soon</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TYPEAHEAD POPOVER -->
+<div class="ftb-popover" id="ftb-popover" role="listbox" aria-label="Search results"></div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Explore</div>
+      <div class="page-subtitle">Discover sponsorship properties across sport and entertainment</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:12px;color:var(--text-tertiary);font-family:var(--mono);">1,284 properties</span>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <span class="filter-label">Sport</span>
+    <button class="filter-pill active" data-group="sport" data-value="all">All</button>
+    <button class="filter-pill" data-group="sport" data-value="Motorsport">🏎 Motorsport</button>
+    <button class="filter-pill" data-group="sport" data-value="Football">⚽ Football</button>
+    <button class="filter-pill" data-group="sport" data-value="Rugby">🏉 Rugby</button>
+    <button class="filter-pill" data-group="sport" data-value="Tennis">🎾 Tennis</button>
+    <button class="filter-pill" data-group="sport" data-value="Cricket">🏏 Cricket</button>
+    <button class="filter-pill" data-group="sport" data-value="Golf">⛳ Golf</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Type</span>
+    <button class="filter-pill active" data-group="cat" data-value="all">All</button>
+    <button class="filter-pill" data-group="cat" data-value="Team">Team</button>
+    <button class="filter-pill" data-group="cat" data-value="Driver">Individual</button>
+    <button class="filter-pill" data-group="cat" data-value="Event">Event</button>
+    <button class="filter-pill" data-group="cat" data-value="Series">Series</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Status</span>
+    <button class="filter-pill active" data-group="seeking" data-value="all">All</button>
+    <button class="filter-pill" data-group="seeking" data-value="seeking">Seeking sponsorship</button>
+    <div class="filter-divider"></div>
+    <button class="filter-pill" id="clear-filters-btn" style="display:none;color:var(--accent);border-color:rgba(232,82,26,0.3);">
+      ✕ Clear filters
+    </button>
+  </div>
+
+  <!-- ACTIVE FILTER SUMMARY -->
+  <div id="filter-summary" style="display:none;margin-bottom:16px;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">
+    <span id="filter-summary-text"></span>
+  </div>
+
+  <!-- DRAG HINT -->
+  <div class="drag-hint">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0"><path d="M5 1v12M9 1v12M1 5h12M1 9h12"/></svg>
+    Drag cards directly to Watchlist, Shortlist or Compare — or use the buttons on each card
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+    <div class="main-content">
+
+      <!-- PROPERTY IN FOCUS -->
+      <div class="focus-section">
+        <div class="section-label">
+          <span class="section-label-text">Property in Focus</span>
+          <span class="section-label-badge">Updated weekly</span>
+        </div>
+
+        <div class="focus-card">
+          <div class="focus-image">
+            <div class="focus-image-inner">🏎</div>
+            <div class="focus-overlay">
+              <div class="focus-category-tag">
+                🏎 Motorsport · Driver
+              </div>
+              <div class="focus-property-name">Lando Norris</div>
+              <div class="focus-property-sub">McLaren F1 · Global</div>
+            </div>
+          </div>
+
+          <div class="focus-content">
+            <div class="focus-top">
+              <div class="focus-insight">
+                <div class="focus-insight-label">Analytical insight</div>
+                <div class="focus-insight-text">
+                  <strong>30-day engagement growth of +18.4%</strong>, driven by sustained 
+                  podium finishes and expanding social media reach across younger demographics. 
+                  Audience composition shows strong crossover with technology and lifestyle verticals.
+                </div>
+              </div>
+
+              <div class="fanscore-badge">
+                <div class="fanscore-label">FanScore</div>
+                <div class="fanscore-value">84</div>
+                <div class="fanscore-trend">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 7L5 3l3 4"/></svg>
+                  +3.2
+                </div>
+              </div>
+            </div>
+
+            <div class="focus-metrics">
+              <div class="focus-metric">
+                <div class="focus-metric-label">Total Followers</div>
+                <div class="focus-metric-value">12.4M</div>
+                <div class="focus-metric-sub">Across platforms</div>
+              </div>
+              <div class="focus-metric">
+                <div class="focus-metric-label">Engagement Rate</div>
+                <div class="focus-metric-value">4.8%</div>
+                <div class="focus-metric-sub">30-day avg</div>
+              </div>
+              <div class="focus-metric">
+                <div class="focus-metric-label">Growth</div>
+                <div class="focus-metric-value">+18.4%</div>
+                <div class="focus-metric-sub">vs prior period</div>
+              </div>
+            </div>
+
+            <div class="focus-actions">
+              <button class="card-btn watching" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>
+                Watching
+              </button>
+              <button class="card-btn" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 6h8M6 2v8"/></svg>
+                Shortlist
+              </button>
+              <button class="card-btn" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                View detail →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTERED GRID VIEW (shown when filters active) -->
+      <div id="filtered-view" style="display:none;">
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title" id="filtered-title">Filtered results <span class="row-count" id="filtered-count"></span></div>
+            <button id="filtered-clear" class="row-show-all" style="background:none;border:none;cursor:pointer;font-family:var(--font);">Clear filters</button>
+          </div>
+          <div id="filtered-grid" class="cards-row" style="grid-template-columns:repeat(4,1fr);"></div>
+          <div id="filtered-empty" style="display:none;padding:40px 0;text-align:center;">
+            <div style="font-size:28px;margin-bottom:12px;">🔍</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:6px;">No properties match these filters</div>
+            <div style="font-size:13px;color:var(--text-tertiary);">Try adjusting your sport, type, or status selection</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEFAULT ROW VIEW -->
+      <div id="default-view">
+
+        <!-- ROW: Strong Momentum -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Strong Audience Momentum
+              <span class="row-count" id="count-momentum"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="momentum">Show all →</a>
+          </div>
+          <div class="cards-row" id="momentum-row"></div>
+        </div>
+
+        <!-- ROW: Seeking Sponsorship -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Actively Seeking Sponsorship
+              <span class="row-count" id="count-seeking"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="seeking">Show all →</a>
+          </div>
+          <div class="cards-row" id="seeking-row"></div>
+        </div>
+
+        <!-- ROW: Motorsport -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Motorsport
+              <span class="row-count" id="count-motorsport"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="motorsport">Show all →</a>
+          </div>
+          <div class="cards-row" id="motorsport-row"></div>
+        </div>
+
+        <!-- ROW: Football -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Football
+              <span class="row-count" id="count-football"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="football">Show all →</a>
+          </div>
+          <div class="cards-row" id="football-row"></div>
+        </div>
+
+        <!-- ROW: Rugby, Tennis, Cricket, Golf -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Rugby, Tennis &amp; Cricket
+              <span class="row-count" id="count-other"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="other">Show all →</a>
+          </div>
+          <div class="cards-row" id="other-row"></div>
+        </div>
+
+      </div>
+
+    </div><!-- /main-content -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">
+          My Watchlist
+          <a href="#" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;text-transform:none;letter-spacing:0;">View all</a>
+        </div>
+        <div id="watchlist-items"></div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">Market Snapshot</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Properties tracked</span>
+          <span class="sidebar-stat-value">1,284</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Seeking sponsorship</span>
+          <span class="sidebar-stat-value">23 <span class="sidebar-stat-trend" style="font-size:11px;">↑ 4</span></span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Avg FanScore (F1)</span>
+          <span class="sidebar-stat-value">71.2</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Avg FanScore (EPL)</span>
+          <span class="sidebar-stat-value">68.8</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Data last updated</span>
+          <span class="sidebar-stat-value" style="font-size:11px;color:var(--text-tertiary);">Today, 06:00</span>
+        </div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">Geography</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🇬🇧 United Kingdom</span>
+          <span class="sidebar-stat-value">342</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🇪🇺 Europe</span>
+          <span class="sidebar-stat-value">487</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🌍 Global</span>
+          <span class="sidebar-stat-value">218</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🌎 Americas</span>
+          <span class="sidebar-stat-value">237</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- DETAIL MODAL -->
+<div class="modal-backdrop" id="detail-modal" role="dialog" aria-modal="true" aria-label="Property detail">
+  <div class="modal" id="modal-inner">
+    <div class="modal-hero" id="modal-hero">
+      <div class="modal-hero-inner" id="modal-hero-emoji"></div>
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      <div class="modal-hero-overlay">
+        <div class="modal-hero-name" id="modal-name"></div>
+        <div class="modal-hero-sub" id="modal-sub"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-label">Analytical insight</div>
+        <div class="modal-insight-text" id="modal-insight"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-label">FanScore snapshot</div>
+        <div class="modal-scores" id="modal-scores"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const properties = [
+  { id:1,  name:'Red Bull Racing',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:91, trend:+1.2, delta:'+1.2', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Sustained dominance with consistent engagement across global markets.',
+    insightFull:  'Red Bull Racing maintains the highest FanScore in Motorsport, driven by sustained championship performance and a highly engaged global social audience. Engagement metrics have held steady across the past 90 days with no anomaly flags. Audience skew is male 18–34, with strong crossover to energy drink and technology verticals.' },
+  { id:2,  name:'Mercedes AMG F1',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:87, trend:+0.8, delta:'+0.8', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Stable audience base with broad geographic reach across Europe and Americas.',
+    insightFull:  'Mercedes AMG F1 shows a stable, broad-based audience with strong presence in European and North American markets. Engagement growth is modest but consistent. Audience profile is well-suited to premium automotive, financial services, and technology sponsors seeking global reach.' },
+  { id:3,  name:'Max Verstappen',        sport:'Motorsport', cat:'Driver', geo:'Global',  score:89, trend:-0.4, delta:'-0.4', dir:'down', emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Slight 30-day dip following off-season. Core audience base remains strong.',
+    insightFull:  'Verstappen shows a minor FanScore dip of -0.4 over 30 days, consistent with off-season engagement patterns. Core follower base remains substantial and highly loyal. This dip appears seasonal rather than structural. Trend stability over 90 days remains high.' },
+  { id:4,  name:'Ducati MotoGP',         sport:'Motorsport', cat:'Team',   geo:'Europe',  score:76, trend:+2.1, delta:'+2.1', dir:'up',   emoji:'🏍', heroClass:'hero-moto',  seeking:true,
+    insightShort: 'Strong recent growth driven by championship contention. Seeking sponsorship.',
+    insightFull:  'Ducati MotoGP is showing one of the stronger growth trajectories in the Motorsport category over the past 30 days, driven by renewed championship contention. The property is actively seeking sponsorship, with a minimum sponsorship threshold accessible to mid-market brands. Audience skews Southern European and male 25–44.' },
+  { id:5,  name:'Arsenal FC',            sport:'Football',   cat:'Team',   geo:'UK',      score:82, trend:+1.8, delta:'+1.8', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Consistent 30-day growth with a notably engaged younger UK audience.',
+    insightFull:  'Arsenal FC demonstrates consistent 30-day growth of +1.8, underpinned by a strong younger UK audience and an active social presence. The club\'s recent commercial positioning has broadened appeal to lifestyle and tech verticals. Engagement rates are above EPL average.' },
+  { id:6,  name:'Manchester City',       sport:'Football',   cat:'Team',   geo:'Global',  score:88, trend:+0.3, delta:'+0.3', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Largest global football audience in this dataset. Growth is modest but stable.',
+    insightFull:  'Manchester City holds the largest global audience footprint in the Football category within this dataset. Growth is modest at +0.3 but reflects a mature, stable audience rather than a declining one. City\'s commercial portfolio is already extensive; remaining inventory tends to be category-exclusive and premium-priced.' },
+  { id:7,  name:'Rory McIlroy',          sport:'Golf',       cat:'Driver', geo:'Global',  score:74, trend:-0.6, delta:'-0.6', dir:'down', emoji:'⛳', heroClass:'hero-golf',  seeking:true,
+    insightShort: 'Recent dip in engagement. Trend stability is mixed; worth monitoring.',
+    insightFull:  'McIlroy\'s FanScore has declined -0.6 over 30 days following a period of mixed tournament results. The dip appears performance-correlated rather than structural. The property is seeking sponsorship, which may indicate reduced existing commercial commitments. Audience is global, affluent, and skews older than most other properties in this dataset.' },
+  { id:8,  name:'Juventus FC',           sport:'Football',   cat:'Team',   geo:'Europe',  score:80, trend:+1.1, delta:'+1.1', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Solid European audience with strong Italian and South American crossover.',
+    insightFull:  'Juventus FC shows solid, consistent growth driven by a loyal European and South American audience base. Engagement is above Serie A average. The club\'s global following provides reach into markets underserved by UK-centric football properties.' },
+  { id:9,  name:'Aprilia Racing',        sport:'Motorsport', cat:'Team',   geo:'Europe',  score:65, trend:+3.4, delta:'+3.4', dir:'up',   emoji:'🏍', heroClass:'hero-moto',  seeking:true,
+    insightShort: 'Highest 30-day growth rate in Motorsport. Smaller base but strong momentum.',
+    insightFull:  'Aprilia Racing shows the highest 30-day growth rate in the Motorsport category at +3.4, driven by competitive performance and a growing social media strategy. The absolute audience base is smaller than tier-one properties, which may suit brands seeking category exclusivity at accessible budget levels. Seeking sponsorship.' },
+  { id:10, name:'Carlos Sainz',          sport:'Motorsport', cat:'Driver', geo:'Global',  score:78, trend:+0.9, delta:'+0.9', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Steady upward trend with cross-cultural appeal across European markets.',
+    insightFull:  'Carlos Sainz maintains a steady upward FanScore trend with particularly strong engagement in Spanish and Italian-speaking markets. Cross-cultural appeal makes him relevant to brands seeking European reach. Audience is younger-skewing with affinity toward automotive and lifestyle categories.' },
+  { id:11, name:'British & Irish Lions', sport:'Rugby',      cat:'Team',   geo:'UK',      score:72, trend:+2.6, delta:'+2.6', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true,
+    insightShort: 'Tour-driven momentum. Strong recent growth ahead of next Lions series.',
+    insightFull:  'The British & Irish Lions are exhibiting strong FanScore growth ahead of the next Lions tour. The property operates on a cyclical engagement model tied to touring years. This period represents a historically favourable window for sponsorship entry, with audience engagement peaking 12–18 months before a tour. Seeking sponsorship.' },
+  { id:12, name:'Carlos Alcaraz',        sport:'Tennis',     cat:'Driver', geo:'Global',  score:81, trend:+4.1, delta:'+4.1', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Highest FanScore growth in Tennis. Young, global audience with strong engagement.',
+    insightFull:  'Carlos Alcaraz records the highest FanScore growth rate in the Tennis category at +4.1 over 30 days. His audience is notably younger than most tennis properties (core 16–28), highly engaged, and genuinely global. Crossover appeal to lifestyle, fashion, and technology brands is strong. Considered a high-momentum property.' },
+  { id:13, name:'England Cricket',       sport:'Cricket',    cat:'Team',   geo:'UK',      score:69, trend:+1.3, delta:'+1.3', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:true,
+    insightShort: 'Steady growth with a loyal, established UK audience. Seeking sponsorship.',
+    insightFull:  'England Cricket shows steady, consistent growth driven by a loyal established UK audience. Engagement tends to spike around major series (Ashes, World Cups) and has held above baseline between events. The property is seeking sponsorship; audience demographics align well with financial services and insurance categories.' },
+  { id:14, name:'Haas F1 Team',          sport:'Motorsport', cat:'Team',   geo:'Global',  score:61, trend:+2.8, delta:'+2.8', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:true,
+    insightShort: 'Strong growth for a lower-tier F1 property. Good entry point for new sponsors.',
+    insightFull:  'Haas F1 Team shows notable growth of +2.8 for a mid-grid F1 property. FanScore growth may reflect driver fanbase transfer rather than team-specific momentum. The property is actively seeking sponsorship and offers F1 positioning at a more accessible budget level than front-running teams. Category exclusivity is likely available.' },
+  { id:15, name:'Tottenham Hotspur',     sport:'Football',   cat:'Team',   geo:'UK',      score:77, trend:-0.2, delta:'-0.2', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Marginal 30-day dip. Audience base is stable; trend appears results-driven.',
+    insightFull:  'Tottenham Hotspur shows a marginal FanScore dip of -0.2, consistent with a period of mixed on-pitch results. The audience base itself is stable and large. This dip does not indicate a structural trend. Spurs have a strong commercial profile and a well-established global fan base with particularly good reach in Asia.' },
+  { id:16, name:'Aston Martin F1',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:75, trend:+1.7, delta:'+1.7', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Consistent growth reflecting investment in team and driver profile.',
+    insightFull:  'Aston Martin F1 has shown consistent FanScore growth reflecting both increased on-track competitiveness and a significant uplift in driver fanbase. Audience skews premium and aligns well with luxury automotive, financial services, and lifestyle brands.' },
+  { id:17, name:'Saracens Rugby',        sport:'Rugby',      cat:'Team',   geo:'UK',      score:63, trend:+1.4, delta:'+1.4', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true,
+    insightShort: 'Steady UK club rugby growth. Strong local audience, seeking sponsorship.',
+    insightFull:  'Saracens Rugby shows steady growth within the UK club rugby segment. Audience is predominantly UK-based and demonstrates above-average engagement for domestic club properties. The club is seeking sponsorship; the audience profile aligns with financial services and premium consumer brands targeting ABC1 UK demographics.' },
+  { id:18, name:'Iga Swiatek',           sport:'Tennis',     cat:'Driver', geo:'Global',  score:79, trend:+2.2, delta:'+2.2', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Strong and consistent growth. One of the most engaged audiences in Women\'s Tennis.',
+    insightFull:  'Iga Swiatek delivers one of the strongest audience engagement profiles in Women\'s Tennis, with consistent FanScore growth of +2.2 over 30 days. Her audience is notably international with strong representation across Europe and the Americas. Brand alignment potential is high for sports, lifestyle, and female-skewing consumer categories.' },
+  { id:19, name:'Surrey Cricket',        sport:'Cricket',    cat:'Team',   geo:'UK',      score:58, trend:+0.8, delta:'+0.8', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:true,
+    insightShort: 'Modest but stable growth. Strong regional UK profile, seeking sponsorship.',
+    insightFull:  'Surrey Cricket shows modest but stable growth, with a concentrated audience base in the South East of England. The property is seeking sponsorship. This is a regional entry-point proposition with strong community alignment, suited to brands targeting London and SE England demographics.' },
+  { id:20, name:'Alpine F1 Team',        sport:'Motorsport', cat:'Team',   geo:'Europe',  score:64, trend:+1.9, delta:'+1.9', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:true,
+    insightShort: 'Recovering momentum following driver changes. French audience base is loyal.',
+    insightFull:  'Alpine F1 Team is showing recovering growth following a period of driver-related instability. The French audience base remains loyal and engaged. The team is seeking sponsorship, which reflects a transitional commercial period. Opportunity exists for brands seeking mid-grid F1 positioning with strong European, particularly French, market reach.' },
+  { id:21, name:'Chelsea FC',            sport:'Football',   cat:'Team',   geo:'UK',      score:84, trend:+0.6, delta:'+0.6', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Large, stable global audience. Modest growth reflects a mature commercial base.',
+    insightFull:  'Chelsea FC maintains a large, globally distributed audience with modest but stable growth. The club has undergone significant ownership and squad changes, which has kept audience engagement higher than purely on-pitch performance would suggest. Global reach is strong, particularly in Asia and North America.' },
+  { id:22, name:'Lionel Messi',          sport:'Football',   cat:'Driver', geo:'Global',  score:93, trend:+0.4, delta:'+0.4', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Largest individual FanScore in this dataset. Audience growth is stable and global.',
+    insightFull:  'Lionel Messi holds the highest FanScore of any individual property in this dataset at 93. Audience growth is modest but extremely stable, reflecting a mature fan base of exceptional scale. Global reach is unmatched. Commercial inventory around Messi is limited and competitively sought. Any available association is premium-priced.' },
+  { id:23, name:'Novak Djokovic',        sport:'Tennis',     cat:'Driver', geo:'Global',  score:77, trend:-1.1, delta:'-1.1', dir:'down', emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Decline in 30-day engagement. Trend warrants monitoring over next cycle.',
+    insightFull:  'Djokovic shows a FanScore decline of -1.1 over 30 days. This is the steepest decline in the Tennis category. The decline appears to correlate with reduced tournament activity and some audience sentiment shifts. Longer-term (90-day) trend is less severe. Core audience remains large and globally distributed.' },
+  { id:24, name:'Wimbledon',             sport:'Tennis',     cat:'Event',  geo:'UK',      score:86, trend:+0.9, delta:'+0.9', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Premium event with consistent annual engagement pattern. Highly stable.',
+    insightFull:  'Wimbledon maintains one of the most consistent and premium FanScore profiles in the entire dataset. As an event property, its engagement is inherently cyclical but extremely reliable. Audience skews affluent, British-led with strong international reach. Long-standing sponsorships create limited new-entrant opportunities, but existing slots are highly valuable.' },
+  { id:25, name:'British Grand Prix',    sport:'Motorsport', cat:'Event',  geo:'UK',      score:83, trend:+1.5, delta:'+1.5', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Consistent growth ahead of race weekend. Strong UK and global motorsport audience.',
+    insightFull:  'The British Grand Prix shows consistent FanScore growth of +1.5, reflecting growing anticipation ahead of race weekend activity. Audience is UK-centric with strong global motorsport crossover. Event sponsorship provides a defined, high-visibility window with clear geographic and demographic targeting.' },
+  { id:26, name:'FA Cup',                sport:'Football',   cat:'Series', geo:'UK',      score:79, trend:+0.7, delta:'+0.7', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Stable UK football institution. Broad national audience across all demographics.',
+    insightFull:  'The FA Cup delivers broad national UK reach across all football demographics, with engagement peaking around draw announcements, semi-finals, and the final. As a series property it offers extended visibility across an entire season. Audience skews broadly UK national, making it well-suited to brands seeking mass-market domestic reach.' },
+  { id:27, name:'Six Nations Rugby',     sport:'Rugby',      cat:'Series', geo:'Europe',  score:75, trend:+2.0, delta:'+2.0', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:false,
+    insightShort: 'Growing European audience. Strong engagement spikes around fixture weekends.',
+    insightFull:  'The Six Nations shows strong FanScore growth of +2.0, driven by fixture-weekend engagement spikes across multiple national audiences. The series covers England, Scotland, Wales, Ireland, France, and Italy, providing genuine pan-European reach. Audience profile is broadly male 25–55 with above-average income and strong community affiliation.' },
+  { id:28, name:'The Open Championship', sport:'Golf',       cat:'Event',  geo:'Global',  score:71, trend:+1.2, delta:'+1.2', dir:'up',   emoji:'⛳', heroClass:'hero-golf',  seeking:false,
+    insightShort: 'Consistent annual pattern. Audience skews affluent and global.',
+    insightFull:  'The Open Championship delivers a consistent, premium annual audience pattern. FanScore growth of +1.2 reflects pre-event build-up activity. The event\'s audience is globally distributed, affluent, and well-aligned with luxury goods, financial services, and premium automotive categories. UK hosting provides strong domestic anchor.' },
+  { id:29, name:'The Ashes',             sport:'Cricket',    cat:'Series', geo:'Global',  score:73, trend:+1.6, delta:'+1.6', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:false,
+    insightShort: 'Biennial series with high-intensity engagement windows. Strong UK-Australia reach.',
+    insightFull:  'The Ashes generates high-intensity engagement in its series years, with strong UK and Australian audience representation. FanScore growth of +1.6 reflects a series year build-up. The property provides dual-market reach (UK and Australia) that few other cricket properties can offer. Audience skews male 30–60 with strong national identity affiliation.' },
+  { id:30, name:'Formula E',             sport:'Motorsport', cat:'Series', geo:'Global',  score:68, trend:+3.1, delta:'+3.1', dir:'up',   emoji:'⚡', heroClass:'hero-f1',    seeking:true,
+    insightShort: 'Strong growth driven by sustainability positioning. Young audience, seeking sponsors.',
+    insightFull:  'Formula E is exhibiting strong FanScore growth of +3.1, driven by increasing interest in electric motorsport and sustainability narratives. Audience is notably younger and more urban than traditional motorsport. The series is seeking sponsorship partners and represents a differentiated proposition for brands with sustainability or EV-related positioning.' },
+
+  // ── BATCH 2: 50 additional properties ──
+
+  // 🔥 FLYING HIGH
+  { id:31, name:'Erling Haaland',        sport:'Football',   cat:'Driver', geo:'Global',  score:92, trend:+5.2, delta:'+5.2', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Exceptional 30-day growth — fastest rising individual in Football this period.',
+    insightFull:  'Erling Haaland records the highest FanScore growth of any Football property this period at +5.2. Audience is genuinely global with particular strength in Northern Europe and South America. Engagement rates are notably above peer average, driven by prolific scoring form. Brand alignment is strong across sportswear, technology, and nutrition categories.' },
+
+  { id:32, name:'Jude Bellingham',       sport:'Football',   cat:'Driver', geo:'Global',  score:88, trend:+4.6, delta:'+4.6', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Rapidly expanding global audience. Strong crossover into youth lifestyle verticals.',
+    insightFull:  'Bellingham continues to expand his audience at an exceptional pace, with +4.6 growth over 30 days. His appeal is notably cross-cultural, with strong engagement in UK, Spain, and emerging markets. Audience skews younger than most peers (core 16–26) and shows strong affinity to lifestyle, fashion, and gaming categories.' },
+
+  { id:33, name:'McLaren F1 Team',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:86, trend:+3.8, delta:'+3.8', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Championship contention driving exceptional audience growth. High-momentum property.',
+    insightFull:  'McLaren F1 is one of the standout growth stories in Motorsport, with FanScore growth of +3.8 driven by genuine championship contention and a resurgent team narrative. Audience is global, younger-skewing than the field average, and highly engaged. The team\'s papaya livery has strong visual brand recognition. Sponsorship demand is high.' },
+
+  { id:34, name:'Coco Gauff',            sport:'Tennis',     cat:'Driver', geo:'Global',  score:83, trend:+4.3, delta:'+4.3', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'One of the highest-growth Tennis properties. Young, diverse, global audience.',
+    insightFull:  'Coco Gauff delivers exceptional audience growth at +4.3, the second highest in Tennis. Her audience is notably diverse and younger than most tennis properties, with strong US and global reach. Engagement rates are consistently high. Brand alignment potential spans sportswear, lifestyle, beauty, and technology — one of the most versatile sponsorship profiles in the dataset.' },
+
+  { id:35, name:'Kylian Mbappé',         sport:'Football',   cat:'Driver', geo:'Global',  score:91, trend:+3.2, delta:'+3.2', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Top-tier global reach with exceptional engagement. Audience breadth is unmatched in Football.',
+    insightFull:  'Mbappé maintains one of the largest and most engaged audiences in global football at FanScore 91. Growth of +3.2 reflects sustained performance and a high-profile club move narrative. Audience is broadly global with exceptional reach into French, African, and South American markets. A premium sponsorship property with limited available inventory.' },
+
+  { id:36, name:'Indian Premier League', sport:'Cricket',    cat:'Series', geo:'Global',  score:89, trend:+4.8, delta:'+4.8', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:false,
+    insightShort: 'Fastest growing cricket property in dataset. Enormous and highly engaged Indian audience.',
+    insightFull:  'The IPL records the highest FanScore growth in the Cricket category at +4.8, driven by a massive and deeply engaged Indian audience supplemented by strong diaspora reach globally. The series commands extraordinary broadcast and social viewership. Brand alignment into FMCG, fintech, and mobile categories is particularly strong. Premium-tier property.' },
+
+  { id:37, name:'Liam Lawson',           sport:'Motorsport', cat:'Driver', geo:'Global',  score:72, trend:+5.6, delta:'+5.6', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false,
+    insightShort: 'Highest FanScore growth rate in entire dataset. New F1 seat driving audience surge.',
+    insightFull:  'Liam Lawson records the highest FanScore growth of any property in this dataset at +5.6, driven by a recent full-time F1 race seat and intense fanbase activation from New Zealand and across Asia-Pacific. Absolute audience base is still building but growth trajectory is exceptional. Represents an early-entry opportunity with strong upside.' },
+
+  { id:38, name:'Atletico Madrid',       sport:'Football',   cat:'Team',   geo:'Europe',  score:82, trend:+2.9, delta:'+2.9', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Consistent growth. Strong dual Spanish and South American audience base.',
+    insightFull:  'Atletico Madrid shows consistent, strong growth driven by on-pitch performance and an engaged dual-market audience across Spain and South America. The club\'s identity as a challenger to establishment clubs gives it a distinctive brand personality well-suited to disruptor brands. Engagement rates are above La Liga average.' },
+
+  { id:39, name:'UFC / MMA Global',      sport:'Motorsport', cat:'Series', geo:'Global',  score:84, trend:+3.5, delta:'+3.5', dir:'up',   emoji:'🥊', heroClass:'hero-moto',  seeking:true,
+    insightShort: 'Explosive growth globally. Young, male-skewing audience with high engagement intensity.',
+    insightFull:  'MMA/UFC as a category continues to record exceptional audience growth globally, with this series property showing +3.5 over 30 days. Audience is dominantly male 18–34 with above-average income and high engagement intensity. Geographic reach is genuinely global. The property is seeking sponsorship and offers category exclusivity in several verticals.' },
+
+  { id:40, name:'Naomi Osaka',           sport:'Tennis',     cat:'Driver', geo:'Global',  score:76, trend:+2.7, delta:'+2.7', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Strong recovery growth following return to competition. Crossover appeal is exceptional.',
+    insightFull:  'Naomi Osaka shows strong FanScore growth of +2.7 following her return to competitive tennis. Her audience extends well beyond sport, with strong presence in fashion, beauty, and cultural spaces. Crossover brand appeal is among the highest of any sports property. Audience is global with particular strength in Japan, USA, and among female demographics 18–35.' },
+
+  // 📊 MID-TIER / STABLE
+  { id:41, name:'Wasps RFC',             sport:'Rugby',      cat:'Team',   geo:'UK',      score:54, trend:+0.4, delta:'+0.4', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true,
+    insightShort: 'Modest but stable UK club rugby presence. Seeking sponsorship at accessible budget.',
+    insightFull:  'Wasps RFC maintains a modest, stable FanScore within domestic UK rugby. Audience is concentrated in the Midlands and South East England. The club is seeking sponsorship, offering accessible budget entry points for regional and national brands targeting ABC1 male demographics. Community activation potential is strong.' },
+
+  { id:42, name:'Derby County FC',       sport:'Football',   cat:'Team',   geo:'UK',      score:52, trend:+0.6, delta:'+0.6', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:true,
+    insightShort: 'Rebuilding club with loyal East Midlands base. Entry-level sponsorship opportunity.',
+    insightFull:  'Derby County FC is in a rebuilding phase with modest but improving FanScore. The club maintains a loyal and passionate East Midlands audience base. Seeking sponsorship, the property offers affordable entry into football sponsorship for regional brands. Audience engagement around matchday is above-average for their tier.' },
+
+  { id:43, name:'World Aquatics Champs', sport:'Golf',       cat:'Event',  geo:'Global',  score:63, trend:+1.1, delta:'+1.1', dir:'up',   emoji:'🏊', heroClass:'hero-golf',  seeking:true,
+    insightShort: 'Growing global event audience. Niche but loyal following with international reach.',
+    insightFull:  'World Aquatics Championships delivers a growing international audience across a loyal but niche following. FanScore growth of +1.1 is consistent and event-driven. The property is seeking sponsorship and offers a relatively under-commercialised platform for brands in health, wellness, and premium consumer goods seeking global exposure.' },
+
+  { id:44, name:'Everton FC',            sport:'Football',   cat:'Team',   geo:'UK',      score:61, trend:+0.3, delta:'+0.3', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Stable loyal fanbase despite on-pitch challenges. New stadium creating renewed interest.',
+    insightFull:  'Everton FC shows flat but stable FanScore, with modest growth of +0.3 driven largely by new stadium excitement offsetting on-pitch underperformance. The club\'s fanbase is notably loyal and deeply community-rooted on Merseyside. Audience skews older and male. Suited to brands seeking long-term, community-anchored UK sponsorship.' },
+
+  { id:45, name:'Glasgow Rangers',       sport:'Football',   cat:'Team',   geo:'UK',      score:67, trend:+1.4, delta:'+1.4', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Strong Scottish audience with growing UK and Irish reach. Consistent engagement.',
+    insightFull:  'Glasgow Rangers maintains a strong FanScore within Scottish and wider UK football. Consistent growth of +1.4 reflects steady performance and European competition engagement. The club\'s audience has notable reach into Northern Ireland and Irish diaspora markets alongside its core Scottish base. Suited to brands seeking UK regional depth.' },
+
+  { id:46, name:'Valentina Shevchenko',  sport:'Motorsport', cat:'Driver', geo:'Global',  score:58, trend:+1.8, delta:'+1.8', dir:'up',   emoji:'🥊', heroClass:'hero-moto',  seeking:true,
+    insightShort: 'Growing MMA profile with strong international female audience. Seeking sponsorship.',
+    insightFull:  'Valentina Shevchenko shows steady FanScore growth within the MMA category. Her audience is notably more internationally diverse and female-inclusive than most combat sports properties. Seeking sponsorship, she represents a differentiated proposition for brands seeking MMA reach with a broader demographic profile than typical.' },
+
+  { id:47, name:'Patrick Mahomes',       sport:'Football',   cat:'Driver', geo:'Global',  score:85, trend:+1.9, delta:'+1.9', dir:'up',   emoji:'🏈', heroClass:'hero-nfl',   seeking:false,
+    insightShort: 'Elite NFL individual profile. Dominant US reach with growing global crossover.',
+    insightFull:  'Patrick Mahomes maintains an elite FanScore with consistent growth, driven by sustained Super Bowl-level performance. Audience is primarily US-based but growing internationally as NFL expands globally. Brand crossover appeal spans sportswear, technology, food and beverage. One of the most commercially active individual sports properties in the dataset.' },
+
+  { id:48, name:'San Francisco 49ers',   sport:'Football',   cat:'Team',   geo:'Global',  score:79, trend:+1.3, delta:'+1.3', dir:'up',   emoji:'🏈', heroClass:'hero-nfl',   seeking:false,
+    insightShort: 'Consistent NFL franchise growth. Strong Bay Area audience with tech sector alignment.',
+    insightFull:  'The San Francisco 49ers show consistent FanScore growth of +1.3, underpinned by strong performance and a loyal Bay Area audience base with above-average income and technology sector affinity. The franchise\'s geographic positioning makes it particularly relevant for tech, fintech, and innovation-led brands.' },
+
+  { id:49, name:'Neymar Jr',             sport:'Football',   cat:'Driver', geo:'Global',  score:74, trend:-0.8, delta:'-0.8', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Declining engagement linked to injury absence. Core audience remains large but disengaged.',
+    insightFull:  'Neymar shows a FanScore decline of -0.8, consistent with a period of extended injury absence and reduced competitive visibility. The underlying audience base remains very large, particularly across Brazil and South America, but engagement rates have softened. Trend warrants monitoring; a return to competition would likely reverse trajectory.' },
+
+  { id:50, name:'World Rugby Sevens',    sport:'Rugby',      cat:'Series', geo:'Global',  score:66, trend:+2.2, delta:'+2.2', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true,
+    insightShort: 'Growing global sevens audience. Olympic cycle driving sustained FanScore uplift.',
+    insightFull:  'World Rugby Sevens series is showing consistent FanScore growth of +2.2, driven by Olympic cycle engagement and a genuinely international audience across multiple tour stops. The format attracts a younger, more diverse audience than traditional rugby. Seeking sponsorship; offers multi-market activation across global venues.' },
+
+  // 📉 STRUGGLING / DECLINING
+  { id:51, name:'Aston Villa FC',        sport:'Football',   cat:'Team',   geo:'UK',      score:64, trend:-1.4, delta:'-1.4', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Noticeable 30-day decline following key player departures. Trend warrants watching.',
+    insightFull:  'Aston Villa shows a FanScore decline of -1.4 over 30 days, coinciding with high-profile player sales and mixed early-season results. The audience base is solid and the club\'s recent European ambitions had generated genuine momentum. This decline appears performance-correlated and may reverse. Monitoring recommended before commitment.' },
+
+  { id:52, name:'Ralf Schumacher Racing',sport:'Motorsport', cat:'Driver', geo:'Europe',  score:31, trend:-2.8, delta:'-2.8', dir:'down', emoji:'🏎', heroClass:'hero-f1',    seeking:true,
+    insightShort: 'Significant sustained decline. Audience erosion across all tracked platforms.',
+    insightFull:  'This property shows significant FanScore decline of -2.8, with consistent audience erosion across all measured platforms. The decline is not anomalous — it reflects a structural reduction in competitive relevance. The property is seeking sponsorship; pricing may reflect this trajectory. Brands should approach with caution and seek updated data.' },
+
+  { id:53, name:'Sunderland AFC',        sport:'Football',   cat:'Team',   geo:'UK',      score:44, trend:-1.9, delta:'-1.9', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:true,
+    insightShort: 'Continued decline in lower-league football. Audience base contracting steadily.',
+    insightFull:  'Sunderland AFC shows ongoing FanScore decline at -1.9, reflecting a period of underperformance and league-level drop. Despite a historically large and loyal fanbase, active engagement metrics are declining. The club is seeking sponsorship. This could represent a recovery play for brands with long-term patience, but current trend data does not support near-term sponsorship value.' },
+
+  { id:54, name:'Hawthorn AFL',          sport:'Football',   cat:'Team',   geo:'Global',  score:38, trend:-3.1, delta:'-3.1', dir:'down', emoji:'🏈', heroClass:'hero-nfl',   seeking:true,
+    insightShort: 'Steepest team decline in dataset. On-pitch struggles driving sustained audience exit.',
+    insightFull:  'Hawthorn AFL records one of the steepest FanScore declines in the dataset at -3.1. Audience erosion is consistent and multi-platform. On-pitch performance has been poor and internal club issues have compounded the engagement decline. The club is seeking sponsorship at what is likely a discounted rate. Not recommended without a clear turnaround signal.' },
+
+  { id:55, name:'Daniil Medvedev',       sport:'Tennis',     cat:'Driver', geo:'Global',  score:59, trend:-2.2, delta:'-2.2', dir:'down', emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Sustained decline following form dip. Audience engagement has weakened materially.',
+    insightFull:  'Medvedev\'s FanScore has declined -2.2 over 30 days, reflecting poor recent tournament results and a noticeable drop in social media engagement. His audience remains globally distributed but engagement quality has softened. The decline is results-correlated and a form recovery could reverse trajectory, but current data suggests caution.' },
+
+  { id:56, name:'Nottm Forest FC',       sport:'Football',   cat:'Team',   geo:'UK',      score:55, trend:-0.9, delta:'-0.9', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Modest decline following relegation threat period. Core audience holding but disengaged.',
+    insightFull:  'Nottingham Forest shows a modest FanScore decline of -0.9, associated with a difficult mid-season period and relegation speculation. The underlying audience retains strong historical identity and loyalty, but active engagement has softened. Trend may stabilise with improved results. Suited to patient, community-aligned brands.' },
+
+  { id:57, name:'Tiger Woods',           sport:'Golf',       cat:'Driver', geo:'Global',  score:48, trend:-2.6, delta:'-2.6', dir:'down', emoji:'⛳', heroClass:'hero-golf',  seeking:false,
+    insightShort: 'Significant long-term decline driven by reduced competitive activity and injury.',
+    insightFull:  'Tiger Woods shows a sustained FanScore decline of -2.6, reflecting significantly reduced competitive activity due to injury. His underlying brand remains globally recognised, but active audience engagement has eroded substantially. The gap between brand name recognition and current sponsorship value is wide. Not recommended for performance-linked activations.' },
+
+  { id:58, name:'Sheffield Wednesday',   sport:'Football',   cat:'Team',   geo:'UK',      score:41, trend:-1.7, delta:'-1.7', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:true,
+    insightShort: 'Declining audience in a difficult league position. Seeking sponsorship below market rate.',
+    insightFull:  'Sheffield Wednesday records consistent FanScore decline at -1.7, associated with sustained league-position challenges. The club is seeking sponsorship and pricing is likely below market rate for football. Local audience loyalty remains, but regional and national appeal is limited in current state. Long-term recovery play only.' },
+
+  { id:59, name:'Celta Vigo',            sport:'Football',   cat:'Team',   geo:'Europe',  score:46, trend:-1.3, delta:'-1.3', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:true,
+    insightShort: 'Gradual audience erosion in Spanish football. Seeking sponsorship at accessible pricing.',
+    insightFull:  'Celta Vigo shows gradual FanScore erosion of -1.3, consistent with a period of mid-table La Liga performance and limited European competition. The club\'s audience is predominantly Spanish with modest South American crossover. Seeking sponsorship; the property offers affordable Spanish football exposure for brands seeking Iberian market presence.' },
+
+  { id:60, name:'Andy Murray',           sport:'Tennis',     cat:'Driver', geo:'Global',  score:43, trend:-3.4, delta:'-3.4', dir:'down', emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Sharpest decline in Tennis. Retirement narrative reducing active audience engagement.',
+    insightFull:  'Andy Murray records the sharpest FanScore decline in the Tennis category at -3.4, driven by a winding-down career narrative and significantly reduced competitive schedule. His audience retains strong UK loyalty and brand warmth, but active engagement metrics have fallen sharply. Legacy sponsorship value may persist for certain UK-focused brands, but performance-linked activation is not advisable.' },
+
+  // 🌍 INTERNATIONAL MIX
+  { id:61, name:'All Blacks Rugby',      sport:'Rugby',      cat:'Team',   geo:'Global',  score:81, trend:+2.3, delta:'+2.3', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:false,
+    insightShort: 'Premium global rugby brand. Consistent growth with exceptional international reach.',
+    insightFull:  'The All Blacks maintain one of the most premium brand profiles in global rugby, with consistent FanScore growth of +2.3. Their audience is genuinely international, with strong reach across New Zealand, UK, Ireland, France, Japan, and South Africa. The brand carries significant prestige and is well-aligned with premium consumer goods, financial services, and automotive categories.' },
+
+  { id:62, name:'FC Barcelona',          sport:'Football',   cat:'Team',   geo:'Global',  score:90, trend:+1.6, delta:'+1.6', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'One of the largest football audiences globally. Steady growth, mature commercial base.',
+    insightFull:  'FC Barcelona holds one of the largest global football audiences, with consistent FanScore growth of +1.6. The club\'s commercial portfolio is extensive, but strategic partnership slots remain available for the right brands. Audience is broadly global with exceptional reach in Spain, Catalonia specifically, and across Latin America. Premium-tier property.' },
+
+  { id:63, name:'Tadej Pogačar',         sport:'Golf',       cat:'Driver', geo:'Global',  score:74, trend:+3.7, delta:'+3.7', dir:'up',   emoji:'🚴', heroClass:'hero-golf',  seeking:false,
+    insightShort: 'Dominant cycling profile with exceptional European growth. Strong Tour de France narrative.',
+    insightFull:  'Tadej Pogačar records strong FanScore growth of +3.7, driven by Tour de France dominance and a compelling sporting narrative. His audience is predominantly European with strong representation across France, Slovenia, Italy, and Spain. Cycling\'s brand partners tend to be premium — automotive, nutrition, technology — and Pogačar\'s profile fits this category well.' },
+
+  { id:64, name:'Springboks Rugby',      sport:'Rugby',      cat:'Team',   geo:'Global',  score:78, trend:+1.8, delta:'+1.8', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:false,
+    insightShort: 'World Champions profile with strong African and global reach. Consistent growth.',
+    insightFull:  'The Springboks carry World Champion status and show consistent FanScore growth of +1.8. Their audience is anchored in South Africa and the African continent, with strong international reach across rugby-playing nations. The team\'s brand is one of national pride and resilience — well-aligned with premium consumer and financial services brands.' },
+
+  { id:65, name:'Shubman Gill',          sport:'Cricket',    cat:'Driver', geo:'Global',  score:77, trend:+3.9, delta:'+3.9', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:false,
+    insightShort: 'Highest-growth individual in Cricket. Rapidly expanding Indian youth audience.',
+    insightFull:  'Shubman Gill records the strongest individual FanScore growth in Cricket at +3.9, driven by exceptional recent form for India and a rapidly expanding social media presence. His audience is predominantly young, Indian, and highly engaged. Brand alignment into FMCG, mobile, and lifestyle categories is strong. An early-entry opportunity in one of cricket\'s fastest-rising profiles.' },
+
+  { id:66, name:'Bayern Munich',         sport:'Football',   cat:'Team',   geo:'Global',  score:87, trend:+0.7, delta:'+0.7', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Dominant German club with strong global audience. Stable growth, broad demographic reach.',
+    insightFull:  'Bayern Munich maintains one of the strongest FanScore profiles in European football with stable growth. Their audience is globally distributed with a strong German foundation, significant Asian reach, and growing North American presence. The club\'s commercial relationships are well-established; new partnership opportunities tend to be category-specific and premium.' },
+
+  { id:67, name:'Sunrisers Hyderabad',   sport:'Cricket',    cat:'Team',   geo:'Global',  score:71, trend:+2.4, delta:'+2.4', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:true,
+    insightShort: 'Strong IPL franchise growth. High engagement within Indian market, seeking sponsors.',
+    insightFull:  'Sunrisers Hyderabad shows strong FanScore growth of +2.4 within the IPL franchise landscape. Audience is primarily Indian with significant diaspora reach globally. The franchise is seeking sponsorship and offers access to one of the world\'s most engaged cricket audiences at a more accessible price point than title-level IPL positions.' },
+
+  { id:68, name:'Olympique de Marseille',sport:'Football',   cat:'Team',   geo:'Europe',  score:69, trend:+1.5, delta:'+1.5', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Passionate French audience with North African crossover. Consistent engagement growth.',
+    insightFull:  'Olympique de Marseille delivers consistent FanScore growth of +1.5, driven by a passionate and loyal French audience with significant North African community crossover. The club\'s identity is deeply rooted in Southern France and Mediterranean culture. Brand alignment into telecoms, FMCG, and community-anchored categories is strong.' },
+
+  { id:69, name:'Nascar Cup Series',     sport:'Motorsport', cat:'Series', geo:'Global',  score:72, trend:+0.8, delta:'+0.8', dir:'up',   emoji:'🏁', heroClass:'hero-moto',  seeking:false,
+    insightShort: 'Stable US motorsport series. Loyal domestic audience with strong commercial infrastructure.',
+    insightFull:  'The NASCAR Cup Series maintains a stable FanScore with modest growth, underpinned by a deeply loyal US domestic audience. The series has strong infrastructure for brand activation and a well-developed sponsorship ecosystem. Audience is broadly American, skewing rural and suburban, male, 25–55. Well-aligned to automotive, insurance, and energy brands.' },
+
+  { id:70, name:'Leon Marchand',         sport:'Golf',       cat:'Driver', geo:'Global',  score:76, trend:+4.4, delta:'+4.4', dir:'up',   emoji:'🏊', heroClass:'hero-golf',  seeking:false,
+    insightShort: 'Olympic champion driving extraordinary growth. One of sport\'s fastest-rising profiles.',
+    insightFull:  'Leon Marchand is one of the most compelling growth stories in global sport, recording +4.4 FanScore growth following multi-Olympic gold performance. His audience is primarily French and European but growing rapidly internationally. Young, aspirational audience with strong alignment to premium, lifestyle, and technology brands. Considered high-upside property.' },
+
+  { id:71, name:'Real Madrid CF',        sport:'Football',   cat:'Team',   geo:'Global',  score:94, trend:+1.1, delta:'+1.1', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Highest FanScore team in dataset. Mature global audience, stable and commercially dominant.',
+    insightFull:  'Real Madrid holds the highest team FanScore in the entire dataset at 94. Their audience is the most globally distributed of any football club, with exceptional reach across Europe, Latin America, Middle East, and Asia. Existing commercial commitments are extensive at the top level; available partnership categories are limited but highly prestigious.' },
+
+  { id:72, name:'Ash Barty Foundation',  sport:'Tennis',     cat:'Event',  geo:'Global',  score:57, trend:+1.6, delta:'+1.6', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:true,
+    insightShort: 'Purpose-led tennis event growing steadily. Strong alignment for socially conscious brands.',
+    insightFull:  'The Ash Barty Foundation events show steady FanScore growth of +1.6, driven by strong purpose-narrative engagement and Barty\'s enduring personal brand post-retirement. Audience is primarily Australian and female-skewing, with strong alignment to family, wellness, and values-led brands. Seeking sponsorship; well-suited to CSR-anchored partnerships.' },
+
+  { id:73, name:'Borussia Dortmund',     sport:'Football',   cat:'Team',   geo:'Global',  score:80, trend:+2.1, delta:'+2.1', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false,
+    insightShort: 'Strong European growth. Youth-skewing audience with high engagement and global appeal.',
+    insightFull:  'Borussia Dortmund shows strong FanScore growth of +2.1, driven by youth appeal, a distinctive brand identity, and consistent Champions League participation. Their audience skews younger than most top European clubs and has genuine global distribution. The Yellow Wall narrative gives the club strong grassroots authenticity — well-aligned to challenger brands.' },
+
+  { id:74, name:'Cricket World Cup',     sport:'Cricket',    cat:'Event',  geo:'Global',  score:85, trend:+2.8, delta:'+2.8', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:false,
+    insightShort: 'Marquee event growing ahead of tournament. Enormous global cricket audience.',
+    insightFull:  'The Cricket World Cup shows strong pre-event FanScore growth of +2.8. The tournament generates enormous global reach, particularly into South Asia, UK, Australia, and the Caribbean. Audience scale is comparable to only the largest global sporting events. Premium commercial positions are highly sought after; brand visibility is exceptional during tournament windows.' },
+
+  { id:75, name:'Irish Rugby Union',     sport:'Rugby',      cat:'Team',   geo:'UK',      score:70, trend:+1.9, delta:'+1.9', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:false,
+    insightShort: 'World-ranked rugby team with consistent growth. Strong all-island Irish audience.',
+    insightFull:  'Irish Rugby Union maintains a strong FanScore with consistent growth of +1.9, driven by world-ranking status and an exceptionally passionate all-island Irish audience. The team\'s audience extends strongly into the Irish diaspora globally. Brand alignment into financial services, telecoms, and premium consumer goods is well-established.' },
+
+  { id:76, name:'LeBron James',          sport:'Football',   cat:'Driver', geo:'Global',  score:89, trend:+0.5, delta:'+0.5', dir:'up',   emoji:'🏀', heroClass:'hero-nfl',   seeking:false,
+    insightShort: 'Transcendent global sports brand. Stable massive audience across sport and culture.',
+    insightFull:  'LeBron James maintains one of the largest individual audiences in global sport at FanScore 89, with stable modest growth. His audience transcends basketball into entertainment, business, and culture. Brand alignment spans luxury, technology, media, and lifestyle. Available commercial inventory is extremely limited and commands premium pricing. A benchmark property.' },
+
+  { id:77, name:'Golden State Warriors',  sport:'Football',   cat:'Team',   geo:'Global',  score:82, trend:+1.2, delta:'+1.2', dir:'up',   emoji:'🏀', heroClass:'hero-nfl',   seeking:false,
+    insightShort: 'Premium NBA franchise with strong tech and lifestyle crossover. Consistent growth.',
+    insightFull:  'Golden State Warriors show consistent FanScore growth of +1.2, underpinned by a premium Bay Area audience profile with exceptional technology sector affinity. The franchise\'s crossover into lifestyle and entertainment is among the highest of any NBA team. Well-positioned for technology, fintech, and premium consumer brand partnerships.' },
+
+  { id:78, name:'Nick Kyrgios',          sport:'Tennis',     cat:'Driver', geo:'Global',  score:62, trend:-1.6, delta:'-1.6', dir:'down', emoji:'🎾', heroClass:'hero-ten',   seeking:false,
+    insightShort: 'Declining engagement during injury absence. Volatile profile with high upside if fit.',
+    insightFull:  'Nick Kyrgios shows FanScore decline of -1.6 during a prolonged injury absence. His engagement is highly volatile — strongly correlated to competitive activity. The underlying audience is younger and more globally diverse than most tennis properties. If fit and competing, trajectory reverses sharply. Currently not recommended for performance-linked commitments.' },
+
+  { id:79, name:'Renault Sport Academy',  sport:'Motorsport', cat:'Team',   geo:'Europe',  score:36, trend:-2.1, delta:'-2.1', dir:'down', emoji:'🏎', heroClass:'hero-f1',    seeking:true,
+    insightShort: 'Significant audience decline. Reduced competitive visibility driving FanScore erosion.',
+    insightFull:  'Renault Sport Academy shows significant FanScore decline of -2.1, reflecting reduced competitive visibility and programme scale-back. Audience erosion is consistent across all tracked platforms. The programme is seeking sponsorship at accessible pricing. Would suit brands with a tolerance for project-stage investment and a French automotive brand alignment need.' },
+
+  { id:80, name:'Tour de France',         sport:'Golf',       cat:'Event',  geo:'Global',  score:83, trend:+2.0, delta:'+2.0', dir:'up',   emoji:'🚴', heroClass:'hero-golf',  seeking:false,
+    insightShort: 'Premium cycling event with consistent pre-race growth. Broad European and global reach.',
+    insightFull:  'Tour de France maintains a strong and consistent FanScore with growth of +2.0 ahead of the race period. The event is one of the world\'s most watched annual sports events, with exceptional European reach and growing global interest driven by streaming. Audience profile is affluent, broadly demographic, and well-aligned to premium categories.' },
+];
+
+// ── FILTER STATE ──
+const state = {
+  sport: 'all',
+  cat: 'all',
+  seeking: 'all',
+  search: ''
+};
+
+// ── SPARKLINE ──
+function generateSparkPath(seed, width=64, height=32) {
+  const points = [];
+  let v = 0.5;
+  const rand = (s) => { let x = Math.sin(s+1)*10000; return x - Math.floor(x); };
+  for (let i=0; i<8; i++) {
+    v = Math.max(0.05, Math.min(0.95, v + (rand(seed*17+i*7) - 0.5)*0.3));
+    points.push(v);
+  }
+  const xs = points.map((_, i) => (i / (points.length-1)) * width);
+  const ys = points.map(v => height - v*height*0.8 - 4);
+  let d = `M ${xs[0]},${ys[0]}`;
+  for (let i=1; i<xs.length; i++) {
+    const cpx = xs[i-1] + (xs[i]-xs[i-1])*0.5;
+    d += ` C ${cpx},${ys[i-1]} ${cpx},${ys[i]} ${xs[i]},${ys[i]}`;
+  }
+  return d;
+}
+
+function sparklineHTML(id, dir) {
+  const path = generateSparkPath(id);
+  const colour = dir === 'up' ? '#1a8a4a' : dir === 'down' ? '#d44614' : '#9c9c96';
+  return `<svg class="spark-svg" width="64" height="32" viewBox="0 0 64 32">
+    <path d="${path}" fill="none" stroke="${colour}" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ── CARD HTML ──
+function cardHTML(p, delay=0) {
+  const trendClass = p.dir === 'up' ? 'trend-up' : p.dir === 'down' ? 'trend-down' : 'trend-flat';
+  const trendArrow = p.dir === 'up' ? '↑' : p.dir === 'down' ? '↓' : '→';
+
+  return `
+    <div class="prop-card" style="animation-delay:${delay}s" draggable="true" data-id="${p.id}" tabindex="0" role="button" aria-label="View ${p.name}">
+      <div class="prop-card-hero ${p.heroClass}">
+        <div class="prop-card-hero-bg">${p.emoji}</div>
+        <div class="hero-noise"></div>
+        <div class="prop-category-tag">${p.cat}</div>
+        ${p.seeking ? '<div class="prop-seeking-badge">Seeking</div>' : ''}
+      </div>
+      <div class="prop-card-body">
+        <div class="prop-card-name">${p.name}</div>
+        <div class="prop-card-meta">
+          <span>${p.sport}</span><span class="meta-dot"></span><span>${p.geo}</span>
+        </div>
+        <div class="prop-card-scores">
+          <div class="score-item">
+            <div class="score-label">FanScore</div>
+            <div class="score-value">${p.score}</div>
+            <div class="score-trend ${trendClass}">${trendArrow} ${p.delta}</div>
+          </div>
+          <div class="sparkline-wrap">${sparklineHTML(p.id, p.dir)}</div>
+        </div>
+      </div>
+      <div class="card-icon-actions">
+        <button class="icon-btn btn-watch" title="Watch" aria-label="Watch ${p.name}">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>
+        </button>
+        <button class="icon-btn btn-short" title="Shortlist" aria-label="Shortlist ${p.name}">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 2h8v7l-4-2-4 2V2z"/></svg>
+        </button>
+        <button class="icon-btn btn-compare" title="Compare" aria-label="Compare ${p.name}">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h4M2 3h8M2 9h8"/></svg>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── APPLY FILTERS ──
+function applyFilters(list) {
+  return list.filter(p => {
+    if (state.sport !== 'all' && p.sport !== state.sport) return false;
+    if (state.cat !== 'all' && p.cat !== state.cat) return false;
+    if (state.seeking === 'seeking' && !p.seeking) return false;
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      if (!p.name.toLowerCase().includes(q) && !p.sport.toLowerCase().includes(q) && !p.geo.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ── IS FILTERED? ──
+function isFiltered() {
+  return state.sport !== 'all' || state.cat !== 'all' || state.seeking !== 'all' || state.search !== '';
+}
+
+// ── RENDER ──
+function render() {
+  const filtered = isFiltered();
+  const defaultView = document.getElementById('default-view');
+  const filteredView = document.getElementById('filtered-view');
+  const clearBtn = document.getElementById('clear-filters-btn');
+
+  clearBtn.style.display = filtered ? 'inline-flex' : 'none';
+
+  if (filtered) {
+    defaultView.style.display = 'none';
+    filteredView.style.display = 'block';
+    renderFiltered();
+  } else {
+    defaultView.style.display = 'block';
+    filteredView.style.display = 'none';
+    renderRows();
+  }
+}
+
+function renderFiltered() {
+  const results = applyFilters(properties);
+  const grid = document.getElementById('filtered-grid');
+  const empty = document.getElementById('filtered-empty');
+  const countEl = document.getElementById('filtered-count');
+  const titleEl = document.getElementById('filtered-title');
+
+  // Build title
+  const parts = [];
+  if (state.sport !== 'all') parts.push(state.sport);
+  if (state.cat !== 'all') parts.push(state.cat === 'Driver' ? 'Individuals' : state.cat + 's');
+  if (state.seeking === 'seeking') parts.push('Seeking Sponsorship');
+  if (state.search) parts.push(`"${state.search}"`);
+  titleEl.innerHTML = (parts.length ? parts.join(' · ') : 'All properties') + ` <span class="row-count" id="filtered-count"></span>`;
+
+  document.getElementById('filtered-count').textContent = results.length;
+
+  if (results.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+  } else {
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = results.map((p,i) => cardHTML(p, i*0.03)).join('');
+  }
+}
+
+function populateRowEl(rowId, list, count=4) {
+  const el = document.getElementById(rowId);
+  if (!el) return;
+  const slice = list.slice(0, count);
+  el.innerHTML = slice.length ? slice.map((p,i) => cardHTML(p, i*0.05)).join('') : '<div style="color:var(--text-tertiary);font-size:13px;padding:12px 0;">No properties available</div>';
+}
+
+function setCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = n;
+}
+
+function renderRows() {
+  const momentum   = properties.filter(p => p.dir === 'up' && p.trend > 1);
+  const seeking    = properties.filter(p => p.seeking);
+  const motorsport = properties.filter(p => p.sport === 'Motorsport');
+  const football   = properties.filter(p => p.sport === 'Football');
+  const other      = properties.filter(p => ['Rugby','Tennis','Cricket','Golf'].includes(p.sport));
+
+  populateRowEl('momentum-row',   momentum);
+  populateRowEl('seeking-row',    seeking);
+  populateRowEl('motorsport-row', motorsport);
+  populateRowEl('football-row',   football);
+  populateRowEl('other-row',      other);
+
+  setCount('count-momentum',   momentum.length);
+  setCount('count-seeking',    seeking.length);
+  setCount('count-motorsport', motorsport.length);
+  setCount('count-football',   football.length);
+  setCount('count-other',      other.length);
+}
+
+// ── FILTER PILL CLICKS ──
+document.querySelectorAll('.filter-pill[data-group]').forEach(pill => {
+  pill.addEventListener('click', function() {
+    const group = this.dataset.group;
+    const value = this.dataset.value;
+
+    // Deactivate siblings in same group
+    document.querySelectorAll(`.filter-pill[data-group="${group}"]`).forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+
+    state[group] = value;
+    render();
+  });
+});
+
+// ── CLEAR FILTERS ──
+function clearAllFilters() {
+  state.sport = 'all';
+  state.cat = 'all';
+  state.seeking = 'all';
+  state.search = '';
+
+  document.querySelectorAll('.filter-pill[data-group]').forEach(p => {
+    p.classList.remove('active');
+    if (p.dataset.value === 'all') p.classList.add('active');
+  });
+
+  const searchInput = document.querySelector('.search-input');
+  if (searchInput) searchInput.value = '';
+
+  render();
+}
+
+document.getElementById('clear-filters-btn').addEventListener('click', clearAllFilters);
+document.getElementById('filtered-clear').addEventListener('click', clearAllFilters);
+
+// ── SEARCH (wired via floating top bar input — see ftb JS below) ──
+
+// ── SHOW ALL ROW LINKS ──
+document.querySelectorAll('[data-rowfilter]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const rf = link.dataset.rowfilter;
+    const sportMap = { motorsport:'Motorsport', football:'Football', rugby:'Rugby', other:null };
+    if (rf === 'momentum') {
+      // No sport filter — just show all upward trending
+      clearAllFilters();
+      // Could add a trend filter in future — for now show all
+    } else if (rf === 'seeking') {
+      clearAllFilters();
+      document.querySelectorAll('.filter-pill[data-group="seeking"]').forEach(p => p.classList.remove('active'));
+      document.querySelector('.filter-pill[data-group="seeking"][data-value="seeking"]').classList.add('active');
+      state.seeking = 'seeking';
+      render();
+    } else if (sportMap[rf]) {
+      clearAllFilters();
+      document.querySelectorAll('.filter-pill[data-group="sport"]').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.filter-pill[data-group="sport"][data-value="${sportMap[rf]}"]`).classList.add('active');
+      state.sport = sportMap[rf];
+      render();
+    }
+  });
+});
+
+// ── CARD INTERACTIONS ──
+
+// Per-property state store
+const cardState = {};
+function getState(id) {
+  if (!cardState[id]) cardState[id] = { watch: false, short: false, compare: false };
+  return cardState[id];
+}
+
+function syncCardUI(id) {
+  document.querySelectorAll(`.prop-card[data-id="${id}"]`).forEach(card => {
+    const s = getState(id);
+    const watchIcon = card.querySelector('.btn-watch');
+    const shortIcon = card.querySelector('.btn-short');
+    const cmpIcon   = card.querySelector('.btn-compare');
+    if (watchIcon)  watchIcon.classList.toggle('active-watch', s.watch);
+    if (shortIcon)  shortIcon.classList.toggle('active-short', s.short);
+    if (cmpIcon)    cmpIcon.classList.toggle('active-compare', s.compare);
+  });
+  const modal = document.getElementById('detail-modal');
+  if (modal.dataset.openId === String(id)) syncModalButtons(id);
+}
+
+document.addEventListener('click', e => {
+  // Watch toggle
+  const watchEl = e.target.closest('.btn-watch');
+  if (watchEl) {
+    e.stopPropagation();
+    const id = +watchEl.closest('[data-id]').dataset.id;
+    getState(id).watch = !getState(id).watch;
+    syncCardUI(id);
+    return;
+  }
+
+  // Shortlist toggle
+  const shortEl = e.target.closest('.btn-short');
+  if (shortEl) {
+    e.stopPropagation();
+    const id = +shortEl.closest('[data-id]').dataset.id;
+    getState(id).short = !getState(id).short;
+    syncCardUI(id);
+    return;
+  }
+
+  // Compare toggle
+  const cmpEl = e.target.closest('.btn-compare');
+  if (cmpEl) {
+    e.stopPropagation();
+    const id = +cmpEl.closest('[data-id]').dataset.id;
+    getState(id).compare = !getState(id).compare;
+    syncCardUI(id);
+    return;
+  }
+
+  // Card click → open modal
+  const card = e.target.closest('.prop-card');
+  if (card) {
+    const id = +card.dataset.id;
+    openModal(id);
+  }
+});
+
+// Keyboard: Enter/Space on card
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const card = e.target.closest('.prop-card');
+    if (card) { e.preventDefault(); openModal(+card.dataset.id); }
+  }
+});
+
+// ── DRAG ──
+document.addEventListener('dragstart', e => { e.target.closest('.prop-card')?.classList.add('is-dragging'); });
+document.addEventListener('dragend',   e => { e.target.closest('.prop-card')?.classList.remove('is-dragging'); });
+
+// ── MODAL ──
+function openModal(id) {
+  const p = properties.find(x => x.id === id);
+  if (!p) return;
+
+  const modal = document.getElementById('detail-modal');
+  modal.dataset.openId = id;
+
+  // Hero
+  document.getElementById('modal-hero').className = `modal-hero ${p.heroClass}`;
+  document.getElementById('modal-hero-emoji').textContent = p.emoji;
+  document.getElementById('modal-name').textContent = p.name;
+  document.getElementById('modal-sub').textContent = `${p.sport} · ${p.cat} · ${p.geo}`;
+
+  // Insight
+  document.getElementById('modal-insight').textContent = p.insightFull;
+
+  // Scores
+  const trendArrow = p.dir === 'up' ? '↑' : p.dir === 'down' ? '↓' : '→';
+  const trendColour = p.dir === 'up' ? 'var(--green)' : p.dir === 'down' ? 'var(--accent-hover)' : 'var(--text-tertiary)';
+  document.getElementById('modal-scores').innerHTML = `
+    <div class="modal-score-card">
+      <div class="modal-score-label">FanScore</div>
+      <div class="modal-score-val">${p.score}</div>
+      <div class="modal-score-sub" style="color:${trendColour}">${trendArrow} ${p.delta} (30d)</div>
+    </div>
+    <div class="modal-score-card">
+      <div class="modal-score-label">Followers</div>
+      <div class="modal-score-val" style="font-size:16px">${p.score > 85 ? '10M+' : p.score > 75 ? '5M+' : p.score > 65 ? '2M+' : '500K+'}</div>
+      <div class="modal-score-sub">Across platforms</div>
+    </div>
+    <div class="modal-score-card">
+      <div class="modal-score-label">Engagement</div>
+      <div class="modal-score-val" style="font-size:16px">${(p.score * 0.06).toFixed(1)}%</div>
+      <div class="modal-score-sub">30-day avg</div>
+    </div>`;
+
+  // Actions
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="modal-action-btn modal-btn-watch">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>
+      Watch
+    </button>
+    <button class="modal-action-btn modal-btn-short">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 2h8v7l-4-2-4 2V2z"/></svg>
+      Shortlist
+    </button>
+    <button class="modal-action-btn modal-btn-compare">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h4M2 3h8M2 9h8"/></svg>
+      Compare
+    </button>`;
+
+  syncModalButtons(id);
+
+  // Modal button handlers
+  document.querySelector('.modal-btn-watch').onclick = (e) => { e.stopPropagation(); getState(id).watch = !getState(id).watch; syncCardUI(id); };
+  document.querySelector('.modal-btn-short').onclick = (e) => { e.stopPropagation(); getState(id).short = !getState(id).short; syncCardUI(id); };
+  document.querySelector('.modal-btn-compare').onclick = (e) => { e.stopPropagation(); getState(id).compare = !getState(id).compare; syncCardUI(id); };
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('modal-close').focus();
+}
+
+function syncModalButtons(id) {
+  const s = getState(id);
+  const icons = {
+    watch:   `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>`,
+    short:   `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 2h8v7l-4-2-4 2V2z"/></svg>`,
+    compare: `<svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h4M2 3h8M2 9h8"/></svg>`,
+  };
+  const mw = document.querySelector('.modal-btn-watch');
+  const ms = document.querySelector('.modal-btn-short');
+  const mc = document.querySelector('.modal-btn-compare');
+  if (mw) { mw.classList.toggle('active-watch', s.watch);   mw.innerHTML = icons.watch   + (s.watch   ? ' Watching'    : ' Watch'); }
+  if (ms) { ms.classList.toggle('active-short', s.short);   ms.innerHTML = icons.short   + (s.short   ? ' Shortlisted' : ' Shortlist'); }
+  if (mc) { mc.classList.toggle('active-compare', s.compare); mc.innerHTML = icons.compare + (s.compare ? ' Comparing'   : ' Compare'); }
+}
+
+function closeModal() {
+  const modal = document.getElementById('detail-modal');
+  modal.classList.remove('open');
+  modal.dataset.openId = '';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+
+document.getElementById('detail-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detail-modal')) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── WATCHLIST SIDEBAR ──
+const watchlistEl = document.getElementById('watchlist-items');
+const watchProps = [properties[0], properties[4], properties[11], properties[2]];
+watchlistEl.innerHTML = watchProps.map(p => `
+  <div class="watchlist-item">
+    <div class="watchlist-icon ${p.heroClass}" style="font-size:14px">${p.emoji}</div>
+    <div class="watchlist-info">
+      <div class="watchlist-name">${p.name}</div>
+      <div class="watchlist-sub">${p.sport}</div>
+    </div>
+    <div class="watchlist-score">${p.score}</div>
+  </div>`).join('');
+
+// ── INIT ──
+render();
+
+// ── FLOATING TOP BAR + TYPEAHEAD ──
+(function() {
+  const ftb         = document.getElementById('ftb');
+  const searchBtn   = document.getElementById('ftb-search-btn');
+  const searchArea  = document.getElementById('ftb-search-area');
+  const searchInp   = document.getElementById('ftb-search-input');
+  const clearBtn    = document.getElementById('ftb-clear-btn');
+  const menuBtn     = document.getElementById('ftb-menu-btn');
+  const menu        = document.getElementById('ftb-menu');
+  const popover     = document.getElementById('ftb-popover');
+
+  let isSearchOpen  = false;
+  let isMenuOpen    = false;
+  let collapseTimer = null;
+  let activeIdx     = -1;   // keyboard selection index (-1 = none)
+  let currentRows   = [];   // rendered result items for keyboard nav
+
+  // ── Halo state helpers ──
+
+  function setHalo(s) {
+    ftb.classList.toggle('search-active', s === 'search');
+    ftb.classList.toggle('menu-active',   s === 'menu');
+  }
+
+  // ── Clear button visibility ──
+
+  function updateClearBtn() {
+    clearBtn.classList.toggle('visible', searchInp.value.length > 0);
+  }
+
+  // ── Search open / close ──
+
+  function openSearch() {
+    if (isSearchOpen) return;
+    isSearchOpen = true;
+    closeMenu();
+    clearTimeout(collapseTimer);
+    searchArea.classList.remove('is-collapsing');
+    searchArea.classList.add('is-open');
+    searchBtn.classList.add('active');
+    setHalo('search');
+    setTimeout(() => searchInp.focus(), 60);
+  }
+
+  function closeSearch() {
+    if (!isSearchOpen) return;
+    isSearchOpen = false;
+    searchBtn.classList.remove('active');
+    setHalo(null);
+    closePopover();
+    searchArea.classList.add('is-collapsing');
+    searchArea.classList.remove('is-open');
+    collapseTimer = setTimeout(() => searchArea.classList.remove('is-collapsing'), 160);
+    searchInp.blur();
+  }
+
+  // ── Menu open / close ──
+
+  function openMenu() {
+    if (isMenuOpen) return;
+    isMenuOpen = true;
+    menu.classList.add('open');
+    menuBtn.classList.add('active');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    setHalo('menu');
+    closePopover(); // opening menu dismisses popover
+  }
+
+  function closeMenu() {
+    if (!isMenuOpen) return;
+    isMenuOpen = false;
+    menu.classList.remove('open');
+    menuBtn.classList.remove('active');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    if (!isSearchOpen) setHalo(null);
+  }
+
+  // ── Typeahead search ──
+
+  // In-memory search over the global `properties` array (already defined above)
+  function searchProperties(q) {
+    if (!q || q.length < 2 || typeof properties === 'undefined') return [];
+    const lower = q.toLowerCase();
+    return properties
+      .filter(p =>
+        p.name.toLowerCase().includes(lower) ||
+        p.sport.toLowerCase().includes(lower) ||
+        p.cat.toLowerCase().includes(lower) ||
+        p.geo.toLowerCase().includes(lower)
+      )
+      .slice(0, 6);
+  }
+
+  // Highlight matching text — wraps match in <mark>
+  function highlight(text, q) {
+    if (!q) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      text.slice(0, idx) +
+      '<mark>' + text.slice(idx, idx + q.length) + '</mark>' +
+      text.slice(idx + q.length)
+    );
+  }
+
+  function openPopover(results, q) {
+    activeIdx = -1;
+    popover.innerHTML = '';
+
+    if (results.length === 0) {
+      popover.innerHTML = `<div class="ftb-popover-empty">No matches found</div>`;
+      popover.classList.add('open');
+      currentRows = [];
+      return;
+    }
+
+    results.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'ftb-popover-row';
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', 'false');
+      row.dataset.idx = i;
+
+      const trendCol = p.dir === 'up' ? 'var(--green)' : p.dir === 'down' ? 'var(--accent-hover)' : 'var(--text-tertiary)';
+      const trendArrow = p.dir === 'up' ? '↑' : p.dir === 'down' ? '↓' : '→';
+
+      row.innerHTML = `
+        <div class="ftb-popover-thumb">${p.emoji}</div>
+        <div class="ftb-popover-body">
+          <div class="ftb-popover-name">${highlight(p.name, q)}</div>
+          <div class="ftb-popover-meta">${p.sport} · ${p.cat} · ${p.geo}</div>
+        </div>
+        <div class="ftb-popover-score" style="color:${trendCol}">
+          ${p.score} <span style="font-size:10px">${trendArrow}${p.delta}</span>
+        </div>`;
+
+      row.addEventListener('mouseenter', () => setActiveIdx(i));
+      row.addEventListener('mouseleave', () => setActiveIdx(-1));
+      row.addEventListener('click', () => selectResult(p));
+      popover.appendChild(row);
+    });
+
+    // "View all" footer if there are more results
+    const totalMatches = searchProperties(q).length; // un-sliced
+    if (totalMatches > 6) {
+      const footer = document.createElement('div');
+      footer.className = 'ftb-popover-footer';
+      footer.setAttribute('role', 'option');
+      footer.dataset.idx = results.length;
+      footer.innerHTML = `View all ${totalMatches} results →`;
+      footer.addEventListener('mouseenter', () => setActiveIdx(results.length));
+      footer.addEventListener('mouseleave', () => setActiveIdx(-1));
+      footer.addEventListener('click', () => {
+        closePopover();
+        // Wire to existing filter state — show all results for this query
+        if (typeof state !== 'undefined') {
+          state.search = q;
+          render();
+        }
+      });
+      popover.appendChild(footer);
+    }
+
+    currentRows = Array.from(popover.querySelectorAll('[data-idx]'));
+    popover.classList.add('open');
+  }
+
+  function closePopover() {
+    popover.classList.remove('open');
+    activeIdx = -1;
+    currentRows = [];
+  }
+
+  function setActiveIdx(idx) {
+    currentRows.forEach((r, i) => {
+      r.classList.toggle('is-active', i === idx);
+      r.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+    });
+    activeIdx = idx;
+  }
+
+  function selectResult(p) {
+    closePopover();
+    // Open the existing detail modal
+    if (typeof openModal === 'function') openModal(p.id);
+  }
+
+  // Debounced input handler
+  let typeaheadTimer = null;
+
+  function handleInput() {
+    updateClearBtn();
+    const q = searchInp.value.trim();
+
+    // Wire to filter grid (existing behaviour)
+    clearTimeout(window._ftbSearchTimeout);
+    window._ftbSearchTimeout = setTimeout(() => {
+      if (typeof state !== 'undefined') {
+        state.search = q;
+        render();
+      }
+    }, 200);
+
+    // Typeahead
+    clearTimeout(typeaheadTimer);
+    if (q.length < 2) { closePopover(); return; }
+    typeaheadTimer = setTimeout(() => {
+      const results = searchProperties(q);
+      openPopover(results, q);
+    }, 80); // fast — feels instant
+  }
+
+  // ── Keyboard navigation ──
+
+  function handleSearchKeydown(e) {
+    if (e.key === 'Escape') {
+      if (popover.classList.contains('open')) {
+        closePopover();
+        return;
+      }
+      if (searchInp.value !== '') {
+        searchInp.value = '';
+        updateClearBtn();
+        closePopover();
+        if (typeof state !== 'undefined') { state.search = ''; render(); }
+      } else {
+        closeSearch();
+      }
+      return;
+    }
+
+    if (!popover.classList.contains('open')) return;
+
+    const total = currentRows.length;
+    if (total === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIdx((activeIdx + 1) % total);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIdx(activeIdx <= 0 ? total - 1 : activeIdx - 1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIdx >= 0 && activeIdx < currentRows.length) {
+        currentRows[activeIdx].click();
+      }
+    }
+  }
+
+  // ── Event wiring ──
+
+  searchBtn.addEventListener('click', e => { e.stopPropagation(); isSearchOpen ? closeSearch() : openSearch(); });
+  menuBtn.addEventListener('click',   e => { e.stopPropagation(); isMenuOpen   ? closeMenu()   : openMenu(); });
+
+  clearBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    searchInp.value = '';
+    updateClearBtn();
+    closePopover();
+    if (typeof state !== 'undefined') { state.search = ''; render(); }
+    searchInp.focus();
+  });
+
+  searchInp.addEventListener('input',   handleInput);
+  searchInp.addEventListener('keydown', handleSearchKeydown);
+  searchInp.addEventListener('focus',   () => {
+    if (isSearchOpen) setHalo('search');
+    // Re-open popover if query already has text
+    const q = searchInp.value.trim();
+    if (q.length >= 2) {
+      const results = searchProperties(q);
+      openPopover(results, q);
+    }
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && isMenuOpen) closeMenu(); });
+
+  // Click outside — capture phase
+  document.addEventListener('click', e => {
+    const inBar     = ftb.contains(e.target);
+    const inPopover = popover.contains(e.target);
+    if (!inBar && !inPopover) {
+      if (isMenuOpen) closeMenu();
+      if (isSearchOpen && searchInp.value.trim() === '') closeSearch();
+      if (popover.classList.contains('open')) closePopover();
+    }
+  }, true);
+
+})();
+</script>
+</body>
+</html>

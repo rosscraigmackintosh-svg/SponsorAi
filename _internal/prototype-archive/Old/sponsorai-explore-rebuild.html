@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Explore</title>
+<style>
+  /* ── Reset & Base ────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink:        #1a1a2e;
+    --blue:       #2c6fad;
+    --blue-light: #deeaf6;
+    --blue-mid:   #b8d4ee;
+    --green:      #2a7a50;
+    --green-light:#ddf0e6;
+    --purple:     #6b4fa0;
+    --purple-light:#ede8f7;
+    --amber:      #b87c20;
+    --amber-light:#fdf3e0;
+    --red:        #c0392b;
+    --red-light:  #fdecea;
+    --mid:        #3a3a3a;
+    --subtle:     #6b6b6b;
+    --rule:       #d4d4d4;
+    --pale:       #f6f6f6;
+    --panel:      #f1f6fb;
+    --white:      #ffffff;
+    --conf-high:  #2a7a50;
+    --conf-mod:   #b87c20;
+    --conf-lim:   #c0392b;
+  }
+  html { font-size: 14px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--pale);
+    color: var(--mid);
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--rule); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 10; display: flex; flex-direction: column; }
+  .content { margin-left: 220px; flex: 1; min-width: 0; padding: 28px 32px 60px; }
+
+  /* ── Sidebar Logo ───────────────────────────────────── */
+  .sidebar-logo-area {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--rule);
+    flex-shrink: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 12px; }
+  .logo-mark { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; }
+  .logo-mark span { color: var(--blue); }
+  .brand-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--panel); border: 1px solid var(--blue-mid);
+    border-radius: 6px; padding: 7px 10px; cursor: pointer;
+    font-size: 12px; color: var(--blue); font-weight: 500;
+    width: 100%;
+  }
+  .brand-chip:hover { background: var(--blue-light); }
+  .brand-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+  .brand-chip-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+  /* ── Sidebar Nav ────────────────────────────────────── */
+  .sidebar-section { padding: 0 14px 8px; margin-bottom: 4px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: 0.7px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; margin-top: 12px; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 8px; border-radius: 5px;
+    font-size: 13px; color: var(--mid); text-decoration: none;
+    cursor: pointer; transition: all 0.12s; user-select: none;
+  }
+  .sidebar-link:hover { background: var(--pale); color: var(--ink); }
+  .sidebar-link.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+  .sidebar-link svg { opacity: 0.65; flex-shrink: 0; }
+  .sidebar-link.active svg { opacity: 1; }
+  .sidebar-divider { height: 1px; background: var(--rule); margin: 10px 14px; }
+  .sidebar-count {
+    margin-left: auto; font-size: 11px; background: var(--rule);
+    color: var(--subtle); border-radius: 10px; padding: 1px 7px;
+  }
+
+  /* ── Brand Profile Card ─────────────────────────────── */
+  .brand-profile-bar {
+    background: var(--white); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .brand-profile-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .brand-profile-meta { font-size: 12px; color: var(--subtle); margin-top: 1px; }
+  .profile-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .profile-tag {
+    font-size: 11px; padding: 3px 9px; border-radius: 12px;
+    background: var(--panel); color: var(--blue); border: 1px solid var(--blue-mid);
+  }
+  .profile-edit {
+    margin-left: auto; font-size: 12px; color: var(--blue);
+    cursor: pointer; padding: 5px 10px; border-radius: 4px;
+    border: 1px solid var(--blue-mid); background: var(--white);
+    white-space: nowrap;
+  }
+  .profile-edit:hover { background: var(--blue-light); }
+
+  /* ── Page Title ─────────────────────────────────────── */
+  .page-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .page-subtitle { font-size: 13px; color: var(--subtle); margin-bottom: 24px; }
+
+  /* ── Explore Rows ───────────────────────────────────── */
+  .explore-row { margin-bottom: 36px; }
+  .row-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .row-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .row-desc { font-size: 12px; color: var(--subtle); }
+  .row-logic {
+    margin-left: auto; font-size: 11px; color: var(--subtle);
+    background: var(--pale); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 2px 9px; white-space: nowrap;
+  }
+  .row-cards {
+    display: flex; gap: 12px; overflow-x: auto;
+    padding-bottom: 6px; scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+  .row-cards::-webkit-scrollbar { height: 4px; }
+  .row-cards::-webkit-scrollbar-track { background: transparent; }
+  .row-cards::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+
+  /* ── Property Card ──────────────────────────────────── */
+  .prop-card {
+    flex: 0 0 230px; background: var(--white);
+    border: 1.5px solid var(--rule); border-radius: 8px;
+    padding: 14px; cursor: pointer; transition: all 0.15s;
+    position: relative;
+  }
+  .prop-card:hover { border-color: var(--blue-mid); box-shadow: 0 2px 10px rgba(44,111,173,0.08); }
+  .prop-card.selected { border-color: var(--blue); background: var(--panel); }
+  .prop-card-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .prop-avatar {
+    width: 38px; height: 38px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+    background: var(--panel); color: var(--blue);
+    border: 1px solid var(--blue-mid);
+  }
+  .prop-name { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .prop-type { font-size: 11px; color: var(--subtle); margin-top: 2px; }
+  .prop-signals { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .signal-pill {
+    font-size: 11px; font-weight: 500; padding: 3px 8px;
+    border-radius: 4px; display: flex; align-items: center; gap: 4px;
+  }
+  .signal-fan  { background: var(--blue-light);   color: var(--blue);   }
+  .signal-fit  { background: var(--green-light);  color: var(--green);  }
+  .signal-bud  { background: var(--purple-light); color: var(--purple); }
+  .signal-label { font-weight: 400; opacity: 0.75; font-size: 10px; }
+  .prop-conf {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--subtle); margin-top: 6px;
+  }
+  .conf-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .conf-high  { background: var(--conf-high); }
+  .conf-mod   { background: var(--conf-mod); }
+  .conf-lim   { background: var(--conf-lim); }
+  .prop-series { font-size: 11px; color: var(--subtle); margin-top: 4px; border-top: 1px solid var(--rule); padding-top: 7px; }
+  .card-view-link { display: block; font-size: 11px; color: var(--blue); margin-top: 8px; text-decoration: none; opacity: 0; transition: opacity 0.15s; }
+  .prop-card:hover .card-view-link { opacity: 1; }
+
+  /* ── Property in Focus ──────────────────────────────── */
+  .focus-panel {
+    background: var(--white); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 22px 24px; margin-bottom: 36px;
+  }
+  .focus-label { font-size: 10px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--subtle); margin-bottom: 12px; }
+  .focus-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+  .focus-avatar {
+    width: 52px; height: 52px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; background: var(--panel);
+    color: var(--blue); border: 1px solid var(--blue-mid); flex-shrink: 0;
+  }
+  .focus-name { font-size: 18px; font-weight: 700; color: var(--ink); }
+  .focus-type { font-size: 13px; color: var(--subtle); margin-top: 2px; }
+  .focus-series { font-size: 12px; color: var(--blue); margin-top: 3px; }
+  .focus-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn {
+    font-size: 12px; padding: 7px 14px; border-radius: 5px;
+    cursor: pointer; border: 1px solid var(--rule); background: var(--white);
+    color: var(--mid); transition: all 0.12s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--pale); border-color: var(--blue-mid); color: var(--ink); }
+  .btn-primary { background: var(--blue); color: var(--white); border-color: var(--blue); }
+  .btn-primary:hover { background: #235a8e; border-color: #235a8e; color: var(--white); }
+  .focus-signals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .focus-signal-card {
+    border-radius: 7px; padding: 13px 14px;
+    border: 1px solid transparent;
+  }
+  .focus-signal-card.fan   { background: var(--blue-light); border-color: var(--blue-mid); }
+  .focus-signal-card.fit   { background: var(--green-light); border-color: #b0d9c2; }
+  .focus-signal-card.bud   { background: var(--purple-light); border-color: #c9bce8; }
+  .focus-signal-type { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .focus-signal-card.fan .focus-signal-type { color: var(--blue); }
+  .focus-signal-card.fit .focus-signal-type { color: var(--green); }
+  .focus-signal-card.bud .focus-signal-type { color: var(--purple); }
+  .focus-signal-value { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+  .focus-signal-card.fan .focus-signal-value { color: var(--blue); }
+  .focus-signal-card.fit .focus-signal-value { color: var(--green); }
+  .focus-signal-card.bud .focus-signal-value { color: var(--purple); }
+  .focus-signal-sub { font-size: 11px; color: var(--subtle); }
+  .focus-signal-note { font-size: 10.5px; color: var(--subtle); margin-top: 6px; font-style: italic; }
+  .focus-dims { margin-bottom: 20px; }
+  .focus-dims-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 10px; }
+  .dim-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .dim-label { font-size: 12px; color: var(--mid); width: 150px; flex-shrink: 0; }
+  .dim-bar-wrap { flex: 1; height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+  .dim-bar { height: 100%; border-radius: 3px; background: var(--green); }
+  .dim-val { font-size: 12px; font-weight: 500; color: var(--mid); width: 30px; text-align: right; }
+  .focus-conf-row {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    background: var(--pale); border-radius: 6px; margin-bottom: 16px;
+    border: 1px solid var(--rule);
+  }
+  .focus-conf-row .conf-dot { width: 8px; height: 8px; }
+  .focus-conf-label { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .focus-conf-desc { font-size: 12px; color: var(--subtle); }
+  .focus-opportunity {
+    background: var(--purple-light); border: 1px solid #c9bce8;
+    border-radius: 7px; padding: 12px 14px;
+  }
+  .opp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .opp-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--purple); background: var(--white); border: 1px solid #c9bce8; border-radius: 4px; padding: 2px 7px; }
+  .opp-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .opp-meta { font-size: 12px; color: var(--subtle); margin-top: 2px; }
+
+  /* ── Signal Legend ──────────────────────────────────── */
+  .signal-legend {
+    display: flex; gap: 20px; align-items: center;
+    padding: 10px 14px; background: var(--white);
+    border: 1px solid var(--rule); border-radius: 6px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .legend-title { font-size: 11px; font-weight: 600; color: var(--subtle); letter-spacing: 0.4px; text-transform: uppercase; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--mid); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-sep { width: 1px; height: 16px; background: var(--rule); }
+
+  /* ── Scrollbar ──────────────────────────────────────── */
+  * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+
+  /* ── Tooltip ────────────────────────────────────────── */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--white); font-size: 11px;
+    padding: 5px 9px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; z-index: 200;
+  }
+
+  /* ── No-signal note ─────────────────────────────────── */
+  .no-score {
+    font-size: 11px; color: var(--subtle); font-style: italic; padding: 3px 0;
+  }
+  .focus-no-fit {
+    background: var(--green-light); border-color: #b0d9c2;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Logo & brand chip -->
+    <div class="sidebar-logo-area">
+      <a class="logo" href="sponsorai-explore-rebuild.html">
+        <span class="logo-mark">Sponsor<span>AI</span></span>
+      </a>
+      <div class="brand-chip" title="Your active brand profile">
+        <span class="brand-chip-dot"></span>
+        <span class="brand-chip-name">Apex Performance Gear</span>
+      </div>
+    </div>
+
+    <div class="sidebar-nav-scroll">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Discover</div>
+        <a class="sidebar-link active" href="sponsorai-explore-rebuild.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+          Explore
+        </a>
+        <a class="sidebar-link" href="sponsorai-browse.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="10" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
+          Browse All
+        </a>
+        <a class="sidebar-link" href="sponsorai-watchlist.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.1l-3.8 2.2.7-4.3-3.1-3 4.3-.6L8 1.5z" fill="currentColor" opacity=".5"/></svg>
+          Watchlist
+          <span class="sidebar-count">4</span>
+        </a>
+        <a class="sidebar-link" href="sponsorai-compare.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="6" height="9" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="1" width="6" height="12" rx="1.5" fill="currentColor"/></svg>
+          Compare
+        </a>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">My Work</div>
+        <a class="sidebar-link" href="sponsorai-portfolio.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          Portfolio
+          <span class="sidebar-count">2</span>
+        </a>
+        <a class="sidebar-link" href="sponsorai-opportunities.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5"/></svg>
+          Opportunities
+        </a>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Intelligence</div>
+        <a class="sidebar-link" href="#">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 12 L5 7 L8 9 L11 4 L14 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          Methodology
+        </a>
+        <a class="sidebar-link" href="#">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          Signal History
+        </a>
+      </div>
+    </div><!-- /sidebar-nav-scroll -->
+  </aside>
+
+  <!-- ── Main Content ──────────────────────────────────── -->
+    <main class="content">
+
+      <div class="page-title">Explore</div>
+      <div class="page-subtitle">Row-based discovery. Each row answers a distinct analytical question. No ranking.</div>
+
+      <!-- Brand Profile Bar -->
+      <div class="brand-profile-bar">
+        <div>
+          <div class="brand-profile-name">Apex Performance Gear</div>
+          <div class="brand-profile-meta">UK automotive accessories · Budget declared: £80k–£150k · FitScore active</div>
+        </div>
+        <div class="profile-tags">
+          <span class="profile-tag">Performance automotive</span>
+          <span class="profile-tag">UK &amp; Europe</span>
+          <span class="profile-tag">18–35 male skew</span>
+        </div>
+        <button class="profile-edit">Edit profile</button>
+      </div>
+
+      <!-- Signal Legend -->
+      <div class="signal-legend">
+        <span class="legend-title">Signal key</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#deeaf6;border:1px solid #b8d4ee"></span> FanScore — digital attention gravity, tier-normalised</span>
+        <span class="legend-sep"></span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#ddf0e6;border:1px solid #b0d9c2"></span> FitScore — alignment to your brand profile</span>
+        <span class="legend-sep"></span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#ede8f7;border:1px solid #c9bce8"></span> Budget — access filter only, not scored</span>
+        <span class="legend-sep"></span>
+        <span class="legend-item">
+          <span style="display:flex;gap:4px">
+            <span class="conf-dot conf-high"></span>
+            <span class="conf-dot conf-mod"></span>
+            <span class="conf-dot conf-lim"></span>
+          </span>
+          Data confidence
+        </span>
+      </div>
+
+      <!-- Property in Focus -->
+      <div class="focus-panel" id="focusPanel">
+        <div class="focus-label">Property in Focus — data-triggered, not editorial</div>
+        <div class="focus-header">
+          <div class="focus-avatar" id="focusAvatar">PR</div>
+          <div>
+            <div class="focus-name" id="focusName">Prema Racing</div>
+            <div class="focus-type" id="focusType">Formula 2 &amp; Formula 3 Constructor</div>
+            <div class="focus-series" id="focusSeries">FIA F2 Championship · FIA F3 Championship · FR Italian</div>
+          </div>
+          <div class="focus-actions">
+            <button class="btn">+ Watchlist</button>
+            <a class="btn" href="sponsorai-compare.html">Compare</a>
+            <a class="btn btn-primary" id="focusViewBtn" href="sponsorai-property.html?id=1">View property →</a>
+          </div>
+        </div>
+
+        <div class="focus-signals">
+          <div class="focus-signal-card fan">
+            <div class="focus-signal-type">FanScore</div>
+            <div class="focus-signal-value" id="focusFanScore">74</div>
+            <div class="focus-signal-sub" id="focusFanTier">Tier B · Multi-platform</div>
+            <div class="focus-signal-note" id="focusFanNote">Strong engagement momentum over 90 days. Audience growth 18% YoY.</div>
+          </div>
+          <div class="focus-signal-card fit">
+            <div class="focus-signal-type">FitScore — your profile</div>
+            <div class="focus-signal-value" id="focusFitScore">68</div>
+            <div class="focus-signal-sub" id="focusFitSub">Good alignment</div>
+            <div class="focus-signal-note" id="focusFitNote">Geographic and category match. Audience age skew aligned. Budget within range.</div>
+          </div>
+          <div class="focus-signal-card bud">
+            <div class="focus-signal-type">Budget access</div>
+            <div class="focus-signal-value" id="focusBudget">£95k</div>
+            <div class="focus-signal-sub" id="focusBudSub">Minimum entry point</div>
+            <div class="focus-signal-note" id="focusBudNote">Within your declared budget range. Opportunity declared and current.</div>
+          </div>
+        </div>
+
+        <div class="focus-dims">
+          <div class="focus-dims-title">FitScore dimensions — Apex Performance Gear</div>
+          <div id="focusDims">
+            <div class="dim-row"><span class="dim-label">Geographic fit</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:80%"></div></div><span class="dim-val">80</span></div>
+            <div class="dim-row"><span class="dim-label">Category alignment</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:72%"></div></div><span class="dim-val">72</span></div>
+            <div class="dim-row"><span class="dim-label">Audience age match</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:65%"></div></div><span class="dim-val">65</span></div>
+            <div class="dim-row"><span class="dim-label">Budget compatibility</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:88%"></div></div><span class="dim-val">88</span></div>
+            <div class="dim-row"><span class="dim-label">Series reach alignment</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:54%"></div></div><span class="dim-val">54</span></div>
+          </div>
+        </div>
+
+        <div class="focus-conf-row">
+          <span class="conf-dot conf-high" id="focusConfDot"></span>
+          <span class="focus-conf-label" id="focusConfLabel">High confidence</span>
+          <span class="focus-conf-desc" id="focusConfDesc">— 4 of 4 primary data sources active. FanScore computed from full signal set. Data currency: 3 days.</span>
+        </div>
+
+        <div class="focus-opportunity" id="focusOpp">
+          <div class="opp-header">
+            <span class="opp-tag">Active opportunity</span>
+          </div>
+          <div class="opp-title" id="focusOppTitle">Race suit &amp; apparel partner — FIA F2 2025 season</div>
+          <div class="opp-meta" id="focusOppMeta">Minimum £95,000 · Declared 18 days ago · Expires in 43 days</div>
+        </div>
+      </div>
+
+      <!-- ── Row 1: Matching your brand profile ──────────── -->
+      <div class="explore-row">
+        <div class="row-header">
+          <span class="row-title">Matching your brand profile</span>
+          <span class="row-desc">Ordered by FitScore alignment to Apex Performance Gear</span>
+          <span class="row-logic" data-tip="FitScore descending · Budget filter applied">FitScore · budget-filtered</span>
+        </div>
+        <div class="row-cards" id="row1">
+          <!-- cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- ── Row 2: High attention momentum ─────────────── -->
+      <div class="explore-row">
+        <div class="row-header">
+          <span class="row-title">High attention momentum</span>
+          <span class="row-desc">FanScore growth over 90 days — not current absolute scale</span>
+          <span class="row-logic" data-tip="90-day FanScore delta · Tier-normalised">FanScore Δ90d · tier-normalised</span>
+        </div>
+        <div class="row-cards" id="row2">
+        </div>
+      </div>
+
+      <!-- ── Row 3: Underexplored  ───────────────────────── -->
+      <div class="explore-row">
+        <div class="row-header">
+          <span class="row-title">Strong signals, low brand activity</span>
+          <span class="row-desc">Properties with solid FanScore and FitScore but limited current brand interest on the platform</span>
+          <span class="row-logic" data-tip="FanScore ≥ 55 · FitScore ≥ 50 · low watchlist density">Low competition · strong signal</span>
+        </div>
+        <div class="row-cards" id="row3">
+        </div>
+      </div>
+
+      <!-- ── Row 4: Within your budget range ────────────── -->
+      <div class="explore-row">
+        <div class="row-header">
+          <span class="row-title">Active opportunities within your budget</span>
+          <span class="row-desc">Declared sponsorship openings. Filtered to your declared budget range. Ordered by FitScore.</span>
+          <span class="row-logic" data-tip="Declared opportunity · within budget · FitScore sort">Opportunities · budget match</span>
+        </div>
+        <div class="row-cards" id="row4">
+        </div>
+      </div>
+
+  </main>
+</div>
+
+<script>
+// ── Sample property data ─────────────────────────────────
+const properties = [
+  {
+    id: 1,
+    initials: "PR",
+    name: "Prema Racing",
+    type: "F2 & F3 Constructor",
+    series: "FIA F2 · FIA F3 · FR Italian",
+    fanScore: 74, fanTier: "Tier B",
+    fitScore: 68, fitSub: "Good alignment",
+    budget: "£95k", budgetNum: 95,
+    conf: "high",
+    confDesc: "4/4 sources active. Data currency: 3 days.",
+    fanNote: "Strong engagement momentum over 90 days. Audience growth 18% YoY.",
+    fitNote: "Geographic and category match. Audience age skew aligned.",
+    oppTitle: "Race suit & apparel partner — FIA F2 2025",
+    oppMeta: "Minimum £95,000 · Declared 18 days ago · Expires in 43 days",
+    rows: [1, 4],
+    dims: [80, 72, 65, 88, 54]
+  },
+  {
+    id: 2,
+    initials: "ART",
+    name: "ART Grand Prix",
+    type: "F2 & F3 Constructor",
+    series: "FIA F2 · FIA F3",
+    fanScore: 71, fanTier: "Tier B",
+    fitScore: 64, fitSub: "Good alignment",
+    budget: "£110k", budgetNum: 110,
+    conf: "high",
+    confDesc: "4/4 sources active. Data currency: 5 days.",
+    fanNote: "Consistent engagement across platforms. Large international fanbase.",
+    fitNote: "Category match strong. Geographic fit moderate — French team, European series.",
+    oppTitle: "Technical partner — livery placement",
+    oppMeta: "Minimum £110,000 · Declared 7 days ago",
+    rows: [1, 4],
+    dims: [68, 74, 70, 77, 62]
+  },
+  {
+    id: 3,
+    initials: "HI",
+    name: "Hitech Grand Prix",
+    type: "F2 & F3 Constructor",
+    series: "FIA F2 · FIA F3",
+    fanScore: 62, fanTier: "Tier B",
+    fitScore: 71, fitSub: "Strong alignment",
+    budget: "£75k", budgetNum: 75,
+    conf: "mod",
+    confDesc: "3/4 sources active. Instagram data partial. Data currency: 9 days.",
+    fanNote: "UK-based team with strong domestic audience. Growing international presence.",
+    fitNote: "Excellent UK geographic fit. Category alignment high. Budget well within range.",
+    oppTitle: "Apparel &amp; accessories partner",
+    oppMeta: "Minimum £75,000 · Declared 12 days ago · Expires in 18 days",
+    rows: [1, 3, 4],
+    dims: [91, 78, 68, 95, 49]
+  },
+  {
+    id: 4,
+    initials: "TR",
+    name: "Theo Pourchaire",
+    type: "Formula 2 Driver",
+    series: "FIA F2 Championship",
+    fanScore: 81, fanTier: "Tier B",
+    fitScore: 52, fitSub: "Moderate alignment",
+    budget: "—", budgetNum: 0,
+    conf: "high",
+    confDesc: "4/4 sources active. Strong social data. Data currency: 1 day.",
+    fanNote: "Highest FanScore momentum in F2 grid. 90-day growth of +12 points.",
+    fitNote: "Strong FanScore match. Geographic fit lower — French driver, limited UK activation history.",
+    oppTitle: null,
+    oppMeta: null,
+    rows: [2],
+    dims: [55, 60, 72, 40, 48]
+  },
+  {
+    id: 5,
+    initials: "CA",
+    name: "Carlin Motorsport",
+    type: "Multi-Series Constructor",
+    series: "FIA F2 · FIA F3 · British F4",
+    fanScore: 69, fanTier: "Tier B",
+    fitScore: 66, fitSub: "Good alignment",
+    budget: "£85k", budgetNum: 85,
+    conf: "high",
+    confDesc: "4/4 sources active. Data currency: 4 days.",
+    fanNote: "Steady engagement. Multi-series presence amplifies total reach.",
+    fitNote: "UK-based. Strong automotive affinity in existing partner base.",
+    oppTitle: "Multi-series branding package",
+    oppMeta: "Minimum £85,000 · Declared 22 days ago",
+    rows: [1, 3, 4],
+    dims: [84, 70, 66, 90, 58]
+  },
+  {
+    id: 6,
+    initials: "VR",
+    name: "Virtuosi Racing",
+    type: "F2 Constructor",
+    series: "FIA F2 Championship",
+    fanScore: 58, fanTier: "Tier B",
+    fitScore: 73, fitSub: "Strong alignment",
+    budget: "£70k", budgetNum: 70,
+    conf: "mod",
+    confDesc: "3/4 sources active. TikTok data limited. Data currency: 7 days.",
+    fanNote: "Moderate FanScore. Strong within-tier positioning. Audience quality indicators positive.",
+    fitNote: "UK team. Category alignment very strong — existing performance automotive adjacency.",
+    oppTitle: "Technical apparel partner",
+    oppMeta: "Minimum £70,000 · Declared 31 days ago · Expires in 9 days",
+    rows: [1, 3, 4],
+    dims: [88, 82, 62, 93, 52]
+  },
+  {
+    id: 7,
+    initials: "WR",
+    name: "WRT",
+    type: "GT & LMP Constructor",
+    series: "FIA WEC · GTWC Europe · GT World Challenge",
+    fanScore: 67, fanTier: "Tier B",
+    fitScore: 59, fitSub: "Moderate alignment",
+    budget: "—", budgetNum: 0,
+    conf: "mod",
+    confDesc: "3/4 sources active. YouTube data limited. Data currency: 6 days.",
+    fanNote: "Strong FanScore growth in endurance category. +9 points over 90 days.",
+    fitNote: "Belgian team. Geographic fit weaker for UK-focused brand. Category interest present.",
+    oppTitle: null,
+    oppMeta: null,
+    rows: [2, 3],
+    dims: [52, 65, 58, 45, 72]
+  },
+  {
+    id: 8,
+    initials: "MP",
+    name: "MP Motorsport",
+    type: "F2 & F3 Constructor",
+    series: "FIA F2 · FIA F3 · Euroformula",
+    fanScore: 55, fanTier: "Tier C",
+    fitScore: 60, fitSub: "Moderate alignment",
+    budget: "£55k", budgetNum: 55,
+    conf: "lim",
+    confDesc: "2/4 sources active. Instagram and YouTube data limited. Interpret FanScore with caution.",
+    fanNote: "Limited data coverage. FanScore computed from partial signal set.",
+    fitNote: "Dutch-based team. Geographic fit moderate. Budget entry point accessible.",
+    oppTitle: "Driver kit &amp; apparel partner",
+    oppMeta: "Minimum £55,000 · Declared 44 days ago · Expires in 16 days",
+    rows: [3, 4],
+    dims: [58, 62, 55, 88, 40]
+  },
+  {
+    id: 9,
+    initials: "DS",
+    name: "DAMS",
+    type: "F2 Constructor",
+    series: "FIA F2 Championship",
+    fanScore: 63, fanTier: "Tier B",
+    fitScore: 57, fitSub: "Moderate alignment",
+    budget: "—", budgetNum: 0,
+    conf: "high",
+    confDesc: "4/4 sources active. Data currency: 2 days.",
+    fanNote: "Steady signals. FanScore stable over 90 days. Strong X/Twitter presence.",
+    fitNote: "French team. Category alignment moderate. Automotive interest in current partner set.",
+    oppTitle: null,
+    oppMeta: null,
+    rows: [2],
+    dims: [50, 60, 58, 42, 61]
+  },
+  {
+    id: 10,
+    initials: "FO",
+    name: "Fortec Motorsports",
+    type: "F3 & British GT Constructor",
+    series: "FIA F3 · British GT · British F4",
+    fanScore: 51, fanTier: "Tier C",
+    fitScore: 67, fitSub: "Good alignment",
+    budget: "£45k", budgetNum: 45,
+    conf: "mod",
+    confDesc: "3/4 sources active. TikTok not tracked. Data currency: 11 days.",
+    fanNote: "Smaller-scale property. FanScore appropriate to tier. Domestic UK presence strong.",
+    fitNote: "UK team. Excellent geographic fit. Category alignment strong. Budget highly accessible.",
+    oppTitle: "Season livery &amp; apparel partner",
+    oppMeta: "Minimum £45,000 · Declared 8 days ago",
+    rows: [3],
+    dims: [92, 75, 60, 99, 43]
+  }
+];
+
+// ── Card builder ─────────────────────────────────────────
+function buildCard(prop, selectedId) {
+  const confClass = { high: "conf-high", mod: "conf-mod", lim: "conf-lim" }[prop.conf];
+  const confLabel = { high: "High confidence", mod: "Moderate confidence", lim: "Limited coverage" }[prop.conf];
+  const isSelected = prop.id === selectedId;
+
+  return `
+    <div class="prop-card ${isSelected ? "selected" : ""}" onclick="selectProperty(${prop.id})">
+      <div class="prop-card-header">
+        <div class="prop-avatar">${prop.initials}</div>
+        <div>
+          <div class="prop-name">${prop.name}</div>
+          <div class="prop-type">${prop.type}</div>
+        </div>
+      </div>
+      <div class="prop-signals">
+        <span class="signal-pill signal-fan" data-tip="FanScore — tier-normalised attention">
+          <span class="signal-label">Fan</span> ${prop.fanScore}
+        </span>
+        ${prop.fitScore ? `<span class="signal-pill signal-fit" data-tip="FitScore — alignment to your brand">
+          <span class="signal-label">Fit</span> ${prop.fitScore}
+        </span>` : `<span class="no-score">FitScore—</span>`}
+        ${prop.budgetNum > 0 ? `<span class="signal-pill signal-bud" data-tip="Budget access filter">
+          <span class="signal-label">£</span> ${prop.budget}
+        </span>` : ""}
+      </div>
+      <div class="prop-conf">
+        <span class="conf-dot ${confClass}"></span>
+        <span>${confLabel}</span>
+      </div>
+      <div class="prop-series">${prop.series}</div>
+      <a class="card-view-link" href="sponsorai-property.html?id=${prop.id}">View full profile →</a>
+    </div>`;
+}
+
+// ── Render rows ──────────────────────────────────────────
+let currentSelected = 1;
+
+function renderRows() {
+  [1, 2, 3, 4].forEach(rowNum => {
+    const rowProps = properties.filter(p => p.rows.includes(rowNum));
+    document.getElementById(`row${rowNum}`).innerHTML = rowProps
+      .map(p => buildCard(p, currentSelected)).join("");
+  });
+}
+
+// ── Update focus panel ───────────────────────────────────
+function selectProperty(id) {
+  currentSelected = id;
+  const p = properties.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById("focusAvatar").textContent = p.initials;
+  document.getElementById("focusName").textContent = p.name;
+  document.getElementById("focusType").textContent = p.type;
+  document.getElementById("focusSeries").textContent = p.series;
+  document.getElementById("focusFanScore").textContent = p.fanScore;
+  document.getElementById("focusFanTier").textContent = p.fanTier + " · Multi-platform";
+  document.getElementById("focusFanNote").textContent = p.fanNote;
+  document.getElementById("focusFitScore").textContent = p.fitScore || "—";
+  document.getElementById("focusFitSub").textContent = p.fitSub;
+  document.getElementById("focusFitNote").textContent = p.fitNote;
+  document.getElementById("focusBudget").textContent = p.budgetNum > 0 ? p.budget : "No opp. declared";
+  document.getElementById("focusBudSub").textContent = p.budgetNum > 0 ? "Minimum entry point" : "Access filter not applicable";
+  document.getElementById("focusBudNote").textContent = p.budgetNum > 0
+    ? "Within your declared budget range. Opportunity declared and current."
+    : "No active declared opportunity on this property.";
+
+  // Confidence
+  const confClass = { high: "conf-high", mod: "conf-mod", lim: "conf-lim" }[p.conf];
+  const confLabel = { high: "High confidence", mod: "Moderate confidence", lim: "Limited coverage" }[p.conf];
+  const dot = document.getElementById("focusConfDot");
+  dot.className = `conf-dot ${confClass}`;
+  document.getElementById("focusConfLabel").textContent = confLabel;
+  document.getElementById("focusConfDesc").textContent = `— ${p.confDesc}`;
+
+  // Dims
+  const dimLabels = ["Geographic fit", "Category alignment", "Audience age match", "Budget compatibility", "Series reach alignment"];
+  document.getElementById("focusDims").innerHTML = p.dims.map((v, i) =>
+    `<div class="dim-row"><span class="dim-label">${dimLabels[i]}</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:${v}%"></div></div><span class="dim-val">${v}</span></div>`
+  ).join("");
+
+  // Opportunity
+  const oppEl = document.getElementById("focusOpp");
+  if (p.oppTitle) {
+    oppEl.style.display = "block";
+    document.getElementById("focusOppTitle").innerHTML = p.oppTitle;
+    document.getElementById("focusOppMeta").textContent = p.oppMeta;
+  } else {
+    oppEl.style.display = "none";
+  }
+
+  // Update View property link
+  document.getElementById("focusViewBtn").href = `sponsorai-property.html?id=${id}`;
+
+  renderRows();
+}
+
+// ── Init ─────────────────────────────────────────────────
+renderRows();
+</script>
+</body>
+</html>

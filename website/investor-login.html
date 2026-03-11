@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SponsorAI — Investor Access</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="investor-login.css" />
+</head>
+<body>
+
+  <!-- Background — same layers as main page -->
+  <div class="bg-scene">
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="bg-vignette"></div>
+    <div class="bg-noise"></div>
+    <div class="light-beam light-beam--left"></div>
+    <div class="light-beam light-beam--right"></div>
+    <div class="light-glow light-glow--1"></div>
+    <div class="light-glow light-glow--2"></div>
+  </div>
+
+  <!-- Page wrapper -->
+  <div class="page">
+
+    <!-- Header -->
+    <header class="header">
+      <a href="hub.html" class="header__logo"><img src="images/logo-whitesvg.svg" alt="SponsorAI" height="20" style="display:block;"></a>
+      <a class="header__badge" href="index.html">Investor Access</a>
+    </header>
+
+    <!-- Login -->
+    <main class="login-wrap">
+      <div class="login-card" role="main">
+
+        <div class="login-card__eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>Restricted area</span>
+        </div>
+
+        <h1 class="login-card__heading">Investor login</h1>
+        <p class="login-card__sub">This area is for invited investors only.</p>
+
+        <form class="login-form" id="loginForm" novalidate autocomplete="off">
+
+          <div class="login-field">
+            <label class="login-label" for="username">Username</label>
+            <input
+              class="login-input"
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter username"
+              autocomplete="username"
+              spellcheck="false"
+              required
+            />
+          </div>
+
+          <div class="login-field">
+            <label class="login-label" for="password">Password</label>
+            <input
+              class="login-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <p class="login-error" id="loginError" aria-live="polite"></p>
+
+          <button class="login-btn" type="submit">
+            <span class="login-btn__text">Sign in</span>
+            <span class="login-btn__arrow">→</span>
+          </button>
+
+        </form>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="footer__copy">© 2026 SponsorAI</span>
+      <span class="footer__divider">·</span>
+      <span class="footer__tagline">Intelligence for sponsorship decisions</span>
+    </footer>
+
+  </div>
+
+  <script src="investor-auth.js"></script>
+</body>
+</html>

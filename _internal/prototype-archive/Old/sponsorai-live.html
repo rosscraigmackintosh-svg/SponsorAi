@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SponsorAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: #fff; color: #111; }
+    #boot { display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 13px; color: #9ca3af; }
+    #err  { display: none; padding: 24px; color: #dc2626; font-size: 13px; white-space: pre-wrap; border: 1px solid #fca5a5; margin: 24px; border-radius: 8px; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- Shown immediately before JS runs -->
+<div id="boot">Loading SponsorAI...</div>
+<div id="err"></div>
+<div id="root"></div>
+
+<!-- Catch JS errors and display them on-screen so we can debug -->
+<script>
+  window.onerror = function(msg, src, line, col, err) {
+    document.getElementById('boot').style.display = 'none';
+    var el = document.getElementById('err');
+    el.style.display = 'block';
+    el.textContent = 'JavaScript error:\n' + msg + '\n\n' + (err && err.stack ? err.stack : '(no stack)');
+  };
+  window.addEventListener('unhandledrejection', function(e) {
+    document.getElementById('boot').style.display = 'none';
+    var el = document.getElementById('err');
+    el.style.display = 'block';
+    el.textContent = 'Unhandled promise rejection:\n' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
+  });
+</script>
+
+<!-- CDN dependencies (loaded in order) -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react,env">
+
+// ── Config ────────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://kyjpxxyaebxvpprugmof.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5anB4eHlhZWJ4dnBwcnVnbW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODMxNjAsImV4cCI6MjA4Nzg1OTE2MH0.Cw77x1rFkJQiEwbI9APniikFPOT7k7M8CsdC1NDhNNc';
+const MODEL    = 'v1.0';
+const ACCENT   = '#e8521a';
+const MONO     = "'DM Mono', monospace";
+const TYPE_COLOR = { driver: '#3b82f6', team: '#8b5cf6', series: '#10b981', event: '#f59e0b' };
+const TYPE_LABEL = { driver: 'Driver', team: 'Team', series: 'Series', event: 'Event' };
+
+const { useState, useEffect } = React;
+
+// ── Supabase client ───────────────────────────────────────────────────────────
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function toNum(v) {
+  if (v == null) return null;
+  var x = Number(v);
+  return isNaN(x) ? null : x;
+}
+function fmt(v, dp) {
+  if (v == null) return '--';
+  return Number(v).toFixed(dp == null ? 1 : dp);
+}
+function getWin(row, s) {
+  return {
+    avg:         toNum(row['avg_score_' + s]),
+    trend:       toNum(row['trend_value_' + s]),
+    completeness:toNum(row['completeness_pct_' + s]),
+    confidence:  row['confidence_band_' + s] || null,
+    suppressed:  row['suppression_reason_' + s] || null,
+  };
+}
+function arrowChar(v)  { return v == null ? '' : v > 0.1 ? '↑' : v < -0.1 ? '↓' : '→'; }
+function arrowColor(v) { return v == null ? '#9ca3af' : v > 0.1 ? '#10b981' : v < -0.1 ? '#ef4444' : '#9ca3af'; }
+
+// ── Data fetchers ─────────────────────────────────────────────────────────────
+async function fetchGrid() {
+  var res = await db.from('v_property_summary_current').select(
+    'property_id,property_name,property_type,country,as_of_day,model_version,' +
+    'avg_score_30d,trend_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,' +
+    'avg_score_60d,avg_score_90d,trend_value_90d'
+  ).order('avg_score_30d', { ascending: false, nullsFirst: false }).limit(48);
+  if (res.error) throw new Error(res.error.message);
+  return res.data;
+}
+
+async function fetchDetail(id) {
+  var r1 = await db.from('v_property_summary_current').select('*').eq('property_id', id).single();
+  if (r1.error) throw new Error(r1.error.message);
+  var r2 = await db.from('fanscore_daily')
+    .select('metric_date,fanscore_value,suppression_reason,confidence_band,components_json')
+    .eq('property_id', id).eq('model_version', MODEL)
+    .order('metric_date', { ascending: false }).limit(1);
+  if (r2.error) throw new Error(r2.error.message);
+  return { view: r1.data, latest: r2.data && r2.data[0] ? r2.data[0] : null };
+}
+
+async function fetchSeries(id) {
+  var since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+  var res = await db.from('fanscore_daily')
+    .select('metric_date,fanscore_value,suppression_reason')
+    .eq('property_id', id).eq('model_version', MODEL)
+    .gte('metric_date', since).order('metric_date', { ascending: true });
+  if (res.error) throw new Error(res.error.message);
+  return res.data.map(function(r) {
+    return { date: r.metric_date, value: r.suppression_reason ? null : toNum(r.fanscore_value), suppressed: !!r.suppression_reason };
+  });
+}
+
+async function fetchCompare(ids) {
+  var since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  var r1 = await db.from('v_property_summary_current').select(
+    'property_id,property_name,property_type,country,as_of_day,' +
+    'avg_score_30d,trend_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,' +
+    'avg_score_90d,trend_value_90d'
+  ).in('property_id', ids);
+  if (r1.error) throw new Error(r1.error.message);
+  var r2 = await db.from('fanscore_daily')
+    .select('property_id,metric_date,fanscore_value,suppression_reason')
+    .in('property_id', ids).eq('model_version', MODEL).gte('metric_date', since)
+    .order('property_id').order('metric_date', { ascending: true });
+  if (r2.error) throw new Error(r2.error.message);
+  var sparkMap = {};
+  (r2.data || []).forEach(function(r) {
+    if (!sparkMap[r.property_id]) sparkMap[r.property_id] = [];
+    sparkMap[r.property_id].push({ date: r.metric_date, value: r.suppression_reason ? null : toNum(r.fanscore_value) });
+  });
+  return ids.map(function(id) {
+    var v = r1.data.find(function(s) { return s.property_id === id; });
+    return Object.assign({}, v, { win30: getWin(v, '30d'), sparkline: sparkMap[id] || [] });
+  });
+}
+
+// ── Sparkline ─────────────────────────────────────────────────────────────────
+function Spark({ points, w, h, color }) {
+  w = w || 100; h = h || 28; color = color || ACCENT;
+  var vals = points.map(function(p) { return p.value; }).filter(function(v) { return v != null; });
+  if (!vals.length) return <span style={{ fontSize: 10, color: '#9ca3af' }}>no data</span>;
+  var pad = 2, min = Math.min.apply(null, vals), max = Math.max.apply(null, vals), rng = max - min || 1;
+  var xFn = function(i) { return pad + i / (points.length - 1 || 1) * (w - pad * 2); };
+  var yFn = function(v) { return pad + (1 - (v - min) / rng) * (h - pad * 2); };
+  var avg = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
+  var segs = [], cur = [];
+  points.forEach(function(p, i) {
+    if (p.value != null) {
+      cur.push({ x: xFn(i), y: yFn(p.value) });
+    } else {
+      if (cur.length) { segs.push(cur); cur = []; }
+    }
+  });
+  if (cur.length) segs.push(cur);
+  var last = segs[segs.length - 1];
+  var areaPoints = last && last.length > 1
+    ? last.map(function(p) { return p.x + ',' + p.y; }).concat([last[last.length-1].x + ',' + (h - pad), last[0].x + ',' + (h - pad)]).join(' ')
+    : null;
+  return (
+    <svg width={w} height={h} style={{ display: 'block', overflow: 'visible' }}>
+      <line x1={pad} y1={yFn(avg)} x2={w - pad} y2={yFn(avg)} stroke="#e5e7eb" strokeWidth="0.5" strokeDasharray="3 2" />
+      {areaPoints && <polygon points={areaPoints} fill={color} fillOpacity="0.08" />}
+      {segs.map(function(seg, i) {
+        return <polyline key={i} points={seg.map(function(p) { return p.x + ',' + p.y; }).join(' ')} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />;
+      })}
+    </svg>
+  );
+}
+
+// ── Window card ───────────────────────────────────────────────────────────────
+function WinCard({ label, w }) {
+  var sup = !!w.suppressed;
+  return (
+    <div style={{ flex: 1, minWidth: 80, border: '1px solid ' + (sup ? '#fed7aa' : '#e5e7eb'), borderRadius: 6, padding: '8px 10px', background: sup ? '#fffbf5' : '#fafafa' }}>
+      <div style={{ fontSize: 9, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{label}</div>
+      {sup && <div style={{ fontSize: 9, color: ACCENT, marginBottom: 1 }}>Low data</div>}
+      <div style={{ fontSize: 20, fontWeight: 600, fontFamily: MONO, color: w.avg != null ? '#111' : '#d1d5db' }}>{fmt(w.avg)}</div>
+      <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
+        {w.confidence || '--'}
+        {w.trend != null && <span style={{ color: arrowColor(w.trend), marginLeft: 4 }}>{arrowChar(w.trend)}</span>}
+      </div>
+      {w.completeness != null && <div style={{ fontSize: 9, color: '#9ca3af' }}>{(w.completeness * 100).toFixed(0)}% coverage</div>}
+    </div>
+  );
+}
+
+// ── Property row ──────────────────────────────────────────────────────────────
+function Row({ row, selected, cmpMode, cmpChecked, onSelect, onToggle }) {
+  var color = TYPE_COLOR[row.property_type] || '#6b7280';
+  var w30 = getWin(row, '30d');
+  var sup = !!w30.suppressed;
+  return (
+    <div onClick={onSelect} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: selected ? '#fff7f3' : '#fff', borderLeft: '3px solid ' + (selected ? ACCENT : 'transparent') }}>
+      {cmpMode && (
+        <input type="checkbox" checked={cmpChecked} style={{ accentColor: ACCENT, flexShrink: 0 }} onChange={function(e) { e.stopPropagation(); onToggle(); }} onClick={function(e) { e.stopPropagation(); }} />
+      )}
+      <div style={{ width: 26, height: 26, borderRadius: 4, background: color, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textTransform: 'uppercase' }}>
+        {row.property_type.slice(0, 2)}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.property_name}</div>
+        <div style={{ fontSize: 11, color: '#9ca3af' }}>{TYPE_LABEL[row.property_type] || row.property_type}{row.country ? ' · ' + row.country : ''}</div>
+      </div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        {sup
+          ? <span style={{ fontSize: 10, color: ACCENT, background: '#fff0eb', padding: '2px 6px', borderRadius: 10 }}>Low data</span>
+          : <div><div style={{ fontSize: 15, fontWeight: 600, fontFamily: MONO }}>{fmt(w30.avg)}</div><div style={{ fontSize: 10, color: '#9ca3af' }}>30d</div></div>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ── Detail panel ──────────────────────────────────────────────────────────────
+function Detail({ id, onClose }) {
+  var init = { loading: true, view: null, latest: null, series: [], error: null };
+  var [state, setState] = useState(init);
+
+  useEffect(function() {
+    setState({ loading: true, view: null, latest: null, series: [], error: null });
+    Promise.all([fetchDetail(id), fetchSeries(id)])
+      .then(function(results) {
+        setState({ loading: false, view: results[0].view, latest: results[0].latest, series: results[1], error: null });
+      })
+      .catch(function(e) {
+        setState({ loading: false, view: null, latest: null, series: [], error: e.message });
+      });
+  }, [id]);
+
+  if (state.loading) return <div style={{ padding: 20, color: '#6b7280', fontSize: 13 }}>Loading...</div>;
+  if (state.error)   return <div style={{ padding: 16, color: '#dc2626', fontSize: 12 }}><b>Error:</b> {state.error}</div>;
+
+  var v = state.view;
+  var latest = state.latest;
+  var series = state.series;
+  var color = TYPE_COLOR[v.property_type] || '#6b7280';
+  var w30 = getWin(v, '30d'), w60 = getWin(v, '60d'), w90 = getWin(v, '90d');
+  var comps = latest && latest.components_json ? latest.components_json : null;
+
+  return (
+    <div style={{ padding: 16, maxWidth: 480 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 6, background: color, color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textTransform: 'uppercase' }}>
+          {v.property_type.slice(0, 2)}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>{v.property_name}</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>{TYPE_LABEL[v.property_type] || v.property_type}{v.country ? ' · ' + v.country : ''}</div>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9ca3af' }}>✕</button>
+      </div>
+
+      {latest && latest.suppression_reason && (
+        <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 6, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#92400e' }}>
+          <b>Data quality notice:</b> {latest.suppression_reason}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        <WinCard label="30d" w={w30} />
+        <WinCard label="60d" w={w60} />
+        <WinCard label="90d" w={w90} />
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>
+          90-day FanScore
+          {series.some(function(p) { return p.suppressed; }) && <span style={{ color: ACCENT, marginLeft: 6 }}>· gaps = suppressed</span>}
+        </div>
+        <Spark points={series} w={340} h={60} color={ACCENT} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#d1d5db', marginTop: 2 }}>
+          <span>{series.length ? series[0].date : ''}</span>
+          <span>{series.length ? series[series.length - 1].date : ''}</span>
+        </div>
+      </div>
+
+      {comps && (
+        <div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>Score components (latest day)</div>
+          <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ color: '#9ca3af' }}>
+                <th style={{ textAlign: 'left', fontWeight: 500, paddingBottom: 4 }}>Component</th>
+                <th style={{ textAlign: 'right', fontWeight: 500 }}>Value</th>
+                <th style={{ textAlign: 'right', fontWeight: 500 }}>Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['norm', 'growth', 'consistency'].map(function(k) {
+                if (!comps[k]) return null;
+                return (
+                  <tr key={k} style={{ borderTop: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '4px 0', textTransform: 'capitalize' }}>{k}</td>
+                    <td style={{ padding: '4px 0', textAlign: 'right', fontFamily: MONO }}>{fmt(comps[k].value)}</td>
+                    <td style={{ padding: '4px 0', textAlign: 'right', color: '#9ca3af' }}>{((comps[k].weight || 0) * 100).toFixed(0)}%</td>
+                  </tr>
+                );
+              })}
+              {comps.integrity_mult != null && (
+                <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '4px 0', color: '#6b7280' }}>Integrity mult.</td>
+                  <td colSpan={2} style={{ padding: '4px 0', textAlign: 'right', fontFamily: MONO }}>x{Number(comps.integrity_mult).toFixed(3)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div style={{ marginTop: 12, fontSize: 10, color: '#d1d5db' }}>Model {v.model_version} · As of {v.as_of_day}</div>
+    </div>
+  );
+}
+
+// ── Compare panel ─────────────────────────────────────────────────────────────
+function Compare({ ids, onClear }) {
+  var [state, setState] = useState({ loading: true, items: [], error: null });
+
+  useEffect(function() {
+    setState({ loading: true, items: [], error: null });
+    fetchCompare(ids)
+      .then(function(items) { setState({ loading: false, items: items, error: null }); })
+      .catch(function(e)    { setState({ loading: false, items: [], error: e.message }); });
+  }, [ids.join(',')]);
+
+  if (state.loading) return <div style={{ padding: 20, color: '#6b7280', fontSize: 13 }}>Loading comparison...</div>;
+  if (state.error)   return <div style={{ padding: 16, color: '#dc2626', fontSize: 12 }}><b>Error:</b> {state.error}</div>;
+
+  return (
+    <div style={{ padding: 16, maxWidth: 560 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Compare <span style={{ color: '#9ca3af', fontWeight: 400 }}>({state.items.length})</span></div>
+        <button onClick={onClear} style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #e5e7eb', borderRadius: 4, padding: '3px 10px', cursor: 'pointer' }}>Clear</button>
+      </div>
+
+      {state.items.map(function(item) {
+        var w = item.win30;
+        var color = TYPE_COLOR[item.property_type] || '#6b7280';
+        return (
+          <div key={item.property_id} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #f3f4f6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 22, height: 22, borderRadius: 3, background: color, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', textTransform: 'uppercase' }}>
+                {item.property_type.slice(0, 2)}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 500 }}>{item.property_name}</div>
+              {item.country && <div style={{ fontSize: 11, color: '#9ca3af' }}>{item.country}</div>}
+            </div>
+            {w.suppressed && <div style={{ fontSize: 11, color: ACCENT, marginBottom: 6 }}>Data quality notice: {w.suppressed}</div>}
+            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>30d avg</div>
+                <div style={{ fontSize: 20, fontWeight: 600, fontFamily: MONO, color: w.avg != null ? '#111' : '#d1d5db' }}>{fmt(w.avg)}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af' }}>
+                  90d: {fmt(toNum(item.avg_score_90d))}
+                  <span style={{ color: arrowColor(toNum(item.trend_value_90d)), marginLeft: 4 }}>{arrowChar(toNum(item.trend_value_90d))}</span>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>30d sparkline</div>
+                <Spark points={item.sparkline} w={110} h={30} color={color} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>Confidence</div>
+                <div style={{ fontSize: 12 }}>{w.confidence || '--'}</div>
+                {w.completeness != null && <div style={{ fontSize: 10, color: '#9ca3af' }}>{(w.completeness * 100).toFixed(0)}% coverage</div>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  var [rows, setRows]       = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [error, setError]     = useState(null);
+  var [filter, setFilter]   = useState('all');
+  var [selId, setSelId]     = useState(null);
+  var [cmpMode, setCmpMode] = useState(false);
+  var [cmpIds, setCmpIds]   = useState([]);
+  var [showCmp, setShowCmp] = useState(false);
+
+  useEffect(function() {
+    fetchGrid()
+      .then(function(data) { setRows(data); setLoading(false); })
+      .catch(function(e)   { setError(e.message); setLoading(false); });
+  }, []);
+
+  var visible = filter === 'all' ? rows : rows.filter(function(r) { return r.property_type === filter; });
+
+  function toggleCmp(id) {
+    setCmpIds(function(prev) {
+      if (prev.indexOf(id) >= 0) return prev.filter(function(x) { return x !== id; });
+      if (prev.length >= 3) return prev;
+      return prev.concat([id]);
+    });
+  }
+
+  var pills = [['all','All'],['driver','Drivers'],['team','Teams'],['series','Series'],['event','Events']];
+  var panel = (showCmp && cmpIds.length >= 2) ? 'compare' : selId ? 'detail' : 'empty';
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+
+      {/* Left: Explore list */}
+      <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+            SponsorAI <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>· Explore</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+            {pills.map(function(p) {
+              var active = filter === p[0];
+              return (
+                <button key={p[0]} onClick={function() { setFilter(p[0]); }}
+                  style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, cursor: 'pointer', border: '1px solid ' + (active ? ACCENT : '#e5e7eb'), background: active ? '#fff0eb' : '#fff', color: active ? ACCENT : '#374151', fontWeight: active ? 600 : 400 }}>
+                  {p[1]}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280', cursor: 'pointer' }}>
+              <input type="checkbox" checked={cmpMode} style={{ accentColor: ACCENT }} onChange={function(e) {
+                setCmpMode(e.target.checked);
+                if (!e.target.checked) { setCmpIds([]); setShowCmp(false); }
+              }} />
+              Compare
+            </label>
+            {cmpMode && (
+              <React.Fragment>
+                <span style={{ fontSize: 11, color: '#9ca3af' }}>{cmpIds.length}/3</span>
+                <button onClick={function() { if (cmpIds.length >= 2) setShowCmp(true); }} disabled={cmpIds.length < 2}
+                  style={{ padding: '3px 10px', borderRadius: 4, fontSize: 11, border: 'none', cursor: cmpIds.length >= 2 ? 'pointer' : 'default', background: cmpIds.length >= 2 ? ACCENT : '#e5e7eb', color: cmpIds.length >= 2 ? '#fff' : '#9ca3af' }}>
+                  Compare
+                </button>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {loading && <div style={{ padding: 20, color: '#6b7280' }}>Loading properties...</div>}
+          {error   && <div style={{ padding: 16, color: '#dc2626', fontSize: 12 }}><b>Error:</b> {error}</div>}
+          {!loading && !error && visible.length === 0 && <div style={{ padding: 20, color: '#9ca3af' }}>No properties.</div>}
+          {visible.map(function(row) {
+            return (
+              <Row key={row.property_id} row={row}
+                selected={selId === row.property_id && !showCmp}
+                cmpMode={cmpMode}
+                cmpChecked={cmpIds.indexOf(row.property_id) >= 0}
+                onSelect={function() { if (!cmpMode) { setSelId(row.property_id); setShowCmp(false); } }}
+                onToggle={function() { toggleCmp(row.property_id); }}
+              />
+            );
+          })}
+        </div>
+
+        <div style={{ padding: '5px 12px', borderTop: '1px solid #f3f4f6', fontSize: 10, color: '#d1d5db' }}>
+          {visible.length} properties · model {MODEL}
+        </div>
+      </div>
+
+      {/* Right: Detail / Compare / Empty */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {panel === 'detail'  && <Detail key={selId} id={selId} onClose={function() { setSelId(null); }} />}
+        {panel === 'compare' && <Compare key={cmpIds.join(',')} ids={cmpIds} onClear={function() { setCmpIds([]); setShowCmp(false); }} />}
+        {panel === 'empty'   && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>
+            Select a property to view detail, or use Compare to compare up to 3.
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+// Mount
+document.getElementById('boot').style.display = 'none';
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+</body>
+</html>

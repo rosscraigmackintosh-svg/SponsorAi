@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI - Explore Card</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─────────────────────────────────────────────────
+   CALM ANALYTICAL SAAS DESIGN SYSTEM v1.4
+   Semantic tokens. No hardcoded hex in component rules.
+───────────────────────────────────────────────── */
+:root {
+  --color-accent-primary:      #F05A28;
+  --color-accent-primary-soft: #FFF1EB;
+  --color-accent-positive:     #15803D;
+  --color-accent-warning:      #B45309;
+  --color-accent-danger:       #B91C1C;
+
+  --color-bg-page:    #FCFCFD;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle:  #F6F7F9;
+
+  --color-text-primary:   #111318;
+  --color-text-muted:     #6B7280;
+  --color-text-on-accent: #FFFFFF;
+
+  --color-border-subtle: #E6E8EC;
+  --color-border-strong: #C9CDD4;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 56px;
+
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 3px rgba(17,19,24,0.06), 0 1px 2px rgba(17,19,24,0.04);
+  --shadow-md: 0 4px 16px rgba(17,19,24,0.10), 0 1px 4px rgba(17,19,24,0.06);
+
+  --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  --text-xs:      11px;
+  --text-sm:      12px;
+  --text-md:      14px;
+  --text-lg:      17px;
+  --text-xl:      20px;
+  --text-display: 28px;
+}
+
+/* ── Base ── */
+html, body {
+  font-family: var(--font-stack);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-7);
+  gap: var(--space-5);
+}
+
+/* ── Page label ── */
+.page-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  align-self: flex-start;
+  max-width: 320px;
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────────────
+   EXPLORE CARD
+───────────────────────────────────────────────── */
+.explore-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Coral accent header band ── */
+.explore-card__header {
+  background: var(--color-accent-primary);
+  padding: var(--space-3) var(--space-4);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.explore-card__category {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-on-accent);
+  opacity: 0.85;
+  letter-spacing: 0.3px;
+}
+
+.explore-card__category-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-text-on-accent);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ── Rank chip ── */
+.explore-card__rank {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-on-accent);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Property identity ── */
+.explore-card__identity {
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.explore-card__name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+
+.explore-card__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ── Scores block ── */
+.explore-card__scores {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+/* Individual score row */
+.score-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.score-row__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.score-row__label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.score-row__value {
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-row--fan .score-row__value {
+  color: var(--color-accent-primary);
+}
+
+.score-row--fit .score-row__value {
+  color: var(--color-text-primary);
+}
+
+.score-row__max {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+.score-row__delta {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+}
+
+.score-row__delta--positive {
+  background: color-mix(in srgb, var(--color-accent-positive) 12%, transparent);
+  color: var(--color-accent-positive);
+}
+
+.score-row__delta--neutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+}
+
+/* Proportional data bar (replaces progress ring - analytical, not gauge) */
+.score-bar {
+  height: 3px;
+  background: var(--color-border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%; /* animated via JS */
+  transition: width 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.score-row--fan .score-bar__fill {
+  background: var(--color-accent-primary);
+}
+
+.score-row--fit .score-bar__fill {
+  background: var(--color-border-strong);
+}
+
+/* ── Confidence indicator ── */
+.explore-card__confidence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.confidence-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.confidence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.confidence-dot--high {
+  background: color-mix(in srgb, var(--color-accent-positive) 60%, var(--color-bg-subtle));
+}
+
+.confidence-label {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.confidence-sources {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+/* ── Footer action ── */
+.explore-card__footer {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.explore-card__descriptor {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.btn-review {
+  font-family: var(--font-stack);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent-primary);
+  background: var(--color-bg-surface);
+  color: var(--color-accent-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.btn-review:hover {
+  background: var(--color-accent-primary);
+  color: var(--color-text-on-accent);
+}
+
+.btn-review:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────
+   THREE-CARD GRID (showcase)
+───────────────────────────────────────────────── */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  justify-content: center;
+  width: 100%;
+}
+
+.card-grid .explore-card {
+  max-width: 296px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="page-label">Explore - Sponsorship Candidates</div>
+
+<div class="card-grid">
+
+  <!-- ── Card 1: Prema Racing ── -->
+  <article class="explore-card" data-fan="74" data-fit="81" aria-label="Prema Racing sponsorship candidate">
+    <div class="explore-card__header">
+      <span class="explore-card__category">
+        <span class="explore-card__category-dot" aria-hidden="true"></span>
+        Formula E
+      </span>
+      <span class="explore-card__rank" aria-label="Ranked number 1">#1</span>
+    </div>
+
+    <div class="explore-card__identity">
+      <div class="explore-card__name">Prema Racing</div>
+      <div class="explore-card__meta">European motorsport - multi-series</div>
+    </div>
+
+    <div class="explore-card__scores">
+      <div class="score-row score-row--fan">
+        <div class="score-row__top">
+          <span class="score-row__label">FanScore</span>
+          <span class="score-row__delta score-row__delta--positive" aria-label="Up 6 points">+6</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+
+      <div class="score-row score-row--fit">
+        <div class="score-row__top">
+          <span class="score-row__label">FitScore</span>
+          <span class="score-row__delta score-row__delta--positive" aria-label="Up 3 points">+3</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="explore-card__confidence" role="status" aria-label="High confidence, 5 of 5 sources">
+      <div class="confidence-inner">
+        <span class="confidence-dot confidence-dot--high" aria-hidden="true"></span>
+        <span class="confidence-label">High confidence</span>
+      </div>
+      <span class="confidence-sources">5 / 5 sources</span>
+    </div>
+
+    <div class="explore-card__footer">
+      <p class="explore-card__descriptor">Strong audience alignment with declared target profile.</p>
+      <button class="btn-review">Review</button>
+    </div>
+  </article>
+
+  <!-- ── Card 2: ART Grand Prix ── -->
+  <article class="explore-card" data-fan="69" data-fit="77" aria-label="ART Grand Prix sponsorship candidate">
+    <div class="explore-card__header">
+      <span class="explore-card__category">
+        <span class="explore-card__category-dot" aria-hidden="true"></span>
+        Formula 2
+      </span>
+      <span class="explore-card__rank" aria-label="Ranked number 2">#2</span>
+    </div>
+
+    <div class="explore-card__identity">
+      <div class="explore-card__name">ART Grand Prix</div>
+      <div class="explore-card__meta">European motorsport - F2, F3</div>
+    </div>
+
+    <div class="explore-card__scores">
+      <div class="score-row score-row--fan">
+        <div class="score-row__top">
+          <span class="score-row__label">FanScore</span>
+          <span class="score-row__delta score-row__delta--positive" aria-label="Up 2 points">+2</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+
+      <div class="score-row score-row--fit">
+        <div class="score-row__top">
+          <span class="score-row__label">FitScore</span>
+          <span class="score-row__delta score-row__delta--neutral" aria-label="No change">-</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="explore-card__confidence" role="status" aria-label="High confidence, 5 of 5 sources">
+      <div class="confidence-inner">
+        <span class="confidence-dot confidence-dot--high" aria-hidden="true"></span>
+        <span class="confidence-label">High confidence</span>
+      </div>
+      <span class="confidence-sources">5 / 5 sources</span>
+    </div>
+
+    <div class="explore-card__footer">
+      <p class="explore-card__descriptor">Consistent reach across YouTube and Instagram.</p>
+      <button class="btn-review">Review</button>
+    </div>
+  </article>
+
+  <!-- ── Card 3: Hitech Grand Prix ── -->
+  <article class="explore-card" data-fan="61" data-fit="68" aria-label="Hitech Grand Prix sponsorship candidate">
+    <div class="explore-card__header">
+      <span class="explore-card__category">
+        <span class="explore-card__category-dot" aria-hidden="true"></span>
+        Formula 2
+      </span>
+      <span class="explore-card__rank" aria-label="Ranked number 3">#3</span>
+    </div>
+
+    <div class="explore-card__identity">
+      <div class="explore-card__name">Hitech Grand Prix</div>
+      <div class="explore-card__meta">European motorsport - F2, F3</div>
+    </div>
+
+    <div class="explore-card__scores">
+      <div class="score-row score-row--fan">
+        <div class="score-row__top">
+          <span class="score-row__label">FanScore</span>
+          <span class="score-row__delta score-row__delta--neutral" aria-label="No change">-</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+
+      <div class="score-row score-row--fit">
+        <div class="score-row__top">
+          <span class="score-row__label">FitScore</span>
+          <span class="score-row__delta score-row__delta--neutral" aria-label="No change">-</span>
+        </div>
+        <div class="score-row__value" aria-live="polite">
+          <span class="score-num">0</span><span class="score-row__max">/100</span>
+        </div>
+        <div class="score-bar" role="presentation">
+          <div class="score-bar__fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="explore-card__confidence" role="status" aria-label="Medium confidence, 3 of 5 sources">
+      <div class="confidence-inner">
+        <span class="confidence-dot" style="background:color-mix(in srgb,var(--color-accent-warning) 60%,var(--color-bg-subtle))" aria-hidden="true"></span>
+        <span class="confidence-label">Medium confidence</span>
+      </div>
+      <span class="confidence-sources">3 / 5 sources</span>
+    </div>
+
+    <div class="explore-card__footer">
+      <p class="explore-card__descriptor">Partial data. Score is indicative, not complete.</p>
+      <button class="btn-review">Review</button>
+    </div>
+  </article>
+
+</div>
+
+<script>
+(function () {
+  // Animate a number from 0 to target over ~800ms
+  function animateCount(el, target, duration) {
+    var start = null;
+    var startVal = 0;
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      var progress = Math.min((timestamp - start) / duration, 1);
+      // Ease out cubic
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(startVal + (target - startVal) * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Trigger animation for a single card
+  function animateCard(card) {
+    var fanTarget = parseInt(card.getAttribute('data-fan'), 10);
+    var fitTarget = parseInt(card.getAttribute('data-fit'), 10);
+    var rows      = card.querySelectorAll('.score-row');
+    var targets   = [fanTarget, fitTarget];
+
+    rows.forEach(function (row, i) {
+      var numEl  = row.querySelector('.score-num');
+      var barEl  = row.querySelector('.score-bar__fill');
+      var target = targets[i];
+
+      animateCount(numEl, target, 900);
+      // Slight stagger on bar so number leads slightly
+      setTimeout(function () {
+        barEl.style.width = target + '%';
+      }, 60);
+    });
+  }
+
+  // IntersectionObserver - trigger once when card enters viewport
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        animateCard(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.explore-card').forEach(function (card) {
+    observer.observe(card);
+  });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SponsorAI — Prototype</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F7F7F5;
+      color: #1A1A1A;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+      color: #1A1A1A;
+    }
+
+    .logo span { color: #E05A2B; }
+
+    .tagline {
+      font-size: 13px;
+      color: #6B7280;
+      margin-bottom: 40px;
+    }
+
+    .label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9CA3AF;
+      margin-bottom: 12px;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .nav-card {
+      display: block;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 16px 18px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .nav-card:hover {
+      border-color: #D1D5DB;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .nav-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 3px;
+      color: #111827;
+    }
+
+    .nav-card-desc {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.4;
+    }
+
+    .footer {
+      font-size: 11px;
+      color: #9CA3AF;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 20px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Sponsor<span>AI</span></div>
+    <div class="tagline">Prototype — Internal use only. Not for distribution.</div>
+
+    <div class="label">Screens</div>
+    <div class="nav-grid">
+      <a class="nav-card" href="explore.html">
+        <div class="nav-card-title">Explore</div>
+        <div class="nav-card-desc">Browse and filter properties by type, score, and fit</div>
+      </a>
+      <a class="nav-card" href="property.html">
+        <div class="nav-card-title">Property detail</div>
+        <div class="nav-card-desc">FanScore, FitScore dimensions, signals, and opportunities</div>
+      </a>
+      <a class="nav-card" href="compare.html">
+        <div class="nav-card-title">Compare</div>
+        <div class="nav-card-desc">Side-by-side signal comparison across two or three properties</div>
+      </a>
+      <a class="nav-card" href="watchlist.html">
+        <div class="nav-card-title">Watchlist</div>
+        <div class="nav-card-desc">Tracked properties with score and confidence indicators</div>
+      </a>
+      <a class="nav-card" href="portfolio.html">
+        <div class="nav-card-title">Portfolio</div>
+        <div class="nav-card-desc">Active evaluation set with FitScore dimensions</div>
+      </a>
+      <a class="nav-card" href="opportunities.html">
+        <div class="nav-card-title">Opportunities</div>
+        <div class="nav-card-desc">Declared sponsorship openings filtered by budget and fit</div>
+      </a>
+    </div>
+
+    <div class="footer">SponsorAI prototype &middot; Data is illustrative &middot; No recommendation implied</div>
+  </div>
+</body>
+</html>

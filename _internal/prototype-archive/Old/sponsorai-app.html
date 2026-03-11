@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:#1a1a2e; --blue:#2c6fad; --blue-light:#deeaf6; --blue-mid:#b8d4ee;
+  --green:#2a7a50; --green-light:#ddf0e6; --purple:#6b4fa0; --purple-light:#ede8f7;
+  --amber:#b87c20; --amber-light:#fdf3e0; --red:#c0392b; --red-light:#fdecea;
+  --mid:#3a3a3a; --subtle:#6b6b6b; --rule:#d4d4d4; --pale:#f6f6f6; --panel:#f1f6fb; --white:#ffffff;
+}
+html { font-size: 14px; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--pale); color: var(--mid); line-height: 1.55; min-height: 100vh; }
+
+/* ── Layout ── */
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--rule); position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; display: flex; flex-direction: column; overflow-y: auto; }
+.main { margin-left: 220px; flex: 1; min-width: 0; }
+.content { padding: 28px 32px 60px; }
+
+/* ── Sidebar ── */
+.sidebar-logo-area { padding: 18px 16px 14px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+.logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 12px; cursor: pointer; }
+.logo-mark { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; }
+.logo-mark span { color: var(--blue); }
+.brand-chip { display: flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--blue-mid); border-radius: 6px; padding: 7px 10px; font-size: 12px; color: var(--blue); font-weight: 500; width: 100%; cursor: pointer; }
+.brand-chip:hover { background: var(--blue-light); }
+.brand-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+.brand-chip-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+.sidebar-section { padding: 0 14px 8px; margin-bottom: 4px; }
+.sidebar-lbl { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: 0.7px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; margin-top: 12px; }
+.sidebar-link { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 5px; font-size: 13px; color: var(--mid); text-decoration: none; cursor: pointer; transition: all 0.12s; user-select: none; }
+.sidebar-link:hover { background: var(--pale); color: var(--ink); }
+.sidebar-link.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+.sidebar-link svg { opacity: 0.65; flex-shrink: 0; }
+.sidebar-link.active svg { opacity: 1; }
+.sidebar-div { height: 1px; background: var(--rule); margin: 10px 14px; }
+.sidebar-count { margin-left: auto; font-size: 11px; background: var(--rule); color: var(--subtle); border-radius: 10px; padding: 1px 7px; }
+
+/* ── Typography ── */
+.page-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--subtle); margin-bottom: 24px; }
+.sec-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 12px; }
+
+/* ── Buttons ── */
+.btn { font-size: 12px; padding: 7px 14px; border-radius: 5px; cursor: pointer; border: 1px solid var(--rule); background: var(--white); color: var(--mid); transition: all 0.12s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--pale); border-color: var(--blue-mid); color: var(--ink); }
+.btn-primary { background: var(--blue); color: var(--white) !important; border-color: var(--blue); }
+.btn-primary:hover { background: #235a8e; border-color: #235a8e; }
+.btn-sm { font-size: 11px; padding: 5px 10px; }
+.btn-danger { color: var(--red) !important; border-color: var(--red-light); }
+.btn-danger:hover { background: var(--red-light); }
+
+/* ── Signals ── */
+.signal-pill { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
+.sig-fan { background: var(--blue-light); color: var(--blue); }
+.sig-fit { background: var(--green-light); color: var(--green); }
+.sig-bud { background: var(--purple-light); color: var(--purple); }
+.sig-lbl { font-weight: 400; opacity: 0.75; font-size: 10px; }
+.conf-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.conf-h { background: var(--green); }
+.conf-m { background: var(--amber); }
+.conf-l { background: var(--red); }
+.conf-row { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--subtle); }
+
+/* ── Cards ── */
+.card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
+.card-hover { cursor: pointer; transition: all 0.15s; }
+.card-hover:hover { border-color: var(--blue-mid); box-shadow: 0 2px 10px rgba(44,111,173,0.07); }
+.card-selected { border-color: var(--blue) !important; background: var(--panel) !important; }
+
+/* ── Property Avatar ── */
+.prop-av { border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--panel); color: var(--blue); border: 1px solid var(--blue-mid); flex-shrink: 0; }
+.prop-av-sm { width: 36px; height: 36px; font-size: 11px; }
+.prop-av-md { width: 44px; height: 44px; font-size: 13px; }
+.prop-av-lg { width: 56px; height: 56px; font-size: 17px; }
+.prop-name { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.prop-type { font-size: 11px; color: var(--subtle); margin-top: 1px; }
+.prop-series { font-size: 11px; color: var(--subtle); }
+
+/* ── Dim bars ── */
+.dim-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.dim-lbl { font-size: 11.5px; color: var(--mid); flex-shrink: 0; }
+.dim-bar-wrap { flex: 1; height: 5px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.dim-bar { height: 100%; border-radius: 3px; background: var(--green); }
+.dim-val { font-size: 11px; font-weight: 500; color: var(--mid); width: 26px; text-align: right; }
+
+/* ── Signal cards (focus/property) ── */
+.sig-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.sig-card { border-radius: 7px; padding: 13px 14px; border: 1px solid transparent; }
+.sig-card-fan { background: var(--blue-light); border-color: var(--blue-mid); }
+.sig-card-fit { background: var(--green-light); border-color: #b0d9c2; }
+.sig-card-bud { background: var(--purple-light); border-color: #c9bce8; }
+.sig-card-type { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+.sig-card-fan .sig-card-type { color: var(--blue); }
+.sig-card-fit .sig-card-type { color: var(--green); }
+.sig-card-bud .sig-card-type { color: var(--purple); }
+.sig-card-val { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 2px; }
+.sig-card-fan .sig-card-val { color: var(--blue); }
+.sig-card-fit .sig-card-val { color: var(--green); }
+.sig-card-bud .sig-card-val { color: var(--purple); }
+.sig-card-sub { font-size: 11px; color: var(--subtle); }
+.sig-card-note { font-size: 10.5px; color: var(--subtle); margin-top: 5px; font-style: italic; }
+
+/* ── Opp panel ── */
+.opp-panel { background: var(--purple-light); border: 1px solid #c9bce8; border-radius: 7px; padding: 12px 14px; }
+.opp-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--purple); background: var(--white); border: 1px solid #c9bce8; border-radius: 4px; padding: 2px 7px; display: inline-block; margin-bottom: 6px; }
+.opp-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.opp-meta { font-size: 12px; color: var(--subtle); margin-top: 2px; }
+
+/* ── Callout ── */
+.callout { border-left: 3px solid var(--blue); background: var(--panel); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: var(--mid); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-light); }
+
+/* ── Explore specific ── */
+.brand-bar { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.brand-bar-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.brand-bar-meta { font-size: 12px; color: var(--subtle); margin-top: 1px; }
+.profile-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.profile-tag { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--panel); color: var(--blue); border: 1px solid var(--blue-mid); }
+.sig-legend { display: flex; gap: 18px; align-items: center; padding: 9px 14px; background: var(--white); border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 22px; flex-wrap: wrap; font-size: 11.5px; color: var(--mid); }
+.sig-legend-title { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: 0.4px; text-transform: uppercase; }
+.leg-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.leg-item { display: flex; align-items: center; gap: 5px; }
+.leg-sep { width: 1px; height: 14px; background: var(--rule); }
+.explore-row { margin-bottom: 34px; }
+.row-hdr { display: flex; align-items: baseline; gap: 10px; margin-bottom: 11px; }
+.row-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.row-desc { font-size: 12px; color: var(--subtle); }
+.row-logic { margin-left: auto; font-size: 11px; color: var(--subtle); background: var(--pale); border: 1px solid var(--rule); border-radius: 10px; padding: 2px 9px; white-space: nowrap; flex-shrink: 0; }
+.row-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.row-cards::-webkit-scrollbar { height: 4px; }
+.row-cards::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+.prop-card { flex: 0 0 225px; background: var(--white); border: 1.5px solid var(--rule); border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.15s; }
+.prop-card:hover { border-color: var(--blue-mid); box-shadow: 0 2px 10px rgba(44,111,173,0.08); }
+.prop-card.active { border-color: var(--blue); background: var(--panel); }
+.prop-card-hdr { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.prop-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+.prop-series-sm { font-size: 11px; color: var(--subtle); border-top: 1px solid var(--rule); padding-top: 7px; margin-top: 4px; }
+.card-link { display: block; font-size: 11px; color: var(--blue); margin-top: 7px; opacity: 0; transition: opacity 0.12s; text-decoration: none; }
+.prop-card:hover .card-link { opacity: 1; }
+.focus-panel { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 22px 24px; margin-bottom: 34px; }
+.focus-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--subtle); margin-bottom: 12px; }
+.focus-hdr { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+.focus-actions { margin-left: auto; display: flex; gap: 8px; }
+.focus-conf { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--pale); border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 14px; font-size: 12px; }
+.focus-conf .conf-dot { width: 8px; height: 8px; }
+.focus-conf-lbl { font-weight: 600; color: var(--ink); }
+
+/* ── Browse specific ── */
+.filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-bar input, .filter-bar select { font-size: 12px; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 5px; background: var(--white); color: var(--mid); outline: none; }
+.filter-bar input:focus, .filter-bar select:focus { border-color: var(--blue-mid); }
+.filter-bar input { min-width: 200px; flex: 1; }
+.prop-count { font-size: 12px; color: var(--subtle); margin-left: auto; }
+.browse-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.browse-card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 8px; padding: 14px; transition: all 0.15s; cursor: pointer; }
+.browse-card:hover { border-color: var(--blue-mid); box-shadow: 0 2px 8px rgba(44,111,173,0.07); }
+.browse-card-hdr { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.browse-card-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+.browse-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule); }
+
+/* ── Watchlist specific ── */
+.wl-list { display: flex; flex-direction: column; gap: 10px; }
+.wl-row { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; }
+.wl-row:hover { border-color: var(--blue-mid); }
+.wl-info { flex: 1; min-width: 0; }
+.wl-meta { font-size: 11px; color: var(--subtle); margin-top: 2px; }
+.wl-pills { display: flex; gap: 6px; margin-top: 6px; }
+.wl-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--subtle); }
+.empty-state-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state-title { font-size: 15px; font-weight: 600; color: var(--mid); margin-bottom: 6px; }
+
+/* ── Compare specific ── */
+.compare-selectors { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; }
+.compare-selectors select { font-size: 13px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 6px; background: var(--white); color: var(--ink); font-weight: 500; flex: 1; outline: none; }
+.compare-selectors select:focus { border-color: var(--blue-mid); }
+.compare-vs { font-size: 12px; color: var(--subtle); font-weight: 500; }
+.cmp-table { width: 100%; border-collapse: collapse; background: var(--white); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; font-size: 12.5px; }
+.cmp-table th { background: var(--panel); font-size: 13px; font-weight: 600; color: var(--ink); padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--rule); }
+.cmp-table td { padding: 12px 18px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table .row-lbl { font-size: 11.5px; font-weight: 500; color: var(--subtle); background: var(--pale); width: 160px; }
+.cmp-table .row-lbl span { display: block; font-size: 11px; font-weight: 400; color: #aaa; margin-top: 2px; }
+.cmp-note { font-size: 11.5px; color: var(--subtle); margin-top: 14px; font-style: italic; text-align: center; }
+
+/* ── Portfolio specific ── */
+.port-cards { display: flex; flex-direction: column; gap: 18px; }
+.port-card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px; }
+.port-card-hdr { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.port-card-meta { flex: 1; }
+.port-card-actions { display: flex; gap: 8px; }
+.port-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--green); background: var(--green-light); border: 1px solid #b0d9c2; border-radius: 12px; padding: 3px 10px; margin-top: 4px; }
+.port-status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.dims-section { margin-bottom: 14px; }
+.dims-title { font-size: 11.5px; font-weight: 600; color: var(--mid); margin-bottom: 9px; }
+
+/* ── Opportunities specific ── */
+.opp-filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.opp-filter-bar select { font-size: 12px; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 5px; background: var(--white); color: var(--mid); outline: none; }
+.opp-filter-bar select:focus { border-color: var(--blue-mid); }
+.opp-list { display: flex; flex-direction: column; gap: 10px; }
+.opp-row { background: var(--white); border: 1.5px solid var(--rule); border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; }
+.opp-row.budget-match { border-left: 3px solid var(--green); }
+.opp-row:hover { border-color: var(--blue-mid); }
+.opp-row.budget-match:hover { border-left-color: var(--green); border-color: var(--blue-mid); }
+.opp-prop { display: flex; align-items: center; gap: 10px; flex: 0 0 180px; }
+.opp-body { flex: 1; min-width: 0; }
+.opp-row-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.opp-row-meta { font-size: 11.5px; color: var(--subtle); margin-top: 2px; }
+.opp-signals { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.opp-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.budget-badge { font-size: 10px; font-weight: 600; color: var(--green); background: var(--green-light); border: 1px solid #b0d9c2; border-radius: 4px; padding: 2px 6px; }
+.opp-footer-note { font-size: 11px; color: var(--subtle); font-style: italic; margin-top: 16px; text-align: center; }
+
+/* ── Property page specific ── */
+.prop-page-hdr { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 22px 24px; margin-bottom: 20px; }
+.prop-page-hdr-inner { display: flex; align-items: flex-start; gap: 18px; }
+.prop-page-meta { flex: 1; }
+.prop-page-name { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.prop-page-type { font-size: 13px; color: var(--subtle); }
+.prop-page-series { font-size: 12px; color: var(--blue); margin-top: 3px; }
+.prop-page-actions { display: flex; gap: 8px; margin-top: 14px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+.full-col { margin-bottom: 20px; }
+.social-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.social-stat { background: var(--white); border: 1px solid var(--rule); border-radius: 7px; padding: 14px; text-align: center; }
+.social-stat-val { font-size: 20px; font-weight: 700; color: var(--ink); }
+.social-stat-lbl { font-size: 11px; color: var(--subtle); margin-top: 3px; }
+.social-platform { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; letter-spacing: 0.3px; text-transform: uppercase; }
+.related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.related-card { background: var(--white); border: 1px solid var(--rule); border-radius: 7px; padding: 13px; cursor: pointer; transition: all 0.12s; }
+.related-card:hover { border-color: var(--blue-mid); }
+.related-card-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--subtle); margin-bottom: 18px; }
+.breadcrumb a { color: var(--blue); text-decoration: none; cursor: pointer; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb-sep { opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo-area">
+    <div class="logo" onclick="nav('explore')">
+      <span class="logo-mark">Sponsor<span>AI</span></span>
+    </div>
+    <div class="brand-chip">
+      <span class="brand-chip-dot"></span>
+      <span class="brand-chip-name">Apex Performance Gear</span>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section">
+      <div class="sidebar-lbl">Discover</div>
+      <div class="sidebar-link" data-page="explore" onclick="nav('explore')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+        Explore
+      </div>
+      <div class="sidebar-link" data-page="browse" onclick="nav('browse')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="10" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
+        Browse All
+      </div>
+      <div class="sidebar-link" data-page="watchlist" onclick="nav('watchlist')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.1l-3.8 2.2.7-4.3-3.1-3 4.3-.6L8 1.5z" fill="currentColor" opacity=".5"/></svg>
+        Watchlist <span class="sidebar-count" id="wl-count">4</span>
+      </div>
+      <div class="sidebar-link" data-page="compare" onclick="nav('compare')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="6" height="9" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="1" width="6" height="12" rx="1.5" fill="currentColor"/></svg>
+        Compare
+      </div>
+    </div>
+    <div class="sidebar-div"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-lbl">My Work</div>
+      <div class="sidebar-link" data-page="portfolio" onclick="nav('portfolio')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        Portfolio <span class="sidebar-count">2</span>
+      </div>
+      <div class="sidebar-link" data-page="opportunities" onclick="nav('opportunities')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5"/></svg>
+        Opportunities
+      </div>
+    </div>
+    <div class="sidebar-div"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-lbl">Intelligence</div>
+      <div class="sidebar-link">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 12 L5 7 L8 9 L11 4 L14 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        Methodology
+      </div>
+      <div class="sidebar-link">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        Signal History
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <div class="content" id="main-content"></div>
+</div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const DIM_LABELS = ["Geographic fit","Category alignment","Audience age match","Budget compatibility","Series reach alignment"];
+const properties = [
+  {id:1,initials:"PR",name:"Prema Racing",type:"F2 & F3 Constructor",series:"FIA F2 · FIA F3 · FR Italian",fanScore:74,fanTier:"Tier B",fitScore:68,fitSub:"Good alignment",budget:"£95k",budgetNum:95,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"Strong engagement momentum over 90 days. Audience growth 18% YoY.",fitNote:"Geographic and category match. Audience age skew aligned. Budget within range.",oppTitle:"Race suit &amp; apparel partner — FIA F2 2025 season",oppMeta:"Minimum £95,000 · Declared 18 days ago · Expires in 43 days",dims:[80,72,65,88,54],watchlist:true,portfolio:true},
+  {id:2,initials:"ART",name:"ART Grand Prix",type:"F2 & F3 Constructor",series:"FIA F2 · FIA F3",fanScore:71,fanTier:"Tier B",fitScore:64,fitSub:"Good alignment",budget:"£110k",budgetNum:110,conf:"h",confDesc:"4/4 sources active. Data currency: 5 days.",fanNote:"Consistent engagement across platforms. Large international fanbase.",fitNote:"Category match strong. Geographic fit moderate — French team, European series.",oppTitle:"Technical partner — livery placement",oppMeta:"Minimum £110,000 · Declared 7 days ago",dims:[68,74,70,77,62],watchlist:false,portfolio:false},
+  {id:3,initials:"HI",name:"Hitech Grand Prix",type:"F2 & F3 Constructor",series:"FIA F2 · FIA F3",fanScore:62,fanTier:"Tier B",fitScore:71,fitSub:"Strong alignment",budget:"£75k",budgetNum:75,conf:"m",confDesc:"3/4 sources active. Instagram data partial. Data currency: 9 days.",fanNote:"UK-based team with strong domestic audience. Growing international presence.",fitNote:"Excellent UK geographic fit. Category alignment high. Budget well within range.",oppTitle:"Apparel &amp; accessories partner",oppMeta:"Minimum £75,000 · Declared 12 days ago · Expires in 18 days",dims:[91,78,68,95,49],watchlist:true,portfolio:false},
+  {id:4,initials:"TP",name:"Theo Pourchaire",type:"Formula 2 Driver",series:"FIA F2 Championship",fanScore:81,fanTier:"Tier B",fitScore:52,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Strong social data. Data currency: 1 day.",fanNote:"Highest FanScore momentum in F2 grid. 90-day growth of +12 points.",fitNote:"Strong FanScore match. Geographic fit lower — French driver, limited UK activation.",oppTitle:null,oppMeta:null,dims:[55,60,72,40,48],watchlist:true,portfolio:false},
+  {id:5,initials:"CA",name:"Carlin Motorsport",type:"Multi-Series Constructor",series:"FIA F2 · FIA F3 · British F4",fanScore:69,fanTier:"Tier B",fitScore:66,fitSub:"Good alignment",budget:"£85k",budgetNum:85,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"Steady engagement. Multi-series presence amplifies total reach.",fitNote:"UK-based. Strong automotive affinity in existing partner base.",oppTitle:"Multi-series branding package",oppMeta:"Minimum £85,000 · Declared 22 days ago",dims:[84,70,66,90,58],watchlist:true,portfolio:true},
+  {id:6,initials:"VR",name:"Virtuosi Racing",type:"F2 Constructor",series:"FIA F2 Championship",fanScore:58,fanTier:"Tier B",fitScore:73,fitSub:"Strong alignment",budget:"£70k",budgetNum:70,conf:"m",confDesc:"3/4 sources active. TikTok data limited. Data currency: 7 days.",fanNote:"Moderate FanScore. Strong within-tier positioning. Audience quality indicators positive.",fitNote:"UK team. Category alignment very strong — existing performance automotive adjacency.",oppTitle:"Technical apparel partner",oppMeta:"Minimum £70,000 · Declared 31 days ago · Expires in 9 days",dims:[88,82,62,93,52],watchlist:false,portfolio:false},
+  {id:7,initials:"WR",name:"WRT",type:"GT & LMP Constructor",series:"FIA WEC · GTWC Europe",fanScore:67,fanTier:"Tier B",fitScore:59,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"m",confDesc:"3/4 sources active. YouTube data limited. Data currency: 6 days.",fanNote:"Strong FanScore growth in endurance. +9 points over 90 days.",fitNote:"Belgian team. Geographic fit weaker for UK-focused brand.",oppTitle:null,oppMeta:null,dims:[52,65,58,45,72],watchlist:false,portfolio:false},
+  {id:8,initials:"MP",name:"MP Motorsport",type:"F2 & F3 Constructor",series:"FIA F2 · FIA F3 · Euroformula",fanScore:55,fanTier:"Tier C",fitScore:60,fitSub:"Moderate alignment",budget:"£55k",budgetNum:55,conf:"l",confDesc:"2/4 sources active. Instagram and YouTube data limited. Interpret FanScore with caution.",fanNote:"Limited data coverage. FanScore computed from partial signal set.",fitNote:"Dutch-based team. Geographic fit moderate. Budget entry point accessible.",oppTitle:"Driver kit &amp; apparel partner",oppMeta:"Minimum £55,000 · Declared 44 days ago · Expires in 16 days",dims:[58,62,55,88,40],watchlist:false,portfolio:false},
+  {id:9,initials:"DS",name:"DAMS",type:"F2 Constructor",series:"FIA F2 Championship",fanScore:63,fanTier:"Tier B",fitScore:57,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"Steady signals. FanScore stable over 90 days. Strong X/Twitter presence.",fitNote:"French team. Category alignment moderate. Automotive interest in current partner set.",oppTitle:null,oppMeta:null,dims:[50,60,58,42,61],watchlist:false,portfolio:false},
+  {id:10,initials:"FO",name:"Fortec Motorsports",type:"F3 & British GT Constructor",series:"FIA F3 · British GT · British F4",fanScore:51,fanTier:"Tier C",fitScore:67,fitSub:"Good alignment",budget:"£45k",budgetNum:45,conf:"m",confDesc:"3/4 sources active. TikTok not tracked. Data currency: 11 days.",fanNote:"Smaller-scale property. FanScore appropriate to tier. Domestic UK presence strong.",fitNote:"UK team. Excellent geographic fit. Category alignment strong. Budget highly accessible.",oppTitle:"Season livery &amp; apparel partner",oppMeta:"Minimum £45,000 · Declared 8 days ago",dims:[92,75,60,99,43],watchlist:false,portfolio:false},
+  // ── Football ──────────────────────────────────────────────────────────────
+  {id:11,initials:"BHA",name:"Brighton & Hove Albion FC",type:"Premier League Club",series:"Premier League · UEFA Conference League",fanScore:79,fanTier:"Tier B",fitScore:72,fitSub:"Strong alignment",budget:"£180k",budgetNum:180,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"Fastest-growing Premier League fanbase by social engagement rate. 31% YoY audience growth.",fitNote:"Strong UK geographic fit. Young, progressive fanbase aligns with performance brand positioning.",oppTitle:"Official training wear partner — 2025/26 season",oppMeta:"Minimum £180,000 · Declared 5 days ago · Expires in 30 days",dims:[85,66,82,72,68],watchlist:true,portfolio:false},
+  {id:12,initials:"WX",name:"Wrexham AFC",type:"Championship Club",series:"EFL Championship",fanScore:88,fanTier:"Tier A",fitScore:58,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Global viral moment. US crossover audience is dominant and growing. Highest FanScore momentum in tier.",fitNote:"Category alignment moderate — primarily lifestyle and entertainment adjacency rather than performance.",oppTitle:null,oppMeta:null,dims:[48,52,76,35,88],watchlist:true,portfolio:false},
+  {id:13,initials:"BFC",name:"Brentford FC",type:"Premier League Club",series:"Premier League",fanScore:66,fanTier:"Tier B",fitScore:69,fitSub:"Good alignment",budget:"£150k",budgetNum:150,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"Data-driven club narrative resonates strongly with analytics-savvy audience. Loyal core fanbase.",fitNote:"London location ideal for UK activation. Audience skew aligns well. Budget within range.",oppTitle:"Matchday performance partner",oppMeta:"Minimum £150,000 · Declared 14 days ago",dims:[88,68,74,78,62],watchlist:false,portfolio:false},
+  {id:14,initials:"PA",name:"Plymouth Argyle FC",type:"Championship Club",series:"EFL Championship",fanScore:53,fanTier:"Tier C",fitScore:62,fitSub:"Good alignment",budget:"£60k",budgetNum:60,conf:"m",confDesc:"3/4 sources active. YouTube data limited. Data currency: 8 days.",fanNote:"South-west England stronghold. Community fanbase with strong local loyalty.",fitNote:"Good UK geographic coverage for regional activation. Budget highly accessible.",oppTitle:"Matchday kit sponsor",oppMeta:"Minimum £60,000 · Declared 21 days ago · Expires in 14 days",dims:[76,60,65,95,44],watchlist:false,portfolio:false},
+  {id:15,initials:"MCW",name:"Manchester City Women's FC",type:"WSL Club",series:"Women's Super League · UEFA Women's CL",fanScore:83,fanTier:"Tier A",fitScore:65,fitSub:"Good alignment",budget:"£130k",budgetNum:130,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Highest FanScore in women's football tier. Audience growth trajectory strongest in the category.",fitNote:"Strong UK reach. Younger audience demographic skew is an excellent fit for performance apparel.",oppTitle:"Performance apparel partner",oppMeta:"Minimum £130,000 · Declared 9 days ago · Expires in 21 days",dims:[80,70,88,82,71],watchlist:true,portfolio:true},
+  {id:16,initials:"AW",name:"Arsenal Women's FC",type:"WSL Club",series:"Women's Super League · UEFA Women's CL",fanScore:87,fanTier:"Tier A",fitScore:61,fitSub:"Good alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Top-tier FanScore. London club amplifies international visibility beyond UK.",fitNote:"Budget compatibility uncertain — currently in renewal cycle with existing partner.",oppTitle:null,oppMeta:null,dims:[82,65,84,52,77],watchlist:false,portfolio:false},
+  {id:17,initials:"CW",name:"Chelsea Women's FC",type:"WSL Club",series:"Women's Super League",fanScore:85,fanTier:"Tier A",fitScore:60,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"Strong engagement. London market reach significant. International fanbase growing.",fitNote:"Existing category partner creates limited inventory window currently.",oppTitle:null,oppMeta:null,dims:[79,62,82,45,74],watchlist:false,portfolio:false},
+  {id:18,initials:"CPF",name:"Crystal Palace FC",type:"Premier League Club",series:"Premier League",fanScore:61,fanTier:"Tier B",fitScore:66,fitSub:"Good alignment",budget:"£125k",budgetNum:125,conf:"m",confDesc:"3/4 sources active. TikTok partial data. Data currency: 6 days.",fanNote:"Loyal south London fanbase. Stable FanScore with incremental growth.",fitNote:"London club. Audience age and brand positioning compatible. Budget accessible.",oppTitle:"Fan experience partner",oppMeta:"Minimum £125,000 · Declared 17 days ago",dims:[84,64,72,83,58],watchlist:false,portfolio:false},
+  {id:19,initials:"EX",name:"Exeter City FC",type:"League One Club",series:"EFL League One",fanScore:48,fanTier:"Tier C",fitScore:70,fitSub:"Good alignment",budget:"£35k",budgetNum:35,conf:"m",confDesc:"3/4 sources active. Data currency: 10 days.",fanNote:"Community-owned club. Highly engaged, values-driven fanbase with strong local loyalty.",fitNote:"Excellent category alignment for performance and community-focused brands.",oppTitle:"Official kit partner",oppMeta:"Minimum £35,000 · Declared 3 days ago · Expires in 28 days",dims:[88,72,62,99,38],watchlist:false,portfolio:false},
+  {id:20,initials:"FGR",name:"Forest Green Rovers FC",type:"League Two Club",series:"EFL League Two",fanScore:44,fanTier:"Tier C",fitScore:74,fitSub:"Strong alignment",budget:"£25k",budgetNum:25,conf:"l",confDesc:"2/4 sources active. TikTok and YouTube data limited.",fanNote:"Niche but vocal sustainability audience. Strong earned media amplification.",fitNote:"Sustainability narrative alignment is high. Audience quality outperforms FanScore.",oppTitle:"Sustainability partner",oppMeta:"Minimum £25,000 · Declared 11 days ago",dims:[80,76,58,99,35],watchlist:false,portfolio:false},
+  // ── Rugby ─────────────────────────────────────────────────────────────────
+  {id:21,initials:"HQ",name:"Harlequins Rugby",type:"Premiership Rugby Club",series:"Gallagher Premiership · Champions Cup",fanScore:72,fanTier:"Tier B",fitScore:75,fitSub:"Strong alignment",budget:"£90k",budgetNum:90,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"London club. Largest social footprint in Premiership Rugby. Young fanbase growth strong.",fitNote:"Performance brand alignment excellent. Twickenham adjacency ideal for London activation.",oppTitle:"Training kit &amp; recovery partner",oppMeta:"Minimum £90,000 · Declared 6 days ago · Expires in 22 days",dims:[86,79,78,91,64],watchlist:true,portfolio:true},
+  {id:22,initials:"EC",name:"Exeter Chiefs",type:"Premiership Rugby Club",series:"Gallagher Premiership · Champions Cup",fanScore:68,fanTier:"Tier B",fitScore:71,fitSub:"Strong alignment",budget:"£80k",budgetNum:80,conf:"h",confDesc:"4/4 sources active. Data currency: 5 days.",fanNote:"Consistent performers. High fan loyalty metrics. UK-wide recognition beyond south-west base.",fitNote:"Strong performance and team culture narrative match. Budget within range.",oppTitle:"Match apparel partner",oppMeta:"Minimum £80,000 · Declared 19 days ago",dims:[82,76,74,93,59],watchlist:false,portfolio:false},
+  {id:23,initials:"SS",name:"Sale Sharks",type:"Premiership Rugby Club",series:"Gallagher Premiership",fanScore:57,fanTier:"Tier B",fitScore:68,fitSub:"Good alignment",budget:"£65k",budgetNum:65,conf:"m",confDesc:"3/4 sources active. YouTube data limited. Data currency: 7 days.",fanNote:"North-west England stronghold. Growing FanScore over past 90 days.",fitNote:"Performance category fit strong. Budget accessible. North England regional activation opportunity.",oppTitle:"Kit supplier activation",oppMeta:"Minimum £65,000 · Declared 28 days ago · Expires in 12 days",dims:[78,70,68,96,52],watchlist:false,portfolio:false},
+  {id:24,initials:"BB",name:"Bristol Bears Rugby",type:"Premiership Rugby Club",series:"Gallagher Premiership",fanScore:60,fanTier:"Tier B",fitScore:65,fitSub:"Good alignment",budget:"£70k",budgetNum:70,conf:"m",confDesc:"3/4 sources active. Data currency: 9 days.",fanNote:"Rapidly growing fanbase following stadium redevelopment. South-west audience strong.",fitNote:"Bristol location provides good regional activation base. Category alignment solid.",oppTitle:"Training ground partner",oppMeta:"Minimum £70,000 · Declared 32 days ago",dims:[80,68,71,94,56],watchlist:false,portfolio:false},
+  {id:25,initials:"NS",name:"Northampton Saints",type:"Premiership Rugby Club",series:"Gallagher Premiership · Champions Cup",fanScore:63,fanTier:"Tier B",fitScore:67,fitSub:"Good alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"Strong regional following. Performance narrative particularly strong this season.",fitNote:"Midlands-based activation potential. Performance brand alignment high.",oppTitle:null,oppMeta:null,dims:[75,72,70,48,60],watchlist:false,portfolio:false},
+  // ── Cricket ───────────────────────────────────────────────────────────────
+  {id:26,initials:"SUR",name:"Surrey CCC",type:"County Cricket Club",series:"County Championship · The Hundred",fanScore:65,fanTier:"Tier B",fitScore:62,fitSub:"Good alignment",budget:"£75k",budgetNum:75,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"London-based club. The Hundred participation significantly lifts reach and younger audience share.",fitNote:"London activation premium. Oval ground inventory high-profile. Budget accessible.",oppTitle:"Ground &amp; kit branding package",oppMeta:"Minimum £75,000 · Declared 13 days ago · Expires in 35 days",dims:[83,60,70,90,58],watchlist:false,portfolio:false},
+  {id:27,initials:"YV",name:"Yorkshire Vikings",type:"County Cricket Club",series:"County Championship · One-Day Cup",fanScore:56,fanTier:"Tier B",fitScore:64,fitSub:"Good alignment",budget:"£55k",budgetNum:55,conf:"m",confDesc:"3/4 sources active. TikTok limited. Data currency: 8 days.",fanNote:"Strong northern England fanbase. Storied cricket heritage amplifies media presence.",fitNote:"Northern regional activation strong. Performance apparel adjacency in sport culture.",oppTitle:"Training apparel partner",oppMeta:"Minimum £55,000 · Declared 27 days ago",dims:[72,62,66,95,50],watchlist:false,portfolio:false},
+  {id:28,initials:"OI",name:"Oval Invincibles",type:"The Hundred Team",series:"The Hundred",fanScore:69,fanTier:"Tier B",fitScore:66,fitSub:"Good alignment",budget:"£85k",budgetNum:85,conf:"h",confDesc:"4/4 sources active. Data currency: 6 days.",fanNote:"The Hundred format drives strong younger audience. London-based with high urban engagement.",fitNote:"Young demographic skew aligns very well. Performance apparel natural adjacency.",oppTitle:"Kit &amp; fan engagement partner",oppMeta:"Minimum £85,000 · Declared 10 days ago · Expires in 40 days",dims:[84,65,85,88,61],watchlist:true,portfolio:false},
+  {id:29,initials:"TR",name:"Trent Rockets",type:"The Hundred Team",series:"The Hundred",fanScore:62,fanTier:"Tier B",fitScore:61,fitSub:"Good alignment",budget:"£75k",budgetNum:75,conf:"m",confDesc:"3/4 sources active. Instagram data partial. Data currency: 9 days.",fanNote:"East Midlands fanbase. Growing rapidly off strong squad performance last season.",fitNote:"Budget within range. Category alignment good. Regional Midlands activation viable.",oppTitle:"Fan experience partner",oppMeta:"Minimum £75,000 · Declared 22 days ago",dims:[70,63,80,91,54],watchlist:false,portfolio:false},
+  {id:30,initials:"LL",name:"Lancashire Lightning",type:"County Cricket Club",series:"County Championship · Vitality Blast",fanScore:58,fanTier:"Tier B",fitScore:63,fitSub:"Good alignment",budget:"£60k",budgetNum:60,conf:"m",confDesc:"3/4 sources active. Data currency: 11 days.",fanNote:"North-west England cricket stronghold. T20 Blast engagement notably stronger than county format.",fitNote:"Strong northern UK activation. Budget accessible. Performance apparel fit strong.",oppTitle:"Match day apparel sponsor",oppMeta:"Minimum £60,000 · Declared 18 days ago · Expires in 25 days",dims:[74,64,68,97,48],watchlist:false,portfolio:false},
+  // ── Esports ───────────────────────────────────────────────────────────────
+  {id:31,initials:"FNC",name:"Fnatic",type:"Esports Organisation",series:"LEC · Valorant Champions · CS2",fanScore:84,fanTier:"Tier A",fitScore:55,fitSub:"Moderate alignment",budget:"£200k",budgetNum:200,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Flagship UK esports brand. 90-day audience growth of +14%. Strong streaming engagement.",fitNote:"Audience skew very young (16–24). Geographic fit global. Category alignment through performance gear.",oppTitle:"Official performance apparel partner",oppMeta:"Minimum £200,000 · Declared 4 days ago · Expires in 27 days",dims:[60,58,92,65,86],watchlist:true,portfolio:false},
+  {id:32,initials:"GLD",name:"Guild Esports",type:"Esports Organisation",series:"EFL Championship · VCT EMEA",fanScore:67,fanTier:"Tier B",fitScore:60,fitSub:"Moderate alignment",budget:"£100k",budgetNum:100,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"London-headquartered. David Beckham co-ownership drives crossover lifestyle reach.",fitNote:"Budget accessible. Lifestyle brand adjacency strong. Performance category fit moderate.",oppTitle:"Brand partnership — lifestyle activation",oppMeta:"Minimum £100,000 · Declared 16 days ago",dims:[65,58,88,87,72],watchlist:false,portfolio:false},
+  {id:33,initials:"XL",name:"EXCEL Esports",type:"Esports Organisation",series:"LEC · Valorant UK",fanScore:61,fanTier:"Tier B",fitScore:62,fitSub:"Good alignment",budget:"£80k",budgetNum:80,conf:"m",confDesc:"3/4 sources active. YouTube data partial. Data currency: 6 days.",fanNote:"UK-native organisation. Strong regional community. LEC platform amplifies reach.",fitNote:"UK geographic fit good. Younger audience well-aligned. Budget within range.",oppTitle:"Athlete kit &amp; accessories partner",oppMeta:"Minimum £80,000 · Declared 20 days ago · Expires in 10 days",dims:[72,60,90,90,65],watchlist:false,portfolio:false},
+  {id:34,initials:"VIT",name:"Team Vitality",type:"Esports Organisation",series:"LEC · Valorant Champions",fanScore:77,fanTier:"Tier B",fitScore:50,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"French-headquartered. Strong pan-European presence. High streaming hours. Bee branding iconic.",fitNote:"Geographic fit moderate for UK brand. Performance apparel fit exists but category crowded.",oppTitle:null,oppMeta:null,dims:[55,56,91,42,80],watchlist:false,portfolio:false},
+  {id:35,initials:"RES",name:"Resolve Esports",type:"Esports Organisation",series:"UK Esports League · VCT UK",fanScore:46,fanTier:"Tier C",fitScore:68,fitSub:"Good alignment",budget:"£40k",budgetNum:40,conf:"l",confDesc:"2/4 sources active. Limited cross-platform coverage.",fanNote:"UK grassroots organisation. Small but highly engaged audience. Rising FanScore trajectory.",fitNote:"UK-native. Very accessible budget. Young performance-oriented audience strong fit.",oppTitle:"Grassroots performance partner",oppMeta:"Minimum £40,000 · Declared 7 days ago · Expires in 23 days",dims:[78,64,91,99,42],watchlist:false,portfolio:false},
+  // ── Cycling ───────────────────────────────────────────────────────────────
+  {id:36,initials:"ING",name:"INEOS Grenadiers",type:"WorldTour Cycling Team",series:"UCI WorldTour",fanScore:76,fanTier:"Tier B",fitScore:73,fitSub:"Strong alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"UK flagship cycling team. Strong Tour de France visibility. High engagement during major events.",fitNote:"Performance category alignment exceptional. UK-headquartered. Existing kit partner saturates apparel.",oppTitle:null,oppMeta:null,dims:[82,82,66,40,70],watchlist:false,portfolio:false},
+  {id:37,initials:"RW",name:"Ribble-Weldtite Pro Cycling",type:"Professional Cycling Team",series:"UCI ProSeries · National Series",fanScore:49,fanTier:"Tier C",fitScore:76,fitSub:"Strong alignment",budget:"£50k",budgetNum:50,conf:"m",confDesc:"3/4 sources active. TikTok data limited. Data currency: 12 days.",fanNote:"UK-based team. Specialist cycling audience with high product affinity.",fitNote:"Exceptional category alignment. Niche but quality audience. Very accessible budget.",oppTitle:"Technical kit partner",oppMeta:"Minimum £50,000 · Declared 15 days ago",dims:[85,85,62,99,44],watchlist:false,portfolio:false},
+  {id:38,initials:"HPH",name:"Human Powered Health",type:"Professional Cycling Team",series:"UCI ProSeries",fanScore:52,fanTier:"Tier C",fitScore:70,fitSub:"Good alignment",budget:"£45k",budgetNum:45,conf:"m",confDesc:"3/4 sources active. Instagram data partial. Data currency: 9 days.",fanNote:"US-founded but strong European race programme. Health and performance narrative alignment.",fitNote:"Performance brand fit high. Wellness category extension natural. Budget accessible.",oppTitle:"Nutrition &amp; recovery partner",oppMeta:"Minimum £45,000 · Declared 24 days ago · Expires in 16 days",dims:[72,78,60,99,46],watchlist:false,portfolio:false},
+  // ── Golf ──────────────────────────────────────────────────────────────────
+  {id:39,initials:"DP",name:"DP World Tour",type:"Golf Tour",series:"DP World Tour · Ryder Cup",fanScore:73,fanTier:"Tier B",fitScore:61,fitSub:"Good alignment",budget:"£160k",budgetNum:160,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"European golf flagship. Broad audience across ages. Strong broadcast and streaming reach.",fitNote:"Audience affluence and age skew moderate for performance apparel. Premium brand adjacency strong.",oppTitle:"Official apparel partner — tour activation",oppMeta:"Minimum £160,000 · Declared 11 days ago · Expires in 29 days",dims:[78,58,55,76,68],watchlist:false,portfolio:false},
+  {id:40,initials:"SL",name:"Scottish Ladies Open",type:"Golf Tournament",series:"Ladies European Tour",fanScore:47,fanTier:"Tier C",fitScore:71,fitSub:"Strong alignment",budget:"£35k",budgetNum:35,conf:"m",confDesc:"3/4 sources active. YouTube limited. Data currency: 14 days.",fanNote:"Women's golf growth trend benefits this event. Strong earned media in Scottish press.",fitNote:"Values alignment strong. Women's sport positioning increasingly attractive. Budget accessible.",oppTitle:"Tournament title partner",oppMeta:"Minimum £35,000 · Declared 6 days ago · Expires in 44 days",dims:[76,72,60,99,40],watchlist:false,portfolio:false},
+  // ── Tennis ────────────────────────────────────────────────────────────────
+  {id:41,initials:"LTA",name:"LTA British Teams",type:"National Governing Body",series:"Davis Cup · Billie Jean King Cup",fanScore:64,fanTier:"Tier B",fitScore:67,fitSub:"Good alignment",budget:"£110k",budgetNum:110,conf:"h",confDesc:"4/4 sources active. Data currency: 5 days.",fanNote:"Tennis participation boom post-pandemic continues to drive audience growth.",fitNote:"UK-wide reach. Performance and active lifestyle fit natural. Budget within range.",oppTitle:"Official performance kit partner",oppMeta:"Minimum £110,000 · Declared 8 days ago",dims:[86,70,72,85,60],watchlist:false,portfolio:false},
+  {id:42,initials:"NTT",name:"Nottingham Open",type:"Grass Court Tournament",series:"ATP Challenger · WTA 250",fanScore:51,fanTier:"Tier C",fitScore:63,fitSub:"Good alignment",budget:"£55k",budgetNum:55,conf:"m",confDesc:"3/4 sources active. TikTok limited. Data currency: 10 days.",fanNote:"Wimbledon warm-up event. Significant broadcast reach disproportionate to event scale.",fitNote:"Budget accessible. Performance category fit strong. Pre-Wimbledon timing is premium.",oppTitle:"Presenting sponsor",oppMeta:"Minimum £55,000 · Declared 19 days ago · Expires in 32 days",dims:[80,66,68,97,52],watchlist:false,portfolio:false},
+  {id:43,initials:"QC",name:"Queen's Club Championships",type:"Grass Court Tournament",series:"ATP 500",fanScore:74,fanTier:"Tier B",fitScore:62,fitSub:"Good alignment",budget:"£200k",budgetNum:200,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"Prestigious London tournament. High affluent audience. Strong broadcast presence globally.",fitNote:"Premium London venue. Audience affluence skew. Budget at upper range.",oppTitle:"Brand activation partner — hospitality &amp; courtside",oppMeta:"Minimum £200,000 · Declared 3 days ago · Expires in 57 days",dims:[85,64,60,68,73],watchlist:false,portfolio:false},
+  // ── Combat Sports ─────────────────────────────────────────────────────────
+  {id:44,initials:"BXR",name:"BOXXER Series",type:"Professional Boxing Promotion",series:"UK Boxing · Sky Sports Boxing",fanScore:70,fanTier:"Tier B",fitScore:65,fitSub:"Good alignment",budget:"£90k",budgetNum:90,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"Sky Sports partnership drives significant broadcast reach. Urban male audience dominant.",fitNote:"Performance and sports nutrition adjacency high. Audience demographic strong match.",oppTitle:"Fight night performance partner",oppMeta:"Minimum £90,000 · Declared 14 days ago · Expires in 20 days",dims:[78,70,78,88,62],watchlist:false,portfolio:false},
+  {id:45,initials:"CW",name:"Cage Warriors MMA",type:"MMA Promotion",series:"European MMA",fanScore:59,fanTier:"Tier B",fitScore:68,fitSub:"Good alignment",budget:"£60k",budgetNum:60,conf:"m",confDesc:"3/4 sources active. Data currency: 7 days.",fanNote:"Premier European MMA promotion. Strong streaming engagement. Youth and male audience dominant.",fitNote:"Performance gear and training equipment fit excellent. Audience highly product-receptive.",oppTitle:"Official fight kit partner",oppMeta:"Minimum £60,000 · Declared 9 days ago · Expires in 31 days",dims:[74,74,80,95,55],watchlist:false,portfolio:false},
+  // ── Athletics ─────────────────────────────────────────────────────────────
+  {id:46,initials:"BA",name:"British Athletics",type:"National Governing Body",series:"World Athletics · European Athletics",fanScore:71,fanTier:"Tier B",fitScore:78,fitSub:"Strong alignment",budget:"£140k",budgetNum:140,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"Major championship cycles drive significant spikes. Dina Asher-Smith and Josh Kerr lift overall FanScore.",fitNote:"Performance category alignment exceptional. National governing body provides broad UK reach.",oppTitle:"National team kit &amp; footwear partner",oppMeta:"Minimum £140,000 · Declared 7 days ago · Expires in 38 days",dims:[88,85,72,80,66],watchlist:true,portfolio:true},
+  {id:47,initials:"LM",name:"London Marathon Events",type:"Mass Participation Event",series:"Abbott World Marathon Majors",fanScore:78,fanTier:"Tier B",fitScore:76,fitSub:"Strong alignment",budget:"£250k",budgetNum:250,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"One of the world's largest annual sporting events. Uniquely broad audience — participants plus spectators.",fitNote:"Running and endurance category fit excellent. Charity and wellbeing narrative also strong.",oppTitle:"Official apparel partner",oppMeta:"Minimum £250,000 · Declared 11 days ago · Expires in 45 days",dims:[90,82,74,60,80],watchlist:false,portfolio:false},
+  {id:48,initials:"PKR",name:"Parkrun UK",type:"Community Running Movement",series:"Parkrun Global Series",fanScore:75,fanTier:"Tier B",fitScore:82,fitSub:"Strong alignment",budget:"£80k",budgetNum:80,conf:"h",confDesc:"4/4 sources active. Data currency: 5 days.",fanNote:"Enormous grassroots reach. 8M+ registered UK participants. Consistently strong social advocacy.",fitNote:"Wellness and active lifestyle alignment exceptional. Breadth of demographic reach unmatched at budget.",oppTitle:"Community activation partner",oppMeta:"Minimum £80,000 · Declared 3 days ago · Expires in 60 days",dims:[92,84,70,88,72],watchlist:true,portfolio:false},
+  // ── Triathlon & Endurance ─────────────────────────────────────────────────
+  {id:49,initials:"BT",name:"British Triathlon",type:"National Governing Body",series:"World Triathlon · Ironman UK",fanScore:55,fanTier:"Tier B",fitScore:79,fitSub:"Strong alignment",budget:"£70k",budgetNum:70,conf:"m",confDesc:"3/4 sources active. Data currency: 8 days.",fanNote:"Triathlon participation at record levels. Audience profile is high-income, highly product-receptive.",fitNote:"Performance gear category fit is exceptional. Audience income aligns well for premium brand.",oppTitle:"Official kit partner — Great Britain squad",oppMeta:"Minimum £70,000 · Declared 16 days ago",dims:[84,86,65,92,58],watchlist:false,portfolio:false},
+  {id:50,initials:"RR",name:"Rat Race Adventures",type:"Adventure Race Organiser",series:"UK Adventure Racing",fanScore:46,fanTier:"Tier C",fitScore:73,fitSub:"Strong alignment",budget:"£30k",budgetNum:30,conf:"l",confDesc:"2/4 sources active. TikTok and X data limited.",fanNote:"Loyal niche community. Highly engaged participants. Strong earned media.",fitNote:"Outdoor and performance gear alignment very strong. Budget accessible. Enthusiast audience.",oppTitle:"Official gear partner",oppMeta:"Minimum £30,000 · Declared 21 days ago · Expires in 19 days",dims:[80,82,60,99,42],watchlist:false,portfolio:false},
+  // ── Extreme & Action Sports ───────────────────────────────────────────────
+  {id:51,initials:"BSN",name:"British Snowsport",type:"National Governing Body",series:"FIS Alpine · Slopestyle · Cross",fanScore:58,fanTier:"Tier B",fitScore:74,fitSub:"Strong alignment",budget:"£55k",budgetNum:55,conf:"m",confDesc:"3/4 sources active. Data currency: 9 days.",fanNote:"Winter sport audience highly engaged during Olympics and World Cup cycles. Good YouTube traction.",fitNote:"Performance outerwear and gear alignment excellent. Audience income skew high.",oppTitle:"Official outerwear partner",oppMeta:"Minimum £55,000 · Declared 14 days ago · Expires in 26 days",dims:[78,80,72,95,50],watchlist:false,portfolio:false},
+  {id:52,initials:"UKS",name:"UK Surfing",type:"National Governing Body",series:"WSL Qualifying Series",fanScore:50,fanTier:"Tier C",fitScore:69,fitSub:"Good alignment",budget:"£40k",budgetNum:40,conf:"m",confDesc:"3/4 sources active. TikTok limited. Data currency: 13 days.",fanNote:"Strong Instagram and YouTube presence. Coastal community engagement high. Youth demographic.",fitNote:"Lifestyle and performance overlap strong. Young audience premium for endurance-adjacent brands.",oppTitle:"National squad kit partner",oppMeta:"Minimum £40,000 · Declared 6 days ago",dims:[72,70,84,99,44],watchlist:false,portfolio:false},
+  {id:53,initials:"RBH",name:"Red Bull Hardline UK",type:"Mountain Bike Event",series:"Mountain Bike Enduro",fanScore:64,fanTier:"Tier B",fitScore:66,fitSub:"Good alignment",budget:"£70k",budgetNum:70,conf:"m",confDesc:"3/4 sources active. Data currency: 7 days.",fanNote:"Viral event format. YouTube event content performs exceptionally. Strong 18–30 male audience.",fitNote:"Performance and outdoor category fit strong. Active lifestyle audience quality high.",oppTitle:"Event presenting partner",oppMeta:"Minimum £70,000 · Declared 12 days ago · Expires in 33 days",dims:[74,72,82,92,58],watchlist:false,portfolio:false},
+  // ── Media & Content ───────────────────────────────────────────────────────
+  {id:54,initials:"HP",name:"The High Performance Podcast",type:"Sports & Performance Podcast",series:"UK Podcast Charts",fanScore:73,fanTier:"Tier B",fitScore:72,fitSub:"Strong alignment",budget:"£65k",budgetNum:65,conf:"h",confDesc:"4/4 sources active. Data currency: 2 days.",fanNote:"Top 5 UK sports podcast. 90-day listener growth of +11%. Strong athlete and coach advocacy.",fitNote:"Performance mindset audience is an exceptional match. Host credibility amplifies brand.",oppTitle:"Season sponsor — performance brand category",oppMeta:"Minimum £65,000 · Declared 5 days ago · Expires in 25 days",dims:[82,80,70,94,66],watchlist:true,portfolio:false},
+  {id:55,initials:"MSM",name:"Motorsport.com Media",type:"Digital Sports Media",series:"Global Motorsport Coverage",fanScore:66,fanTier:"Tier B",fitScore:63,fitSub:"Good alignment",budget:"£90k",budgetNum:90,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"Global motorsport audience. Strong editorial reach across F1, F2, MotoGP, and endurance.",fitNote:"Motorsport audience affinity with performance gear natural. Budget within range.",oppTitle:"Premium editorial partner",oppMeta:"Minimum £90,000 · Declared 17 days ago",dims:[70,66,64,88,75],watchlist:false,portfolio:false},
+  {id:56,initials:"ATH",name:"The Athletic UK",type:"Digital Sports Media",series:"UK Sports Journalism",fanScore:70,fanTier:"Tier B",fitScore:58,fitSub:"Moderate alignment",budget:"£120k",budgetNum:120,conf:"h",confDesc:"4/4 sources active. Data currency: 4 days.",fanNote:"Subscriber-led model drives high-quality, engaged audience. Football dominant but multi-sport.",fitNote:"Audience income skew high. Category fit moderate — primarily lifestyle rather than performance gear.",oppTitle:"Brand integration partner",oppMeta:"Minimum £120,000 · Declared 22 days ago",dims:[76,56,68,82,65],watchlist:false,portfolio:false},
+  // ── Individual Athletes ────────────────────────────────────────────────────
+  {id:57,initials:"DA",name:"Dina Asher-Smith",type:"Track & Field Athlete",series:"World Athletics · Diamond League",fanScore:82,fanTier:"Tier A",fitScore:77,fitSub:"Strong alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"UK's leading female track athlete. Highly articulate media presence. Role model positioning strong.",fitNote:"Performance and empowerment narrative excellent fit. Category alignment high. Current partner window unclear.",oppTitle:null,oppMeta:null,dims:[88,82,82,44,75],watchlist:true,portfolio:false},
+  {id:58,initials:"TD",name:"Tom Daley",type:"Olympic Diver & Media Personality",series:"World Aquatics · FINA",fanScore:86,fanTier:"Tier A",fitScore:54,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Olympic Gold medalist. Crossover lifestyle and media presence. Wide UK public awareness.",fitNote:"Brand values alignment dependent on positioning strategy. Performance category fit moderate.",oppTitle:null,oppMeta:null,dims:[80,52,82,38,72],watchlist:false,portfolio:false},
+  {id:59,initials:"ER",name:"Emma Raducanu",type:"Professional Tennis Player",series:"WTA Tour",fanScore:91,fanTier:"Tier A",fitScore:57,fitSub:"Moderate alignment",budget:"—",budgetNum:0,conf:"h",confDesc:"4/4 sources active. Data currency: 1 day.",fanNote:"Highest FanScore individual athlete in dataset. US Open legacy sustains long-term awareness.",fitNote:"Existing category partners occupy multiple adjacencies. Performance fit exists but window limited.",oppTitle:null,oppMeta:null,dims:[80,60,84,28,82],watchlist:false,portfolio:false},
+  {id:60,initials:"JW",name:"Josh Warrington",type:"Professional Boxer",series:"IBF World Champion",fanScore:68,fanTier:"Tier B",fitScore:70,fitSub:"Good alignment",budget:"£75k",budgetNum:75,conf:"h",confDesc:"4/4 sources active. Data currency: 3 days.",fanNote:"IBF Featherweight Champion. Leeds stronghold. Highly loyal northern England fanbase.",fitNote:"Performance nutrition and gear adjacency natural. Yorkshire regional activation strong.",oppTitle:"Fight camp &amp; training partner",oppMeta:"Minimum £75,000 · Declared 8 days ago · Expires in 35 days",dims:[76,72,76,90,60],watchlist:false,portfolio:false},
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let currentPage = 'explore';
+let exploreSelected = 1;
+let compareId1 = 1, compareId2 = 3;
+let watchlistIds = new Set(properties.filter(p=>p.watchlist).map(p=>p.id));
+let prevPage = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+const confLabel = {h:"High confidence",m:"Moderate confidence",l:"Limited coverage"};
+const confClass = {h:"conf-h",m:"conf-m",l:"conf-l"};
+
+function P(id) { return properties.find(p => p.id === id); }
+
+function signalPills(p, showBudget=true) {
+  let h = `<span class="signal-pill sig-fan"><span class="sig-lbl">Fan</span> ${p.fanScore}</span>`;
+  h += `<span class="signal-pill sig-fit"><span class="sig-lbl">Fit</span> ${p.fitScore}</span>`;
+  if (showBudget && p.budgetNum > 0) h += `<span class="signal-pill sig-bud"><span class="sig-lbl">£</span> ${p.budget}</span>`;
+  return h;
+}
+
+function confRowHtml(p, large=false) {
+  const sz = large ? 'style="width:9px;height:9px"' : '';
+  return `<div class="conf-row"><span class="conf-dot ${confClass[p.conf]}" ${sz}></span> <strong>${confLabel[p.conf]}</strong> — ${p.confDesc}</div>`;
+}
+
+function dimBarsHtml(p, labelWidth='130px') {
+  return DIM_LABELS.map((l,i) =>
+    `<div class="dim-row"><span class="dim-lbl" style="width:${labelWidth}">${l}</span><div class="dim-bar-wrap"><div class="dim-bar" style="width:${p.dims[i]}%"></div></div><span class="dim-val">${p.dims[i]}</span></div>`
+  ).join('');
+}
+
+function sigCardsHtml(p) {
+  return `<div class="sig-cards">
+    <div class="sig-card sig-card-fan">
+      <div class="sig-card-type">FanScore</div>
+      <div class="sig-card-val">${p.fanScore}</div>
+      <div class="sig-card-sub">${p.fanTier} · Multi-platform</div>
+      <div class="sig-card-note">${p.fanNote}</div>
+    </div>
+    <div class="sig-card sig-card-fit">
+      <div class="sig-card-type">FitScore — your profile</div>
+      <div class="sig-card-val">${p.fitScore}</div>
+      <div class="sig-card-sub">${p.fitSub}</div>
+      <div class="sig-card-note">${p.fitNote}</div>
+    </div>
+    <div class="sig-card sig-card-bud">
+      <div class="sig-card-type">Budget access</div>
+      <div class="sig-card-val">${p.budgetNum > 0 ? p.budget : '—'}</div>
+      <div class="sig-card-sub">${p.budgetNum > 0 ? 'Minimum entry point' : 'No opportunity declared'}</div>
+      <div class="sig-card-note">${p.budgetNum > 0 ? 'Within your declared budget range.' : 'No active declared opportunity on this property.'}</div>
+    </div>
+  </div>`;
+}
+
+function oppPanelHtml(p) {
+  if (!p.oppTitle) return '';
+  return `<div class="opp-panel"><span class="opp-tag">Active opportunity</span><div class="opp-title">${p.oppTitle}</div><div class="opp-meta">${p.oppMeta}</div></div>`;
+}
+
+function propCardHtml(p, selected=false) {
+  return `<div class="prop-card ${selected?'active':''}" onclick="exploreSelect(${p.id})">
+    <div class="prop-card-hdr">
+      <div class="prop-av prop-av-sm">${p.initials}</div>
+      <div><div class="prop-name">${p.name}</div><div class="prop-type">${p.type}</div></div>
+    </div>
+    <div class="prop-pills">${signalPills(p)}</div>
+    ${confRowHtml(p)}
+    <div class="prop-series-sm">${p.series}</div>
+    <span class="card-link" onclick="event.stopPropagation();nav('property',${p.id})">View full profile →</span>
+  </div>`;
+}
+
+// ── Router ────────────────────────────────────────────────────────────────
+function nav(page, param) {
+  prevPage = currentPage;
+  currentPage = page;
+  document.querySelectorAll('.sidebar-link[data-page]').forEach(l => l.classList.remove('active'));
+  const link = document.querySelector(`.sidebar-link[data-page="${page}"]`);
+  if (link) link.classList.add('active');
+  document.getElementById('main-content').innerHTML = renders[page] ? renders[page](param) : '';
+  document.getElementById('main-content').scrollTop = 0;
+  window.scrollTo(0,0);
+  if (inits[page]) inits[page](param);
+}
+
+// ── Explore ───────────────────────────────────────────────────────────────
+function renderExplore() {
+  const rows = [
+    { id:'r1', title:'Matching your brand profile', desc:'Ordered by FitScore alignment to Apex Performance Gear', logic:'FitScore · budget-filtered', ids:[48,46,21,47,37] },
+    { id:'r2', title:'High attention momentum', desc:'FanScore growth over 90 days — not current absolute scale', logic:'FanScore Δ90d · tier-normalised', ids:[59,12,15,57,31] },
+    { id:'r3', title:'Strong signals, low brand activity', desc:'Properties with solid FanScore and FitScore but limited current brand interest', logic:'Low competition · strong signal', ids:[49,54,28,37,50] },
+    { id:'r4', title:'Active opportunities within your budget', desc:'Declared openings filtered to your budget range. Ordered by FitScore.', logic:'Opportunities · budget match', ids:[48,46,21,54,11] },
+  ];
+  const p = P(exploreSelected);
+  return `
+    <div class="page-title">Explore</div>
+    <div class="page-sub">Row-based discovery. Each row answers a distinct analytical question. No ranking.</div>
+    <div class="brand-bar">
+      <div><div class="brand-bar-name">Apex Performance Gear</div><div class="brand-bar-meta">UK automotive accessories · Budget declared: £80k–£150k · FitScore active</div></div>
+      <div class="profile-tags"><span class="profile-tag">Performance automotive</span><span class="profile-tag">UK &amp; Europe</span><span class="profile-tag">18–35 male skew</span></div>
+      <button class="btn btn-sm" style="margin-left:auto">Edit profile</button>
+    </div>
+    <div class="sig-legend">
+      <span class="sig-legend-title">Signal key</span>
+      <span class="leg-item"><span class="leg-swatch" style="background:var(--blue-light);border:1px solid var(--blue-mid)"></span> FanScore — digital attention gravity, tier-normalised</span>
+      <span class="leg-sep"></span>
+      <span class="leg-item"><span class="leg-swatch" style="background:var(--green-light);border:1px solid #b0d9c2"></span> FitScore — alignment to your brand profile</span>
+      <span class="leg-sep"></span>
+      <span class="leg-item"><span class="leg-swatch" style="background:var(--purple-light);border:1px solid #c9bce8"></span> Budget — access filter only, not scored</span>
+    </div>
+    <div class="focus-panel">
+      <div class="focus-lbl">Property in Focus — data-triggered, not editorial</div>
+      <div class="focus-hdr">
+        <div class="prop-av prop-av-lg" id="fx-av">${p.initials}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--ink)" id="fx-name">${p.name}</div>
+          <div style="font-size:12px;color:var(--subtle)" id="fx-type">${p.type}</div>
+          <div style="font-size:12px;color:var(--blue);margin-top:2px" id="fx-series">${p.series}</div>
+        </div>
+        <div class="focus-actions">
+          <button class="btn btn-sm" onclick="toggleWatchlist(${p.id})">+ Watchlist</button>
+          <button class="btn btn-sm" onclick="nav('compare')">Compare</button>
+          <button class="btn btn-sm btn-primary" onclick="nav('property',${p.id})">View property →</button>
+        </div>
+      </div>
+      <div id="fx-sigcards">${sigCardsHtml(p)}</div>
+      <div style="margin-bottom:16px">
+        <div class="dims-title">FitScore dimensions — Apex Performance Gear</div>
+        <div id="fx-dims">${dimBarsHtml(p)}</div>
+      </div>
+      <div class="focus-conf" id="fx-conf">
+        <span class="conf-dot ${confClass[p.conf]}" style="width:9px;height:9px"></span>
+        <span class="focus-conf-lbl">${confLabel[p.conf]}</span>
+        <span style="color:var(--subtle);font-size:12px"> — ${p.confDesc}</span>
+      </div>
+      <div id="fx-opp">${oppPanelHtml(p)}</div>
+    </div>
+    ${rows.map(r => `
+    <div class="explore-row">
+      <div class="row-hdr">
+        <span class="row-title">${r.title}</span>
+        <span class="row-desc">${r.desc}</span>
+        <span class="row-logic">${r.logic}</span>
+      </div>
+      <div class="row-cards">${r.ids.map(id => propCardHtml(P(id), id===exploreSelected)).join('')}</div>
+    </div>`).join('')}`;
+}
+
+function exploreSelect(id) {
+  exploreSelected = id;
+  const p = P(id);
+  document.getElementById('fx-av').textContent = p.initials;
+  document.getElementById('fx-name').textContent = p.name;
+  document.getElementById('fx-type').textContent = p.type;
+  document.getElementById('fx-series').textContent = p.series;
+  document.getElementById('fx-sigcards').innerHTML = sigCardsHtml(p);
+  document.getElementById('fx-dims').innerHTML = dimBarsHtml(p);
+  document.getElementById('fx-conf').innerHTML = `<span class="conf-dot ${confClass[p.conf]}" style="width:9px;height:9px"></span><span class="focus-conf-lbl">${confLabel[p.conf]}</span><span style="color:var(--subtle);font-size:12px"> — ${p.confDesc}</span>`;
+  document.getElementById('fx-opp').innerHTML = oppPanelHtml(p);
+  document.querySelectorAll('.prop-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll(`.prop-card`).forEach(c => {
+    if (c.getAttribute('onclick') === `exploreSelect(${id})`) c.classList.add('active');
+  });
+  // update View button
+  const actions = document.querySelector('.focus-actions');
+  if (actions) {
+    const btns = actions.querySelectorAll('button');
+    if (btns[2]) btns[2].setAttribute('onclick', `nav('property',${id})`);
+    if (btns[0]) btns[0].setAttribute('onclick', `toggleWatchlist(${id})`);
+  }
+}
+
+function toggleWatchlist(id) {
+  if (watchlistIds.has(id)) watchlistIds.delete(id);
+  else watchlistIds.add(id);
+  document.getElementById('wl-count').textContent = watchlistIds.size;
+}
+
+// ── Browse ────────────────────────────────────────────────────────────────
+function renderBrowse() {
+  return `
+    <div class="page-title">Browse All</div>
+    <div class="page-sub">Complete property universe. No implied ranking. Filter to narrow scope.</div>
+    <div class="filter-bar">
+      <input type="text" id="br-search" placeholder="Search properties…" oninput="browseFilter()">
+      <select id="br-series" onchange="browseFilter()">
+        <option value="">All categories</option>
+        <optgroup label="Motorsport"><option>FIA F2</option><option>FIA F3</option><option>FIA WEC</option><option>British GT</option></optgroup>
+        <optgroup label="Football"><option>Premier League</option><option>EFL Championship</option><option>Women's Super League</option><option>EFL League One</option><option>EFL League Two</option></optgroup>
+        <optgroup label="Rugby"><option>Gallagher Premiership</option><option>Champions Cup</option></optgroup>
+        <optgroup label="Cricket"><option>County Championship</option><option>The Hundred</option><option>Vitality Blast</option></optgroup>
+        <optgroup label="Esports"><option>LEC</option><option>Valorant</option><option>CS2</option></optgroup>
+        <optgroup label="Cycling"><option>UCI WorldTour</option><option>UCI ProSeries</option></optgroup>
+        <optgroup label="Athletics &amp; Endurance"><option>World Athletics</option><option>Abbott World Marathon Majors</option><option>Parkrun</option><option>Ironman UK</option></optgroup>
+        <optgroup label="Golf &amp; Tennis"><option>DP World Tour</option><option>Ladies European Tour</option><option>ATP 500</option><option>WTA 250</option></optgroup>
+        <optgroup label="Combat Sports"><option>Sky Sports Boxing</option><option>European MMA</option></optgroup>
+        <optgroup label="Media &amp; Podcast"><option>UK Podcast Charts</option><option>UK Sports Journalism</option></optgroup>
+      </select>
+      <select id="br-tier" onchange="browseFilter()">
+        <option value="">All tiers</option>
+        <option value="Tier A">Tier A</option>
+        <option value="Tier B">Tier B</option>
+        <option value="Tier C">Tier C</option>
+      </select>
+      <select id="br-conf" onchange="browseFilter()">
+        <option value="">All confidence</option>
+        <option value="h">High confidence</option>
+        <option value="m">Moderate confidence</option>
+        <option value="l">Limited coverage</option>
+      </select>
+      <span class="prop-count" id="br-count">Showing ${properties.length} properties</span>
+    </div>
+    <div class="browse-grid" id="browse-grid">${renderBrowseCards(properties)}</div>`;
+}
+
+function renderBrowseCards(props) {
+  if (!props.length) return `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--subtle)">No properties match the current filters.</div>`;
+  return props.map(p => `
+    <div class="browse-card" onclick="nav('property',${p.id})">
+      <div class="browse-card-hdr">
+        <div class="prop-av prop-av-md">${p.initials}</div>
+        <div><div class="prop-name">${p.name}</div><div class="prop-type">${p.type}</div></div>
+      </div>
+      <div class="browse-card-pills">${signalPills(p)}</div>
+      ${confRowHtml(p)}
+      <div class="browse-card-footer">
+        <span class="prop-series">${p.series}</span>
+        <span style="font-size:11px;color:var(--blue)">View profile →</span>
+      </div>
+    </div>`).join('');
+}
+
+function browseFilter() {
+  const q = (document.getElementById('br-search').value||'').toLowerCase();
+  const series = document.getElementById('br-series').value;
+  const tier = document.getElementById('br-tier').value;
+  const conf = document.getElementById('br-conf').value;
+  const filtered = properties.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q) && !p.series.toLowerCase().includes(q) && !p.type.toLowerCase().includes(q)) return false;
+    if (series && !p.series.includes(series)) return false;
+    if (tier && p.fanTier !== tier) return false;
+    if (conf && p.conf !== conf) return false;
+    return true;
+  });
+  document.getElementById('browse-grid').innerHTML = renderBrowseCards(filtered);
+  document.getElementById('br-count').textContent = `Showing ${filtered.length} properties`;
+}
+
+// ── Watchlist ─────────────────────────────────────────────────────────────
+function renderWatchlist() {
+  const wlProps = properties.filter(p => watchlistIds.has(p.id));
+  return `
+    <div class="page-title">Watchlist</div>
+    <div class="page-sub">Properties you are tracking. ${wlProps.length} ${wlProps.length===1?'property':'properties'}.</div>
+    <div class="wl-list" id="wl-list">
+      ${wlProps.length ? wlProps.map(p => wlRowHtml(p)).join('') : emptyState('No properties on your watchlist','Explore properties and add them here to track signals over time.','☆')}
+    </div>`;
+}
+
+function wlRowHtml(p) {
+  return `<div class="wl-row" id="wl-row-${p.id}">
+    <div class="prop-av prop-av-sm" style="cursor:pointer" onclick="nav('property',${p.id})">${p.initials}</div>
+    <div class="wl-info">
+      <div class="prop-name" style="cursor:pointer" onclick="nav('property',${p.id})">${p.name}</div>
+      <div class="wl-meta">${p.type} · ${p.series}</div>
+      <div class="wl-pills">${signalPills(p)}</div>
+    </div>
+    ${confRowHtml(p)}
+    <div class="wl-actions">
+      <button class="btn btn-sm" onclick="nav('property',${p.id})">View</button>
+      <button class="btn btn-sm" onclick="nav('compare')">Compare</button>
+      <button class="btn btn-sm btn-danger" onclick="wlRemove(${p.id})">Remove</button>
+    </div>
+  </div>`;
+}
+
+function wlRemove(id) {
+  watchlistIds.delete(id);
+  document.getElementById('wl-count').textContent = watchlistIds.size;
+  const row = document.getElementById(`wl-row-${id}`);
+  if (row) row.remove();
+  const list = document.getElementById('wl-list');
+  if (list && !list.children.length) list.innerHTML = emptyState('Your watchlist is empty','Explore properties and add them here to track signals over time.','☆');
+}
+
+function emptyState(title, desc, icon='○') {
+  return `<div class="empty-state"><div class="empty-state-icon">${icon}</div><div class="empty-state-title">${title}</div><div style="font-size:13px">${desc}</div><button class="btn btn-primary btn-sm" style="margin-top:16px" onclick="nav('explore')">Go to Explore</button></div>`;
+}
+
+// ── Compare ───────────────────────────────────────────────────────────────
+function renderCompare() {
+  const opts = properties.map(p => `<option value="${p.id}" ${p.id===compareId1?'selected':''}>${p.name}</option>`).join('');
+  const opts2 = properties.map(p => `<option value="${p.id}" ${p.id===compareId2?'selected':''}>${p.name}</option>`).join('');
+  return `
+    <div class="page-title">Compare</div>
+    <div class="page-sub">Side-by-side signal comparison. Data presented in parallel. No winner declared.</div>
+    <div class="compare-selectors">
+      <select onchange="updateCompare(1, parseInt(this.value))">${opts}</select>
+      <span class="compare-vs">vs</span>
+      <select onchange="updateCompare(2, parseInt(this.value))">${opts2}</select>
+      <button class="btn btn-sm" style="opacity:0.5;cursor:not-allowed" disabled>+ Add third property</button>
+    </div>
+    <div id="cmp-table">${renderCmpTable()}</div>
+    <div class="cmp-note">Data presented in parallel. No recommendation implied. FitScore is brand-specific to Apex Performance Gear. Signals are independently computed and must not be combined.</div>`;
+}
+
+function renderCmpTable() {
+  const p1 = P(compareId1), p2 = P(compareId2);
+  const rows = [
+    ['Property', `<div style="display:flex;align-items:center;gap:8px"><div class="prop-av prop-av-sm" style="cursor:pointer" onclick="nav('property',${p1.id})">${p1.initials}</div><div><div class="prop-name">${p1.name}</div><div class="prop-type">${p1.type}</div></div></div>`, `<div style="display:flex;align-items:center;gap:8px"><div class="prop-av prop-av-sm" style="cursor:pointer" onclick="nav('property',${p2.id})">${p2.initials}</div><div><div class="prop-name">${p2.name}</div><div class="prop-type">${p2.type}</div></div></div>`],
+    ['FanScore','<em>Attention signal</em>',`<span class="signal-pill sig-fan">${p1.fanScore}</span>`, `<span class="signal-pill sig-fan">${p2.fanScore}</span>`],
+    ['FanScore tier',`${p1.fanTier}`,`${p2.fanTier}`],
+    ['FitScore','<em>Your brand profile</em>',`<span class="signal-pill sig-fit">${p1.fitScore}</span>`,`<span class="signal-pill sig-fit">${p2.fitScore}</span>`],
+    ['Geographic fit',`${p1.dims[0]}`,`${p2.dims[0]}`],
+    ['Category alignment',`${p1.dims[1]}`,`${p2.dims[1]}`],
+    ['Audience age match',`${p1.dims[2]}`,`${p2.dims[2]}`],
+    ['Budget compatibility',`${p1.dims[3]}`,`${p2.dims[3]}`],
+    ['Series reach alignment',`${p1.dims[4]}`,`${p2.dims[4]}`],
+    ['Entry budget',p1.budgetNum>0?`<span class="signal-pill sig-bud">${p1.budget}</span>`:'No opp.', p2.budgetNum>0?`<span class="signal-pill sig-bud">${p2.budget}</span>`:'No opp.'],
+    ['Data confidence',confRowHtml(p1), confRowHtml(p2)],
+    ['Series',p1.series, p2.series],
+  ];
+  // fix row format — some are 3-col, some were accidentally 4-col
+  const dataRows = [
+    ['Property', `<div style="display:flex;align-items:center;gap:8px"><div class="prop-av prop-av-sm">${p1.initials}</div><div><div class="prop-name">${p1.name}</div><div class="prop-type">${p1.type}</div></div></div>`, `<div style="display:flex;align-items:center;gap:8px"><div class="prop-av prop-av-sm">${p2.initials}</div><div><div class="prop-name">${p2.name}</div><div class="prop-type">${p2.type}</div></div></div>`],
+    ['FanScore', `<span class="signal-pill sig-fan">${p1.fanScore}</span>`, `<span class="signal-pill sig-fan">${p2.fanScore}</span>`],
+    ['FanScore tier', p1.fanTier, p2.fanTier],
+    ['FitScore', `<span class="signal-pill sig-fit">${p1.fitScore}</span>`, `<span class="signal-pill sig-fit">${p2.fitScore}</span>`],
+    ['Geographic fit', p1.dims[0], p2.dims[0]],
+    ['Category alignment', p1.dims[1], p2.dims[1]],
+    ['Audience age match', p1.dims[2], p2.dims[2]],
+    ['Budget compatibility', p1.dims[3], p2.dims[3]],
+    ['Series reach alignment', p1.dims[4], p2.dims[4]],
+    ['Entry budget', p1.budgetNum>0?`<span class="signal-pill sig-bud">${p1.budget}</span>`:'No opp. declared', p2.budgetNum>0?`<span class="signal-pill sig-bud">${p2.budget}</span>`:'No opp. declared'],
+    ['Data confidence', confRowHtml(p1), confRowHtml(p2)],
+    ['Series', p1.series, p2.series],
+  ];
+  return `<table class="cmp-table">
+    <thead><tr>
+      <th class="row-lbl" style="width:160px"></th>
+      <th><span style="cursor:pointer;color:var(--blue)" onclick="nav('property',${p1.id})">${p1.name} ↗</span></th>
+      <th><span style="cursor:pointer;color:var(--blue)" onclick="nav('property',${p2.id})">${p2.name} ↗</span></th>
+    </tr></thead>
+    <tbody>${dataRows.map(r=>`<tr><td class="row-lbl">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function updateCompare(slot, id) {
+  if (slot===1) compareId1=id; else compareId2=id;
+  document.getElementById('cmp-table').innerHTML = renderCmpTable();
+}
+
+// ── Portfolio ─────────────────────────────────────────────────────────────
+function renderPortfolio() {
+  const portProps = properties.filter(p => p.portfolio);
+  return `
+    <div class="page-title">Portfolio</div>
+    <div class="page-sub">Active evaluation set. ${portProps.length} properties.</div>
+    <div class="callout" style="margin-bottom:20px">Portfolio tracks properties under active evaluation. Adding a property here does not indicate commercial intent or constitute a recommendation.</div>
+    <div class="port-cards">
+      ${portProps.map(p => `
+      <div class="port-card" id="port-card-${p.id}">
+        <div class="port-card-hdr">
+          <div class="prop-av prop-av-lg" style="cursor:pointer" onclick="nav('property',${p.id})">${p.initials}</div>
+          <div class="port-card-meta">
+            <div style="font-size:16px;font-weight:700;color:var(--ink);cursor:pointer" onclick="nav('property',${p.id})">${p.name}</div>
+            <div style="font-size:12px;color:var(--subtle);margin-top:1px">${p.type}</div>
+            <div style="font-size:12px;color:var(--blue);margin-top:2px">${p.series}</div>
+            <div class="port-status"><span class="port-status-dot"></span>Active evaluation</div>
+          </div>
+          <div class="port-card-actions">
+            <button class="btn btn-sm" onclick="nav('property',${p.id})">View full profile</button>
+            <button class="btn btn-sm btn-danger" onclick="portRemove(${p.id})">Remove</button>
+          </div>
+        </div>
+        ${sigCardsHtml(p)}
+        <div class="dims-section">
+          <div class="dims-title">FitScore dimensions — Apex Performance Gear</div>
+          ${dimBarsHtml(p)}
+        </div>
+        ${confRowHtml(p, true)}
+        ${p.oppTitle ? `<div style="margin-top:14px">${oppPanelHtml(p)}</div>` : ''}
+      </div>`).join('')}
+    </div>`;
+}
+
+function portRemove(id) {
+  const card = document.getElementById(`port-card-${id}`);
+  if (card) { card.style.opacity='0.4'; card.style.pointerEvents='none'; card.querySelector('.port-status').innerHTML='<span style="color:var(--subtle)">Removed from portfolio</span>'; }
+}
+
+// ── Opportunities ─────────────────────────────────────────────────────────
+function renderOpportunities() {
+  return `
+    <div class="page-title">Opportunities</div>
+    <div class="page-sub">Declared sponsorship openings. Filtered to your declared budget range of £80k–£150k.</div>
+    <div class="opp-filter-bar">
+      <select id="opp-budget" onchange="oppFilter()">
+        <option value="">All budgets</option>
+        <option value="under50">Under £50k</option>
+        <option value="50to100">£50k – £100k</option>
+        <option value="over100">Over £100k</option>
+      </select>
+      <select id="opp-fit" onchange="oppFilter()">
+        <option value="">All FitScores</option>
+        <option value="70">Strong alignment (70+)</option>
+        <option value="60">Good alignment (60–69)</option>
+        <option value="50">Moderate (50–59)</option>
+      </select>
+      <select id="opp-sort" onchange="oppFilter()">
+        <option value="fit">FitScore ↓</option>
+        <option value="budget">Budget ↑</option>
+      </select>
+      <span class="prop-count" id="opp-count"></span>
+    </div>
+    <div class="opp-list" id="opp-list"></div>
+    <div class="opp-footer-note">Opportunities are property-declared. SponsorAI does not verify terms or guarantee availability. No recommendation is implied.</div>`;
+}
+
+function oppFilter() {
+  const budgetF = document.getElementById('opp-budget')?.value || '';
+  const fitF = parseInt(document.getElementById('opp-fit')?.value||0);
+  const sortF = document.getElementById('opp-sort')?.value || 'fit';
+  let opps = properties.filter(p => p.oppTitle);
+  if (budgetF==='under50') opps = opps.filter(p=>p.budgetNum>0&&p.budgetNum<50);
+  else if (budgetF==='50to100') opps = opps.filter(p=>p.budgetNum>=50&&p.budgetNum<=100);
+  else if (budgetF==='over100') opps = opps.filter(p=>p.budgetNum>100);
+  if (fitF) opps = opps.filter(p=>p.fitScore>=fitF);
+  if (sortF==='fit') opps.sort((a,b)=>b.fitScore-a.fitScore);
+  else opps.sort((a,b)=>a.budgetNum-b.budgetNum);
+  const inBudget = opps.filter(p=>p.budgetNum>=80&&p.budgetNum<=150).length;
+  document.getElementById('opp-count').textContent = `${opps.length} ${opps.length===1?'opportunity':'opportunities'} · ${inBudget} within budget range`;
+  document.getElementById('opp-list').innerHTML = opps.map(p => {
+    const match = p.budgetNum>=80&&p.budgetNum<=150;
+    return `<div class="opp-row ${match?'budget-match':''}">
+      <div class="opp-prop" onclick="nav('property',${p.id})" style="cursor:pointer">
+        <div class="prop-av prop-av-sm">${p.initials}</div>
+        <div><div class="prop-name">${p.name}</div><div class="prop-type">${p.type}</div></div>
+      </div>
+      <div class="opp-body">
+        <div class="opp-row-title">${p.oppTitle}</div>
+        <div class="opp-row-meta">${p.oppMeta}</div>
+      </div>
+      <div class="opp-signals">
+        ${match?`<span class="budget-badge">In budget</span>`:''}
+        <span class="signal-pill sig-fit"><span class="sig-lbl">Fit</span> ${p.fitScore}</span>
+        <span class="signal-pill sig-bud"><span class="sig-lbl">£</span> ${p.budget}</span>
+      </div>
+      <div class="opp-actions">
+        <button class="btn btn-sm" onclick="nav('property',${p.id})">View property</button>
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="empty-state-title">No opportunities match these filters</div></div>`;
+}
+
+// ── Property page ─────────────────────────────────────────────────────────
+function renderProperty(id) {
+  const pid = parseInt(id) || 1;
+  const p = P(pid) || properties[0];
+  const related = properties.filter(q => q.id!==pid && q.fanTier===p.fanTier).slice(0,3);
+  const ig = Math.round(p.fanScore * 2.1 + 20);
+  const tw = Math.round(p.fanScore * 1.4 + 5);
+  const yt = Math.round(p.fanScore * 0.6 + 2);
+  const eng = (2.1 + (p.fanScore-50)*0.04).toFixed(1);
+  const back = prevPage && prevPage!=='property' ? prevPage : 'explore';
+  const backLabel = {explore:'Explore', browse:'Browse All', watchlist:'Watchlist', opportunities:'Opportunities', portfolio:'Portfolio', compare:'Compare'}[back]||'Explore';
+  return `
+    <div class="breadcrumb">
+      <span class="card-link" style="opacity:1;font-size:12px;cursor:pointer;color:var(--blue)" onclick="nav('${back}')">← Back to ${backLabel}</span>
+    </div>
+    <div class="prop-page-hdr">
+      <div class="prop-page-hdr-inner">
+        <div class="prop-av prop-av-lg">${p.initials}</div>
+        <div class="prop-page-meta">
+          <div class="prop-page-name">${p.name}</div>
+          <div class="prop-page-type">${p.type}</div>
+          <div class="prop-page-series">${p.series}</div>
+        </div>
+      </div>
+      <div class="prop-page-actions">
+        <button class="btn btn-sm" onclick="toggleWatchlist(${p.id})">+ Watchlist</button>
+        <button class="btn btn-sm" onclick="nav('compare')">Compare</button>
+        ${p.oppTitle?`<button class="btn btn-sm btn-primary" onclick="nav('opportunities')">View opportunities</button>`:''}
+      </div>
+    </div>
+
+    ${sigCardsHtml(p)}
+
+    <div class="two-col">
+      <div class="card full-col" style="margin-bottom:0">
+        <div class="sec-title" style="margin-bottom:14px">FitScore dimensions — Apex Performance Gear</div>
+        ${dimBarsHtml(p, '145px')}
+        <div style="margin-top:12px">${confRowHtml(p, true)}</div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="sec-title" style="margin-bottom:14px">Social signals</div>
+        <div class="social-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div class="social-stat"><div class="social-platform">Instagram</div><div class="social-stat-val">${ig}k</div><div class="social-stat-lbl">Followers</div></div>
+          <div class="social-stat"><div class="social-platform">X / Twitter</div><div class="social-stat-val">${tw}k</div><div class="social-stat-lbl">Followers</div></div>
+          <div class="social-stat"><div class="social-platform">YouTube</div><div class="social-stat-val">${yt}k</div><div class="social-stat-lbl">Subscribers</div></div>
+          <div class="social-stat"><div class="social-platform">Engagement</div><div class="social-stat-val">${eng}%</div><div class="social-stat-lbl">Avg. rate</div></div>
+        </div>
+      </div>
+    </div>
+
+    ${p.oppTitle ? `<div class="full-col">${oppPanelHtml(p)}</div>` : ''}
+
+    ${related.length ? `<div class="full-col">
+      <div class="sec-title">Related properties — same tier</div>
+      <div class="related-grid">
+        ${related.map(r=>`<div class="related-card" onclick="nav('property',${r.id})">
+          <div class="related-card-hdr">
+            <div class="prop-av prop-av-sm">${r.initials}</div>
+            <div><div class="prop-name">${r.name}</div><div class="prop-type">${r.type}</div></div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">${signalPills(r,false)}</div>
+          <div style="margin-top:6px">${confRowHtml(r)}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}`;
+}
+
+// ── Render map ────────────────────────────────────────────────────────────
+const renders = {
+  explore: renderExplore,
+  browse: renderBrowse,
+  watchlist: renderWatchlist,
+  compare: renderCompare,
+  portfolio: renderPortfolio,
+  opportunities: renderOpportunities,
+  property: renderProperty,
+};
+
+const inits = {
+  opportunities: () => oppFilter(),
+};
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+nav('explore');
+</script>
+</body>
+</html>

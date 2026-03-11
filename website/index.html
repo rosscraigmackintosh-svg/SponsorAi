@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SponsorAI — Coming Soon</title>
+  <meta name="description" content="Sponsorship is about to feel a lot less vague." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div class="bg-scene">
+
+    <!-- Sports collage panels — five sport environments layered behind content -->
+    <div class="bg-collage">
+      <div class="sport-panel sport-panel--pitch"></div>
+      <div class="sport-panel sport-panel--stadium"></div>
+      <div class="sport-panel sport-panel--motor"></div>
+      <div class="sport-panel sport-panel--tennis"></div>
+      <div class="sport-panel sport-panel--athletics"></div>
+    </div>
+
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="bg-vignette"></div>
+    <div class="bg-noise"></div>
+    <div class="light-beam light-beam--left"></div>
+    <div class="light-beam light-beam--right"></div>
+    <div class="light-glow light-glow--1"></div>
+    <div class="light-glow light-glow--2"></div>
+    <div class="light-glow light-glow--3"></div>
+    <div class="pitch-lines">
+      <div class="pitch-line pitch-line--h1"></div>
+      <div class="pitch-line pitch-line--h2"></div>
+      <div class="pitch-line pitch-line--v"></div>
+      <div class="pitch-circle"></div>
+    </div>
+  </div>
+
+  <!-- Page wrapper -->
+  <div class="page">
+
+    <!-- Header -->
+    <header class="header">
+      <a class="header__logo" href="hub.html"><img src="images/logo-whitesvg.svg" alt="SponsorAI" height="20" style="display:block;"></a>
+      <a class="header__badge" href="investor-login.html">Early Access</a>
+    </header>
+
+    <!-- Hero -->
+    <main class="hero">
+      <div class="hero__inner">
+
+        <div class="hero__eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>Something is coming</span>
+        </div>
+
+        <h1 class="hero__headline">
+          Sponsorship is about to<br />
+          <em>feel a lot less vague.</em>
+        </h1>
+
+        <p class="hero__body">
+          We're building something calm, sharp and quietly powerful<br class="desktop-break" />
+          for people who make sponsorship decisions.
+        </p>
+
+        <p class="hero__body hero__body--secondary">
+          Less noise. Less guesswork. A clearer way to understand<br class="desktop-break" />
+          where attention really lives.
+        </p>
+
+        <p class="hero__whisper">
+          We're not saying too much yet. But if sponsorship sits anywhere near your world,<br class="desktop-break" />
+          you might want to be early.
+        </p>
+
+        <!-- Email signup -->
+        <form class="signup" id="signupForm" novalidate>
+          <div class="signup__field">
+            <input
+              class="signup__input"
+              type="email"
+              id="emailInput"
+              placeholder="you@company.com"
+              autocomplete="email"
+              required
+            />
+            <button class="signup__btn" type="submit">
+              <span class="signup__btn-text">Notify me</span>
+              <span class="signup__btn-arrow">→</span>
+            </button>
+          </div>
+          <p class="signup__note" id="signupNote" aria-live="polite"></p>
+        </form>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="footer__copy">© 2026 SponsorAI</span>
+      <span class="footer__divider">·</span>
+      <span class="footer__tagline">Intelligence for sponsorship decisions</span>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

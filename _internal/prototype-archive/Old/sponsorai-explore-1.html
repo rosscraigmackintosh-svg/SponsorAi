@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f9f9f8;
+    --surface: #ffffff;
+    --surface-alt: #f4f4f2;
+    --border: #e8e8e4;
+    --border-strong: #d0d0ca;
+    --text-primary: #0f0f0e;
+    --text-secondary: #5c5c58;
+    --text-tertiary: #9c9c96;
+    --accent: #e8521a;
+    --accent-soft: #fdf1eb;
+    --accent-hover: #d44614;
+    --green: #1a8a4a;
+    --green-soft: #edf7f2;
+    --blue: #1a5ce8;
+    --blue-soft: #edf2fd;
+    --amber: #b87010;
+    --amber-soft: #fdf6eb;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --nav-h: 58px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--nav-h);
+    background: rgba(249,249,248,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 32px;
+  }
+
+  .nav-logo {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .nav-logo-mark {
+    width: 26px;
+    height: 26px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 400;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); background: var(--surface-alt); }
+  .nav-links a.active { color: var(--text-primary); font-weight: 500; background: var(--surface-alt); }
+
+  .nav-search {
+    flex: 1;
+    max-width: 360px;
+    margin-left: auto;
+  }
+
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 11px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+    width: 15px;
+    height: 15px;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 0 34px 0 34px;
+    font-family: var(--font);
+    font-size: 13.5px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,82,26,0.1);
+  }
+
+  .search-input::placeholder { color: var(--text-tertiary); }
+
+  .search-kbd {
+    position: absolute;
+    right: 9px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 16px;
+  }
+
+  .btn-ghost {
+    font-family: var(--font);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-ghost:hover { background: var(--surface-alt); color: var(--text-primary); }
+
+  .btn-primary {
+    font-family: var(--font);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: white;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* ── PAGE ── */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 28px 64px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+  }
+
+  .page-subtitle {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ── FILTERS ── */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-pill {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 99px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .filter-pill:hover { border-color: var(--accent); color: var(--text-primary); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 500; }
+
+  .filter-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-strong);
+    margin: 0 4px;
+  }
+
+  /* ── PROPERTY IN FOCUS ── */
+  .focus-section {
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .section-label-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .section-label-badge {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(232,82,26,0.2);
+    border-radius: 99px;
+    padding: 1px 7px;
+  }
+
+  .focus-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.2s;
+    animation: fadeRise 0.4s ease both;
+  }
+
+  .focus-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+
+  .focus-image {
+    position: relative;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px;
+  }
+
+  .focus-image-inner {
+    /* Simulated sport hero visual */
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 60% 40%, rgba(232,82,26,0.25) 0%, transparent 60%),
+      linear-gradient(160deg, #0d1b2a 0%, #1a3a5c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    opacity: 0.6;
+  }
+
+  .focus-overlay {
+    position: relative;
+    z-index: 1;
+  }
+
+  .focus-category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 10px;
+    backdrop-filter: blur(4px);
+  }
+
+  .focus-property-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+  }
+
+  .focus-property-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 3px;
+  }
+
+  .focus-content {
+    padding: 28px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .focus-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .focus-insight {
+    flex: 1;
+  }
+
+  .focus-insight-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .focus-insight-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 380px;
+  }
+
+  .focus-insight-text strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .fanscore-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    min-width: 88px;
+    flex-shrink: 0;
+    margin-left: 20px;
+  }
+
+  .fanscore-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+
+  .fanscore-value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .fanscore-trend {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .focus-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .focus-metric {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .focus-metric-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .focus-metric-value {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .focus-metric-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .focus-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── MINI SPARKLINE ── */
+  .sparkline {
+    display: block;
+  }
+
+  /* ── ROW SECTION ── */
+  .row-section {
+    margin-bottom: 36px;
+    animation: fadeRise 0.4s ease both;
+  }
+
+  .row-section:nth-child(2) { animation-delay: 0.05s; }
+  .row-section:nth-child(3) { animation-delay: 0.1s; }
+  .row-section:nth-child(4) { animation-delay: 0.15s; }
+
+  .row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .row-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .row-count {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+
+  .row-show-all {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.15s;
+  }
+
+  .row-show-all:hover { color: var(--accent); }
+
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  /* ── PROPERTY CARD ── */
+  .prop-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+    position: relative;
+    animation: fadeRise 0.35s ease both;
+  }
+
+  .prop-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+  }
+
+  .prop-card-hero {
+    height: 110px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prop-card-hero-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+
+  .hero-f1   { background: linear-gradient(135deg, #1a0a2e 0%, #3d1a6e 100%); }
+  .hero-moto { background: linear-gradient(135deg, #0a1628 0%, #1a3a6e 100%); }
+  .hero-epl  { background: linear-gradient(135deg, #0a1e0a 0%, #1a4a1e 100%); }
+  .hero-golf { background: linear-gradient(135deg, #0a1a12 0%, #1a3a2a 100%); }
+  .hero-nfl  { background: linear-gradient(135deg, #1a0a0a 0%, #4a1a1a 100%); }
+  .hero-rugby{ background: linear-gradient(135deg, #1a100a 0%, #4a2a0a 100%); }
+  .hero-ten  { background: linear-gradient(135deg, #0a1620 0%, #0a3050 100%); }
+  .hero-cric { background: linear-gradient(135deg, #1c1a0a 0%, #3a380a 100%); }
+
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.3;
+  }
+
+  .prop-category-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(4px);
+    border-radius: 99px;
+    padding: 2px 8px;
+  }
+
+  .prop-seeking-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--green);
+    background: rgba(26,138,74,0.15);
+    border: 1px solid rgba(26,138,74,0.3);
+    backdrop-filter: blur(4px);
+    border-radius: 99px;
+    padding: 2px 8px;
+  }
+
+  .prop-card-body {
+    padding: 14px;
+  }
+
+  .prop-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .prop-card-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .meta-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    display: inline-block;
+  }
+
+  .prop-card-scores {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .score-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .score-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+  }
+
+  .score-value {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .score-trend {
+    font-size: 11px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .trend-up { color: var(--green); }
+  .trend-down { color: #d44614; }
+  .trend-flat { color: var(--text-tertiary); }
+
+  .sparkline-wrap {
+    width: 64px;
+    height: 32px;
+  }
+
+  .prop-card-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .card-btn {
+    font-family: var(--font);
+    font-size: 11.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-secondary);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .card-btn:hover { background: var(--surface-alt); color: var(--text-primary); border-color: var(--border-strong); }
+
+  .card-btn.watching { background: var(--blue-soft); border-color: rgba(26,92,232,0.25); color: var(--blue); }
+  .card-btn.shortlisted { background: var(--accent-soft); border-color: rgba(232,82,26,0.25); color: var(--accent); }
+  .card-btn.compare { background: var(--surface-alt); }
+
+  .card-btn-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ── DRAG HINT ── */
+  .drag-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: 22px;
+    font-size: 12.5px;
+    color: var(--text-tertiary);
+  }
+
+  /* ── SIDEBAR ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 28px;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar-widget {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+  }
+
+  .sidebar-widget-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .watchlist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .watchlist-item:last-child { border-bottom: none; }
+  .watchlist-item:hover { opacity: 0.75; }
+
+  .watchlist-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .watchlist-info { flex: 1; min-width: 0; }
+
+  .watchlist-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .watchlist-sub {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  .watchlist-score {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+
+  .sidebar-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-stat:last-child { border-bottom: none; }
+
+  .sidebar-stat-label {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  .sidebar-stat-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .sidebar-stat-trend {
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeRise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .cards-row { grid-template-columns: repeat(2, 1fr); }
+    .focus-card { grid-template-columns: 1fr; }
+    .focus-metrics { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 540px) {
+    .cards-row { grid-template-columns: 1fr; }
+    nav { padding: 0 16px; gap: 16px; }
+    .nav-links { display: none; }
+  }
+
+  /* SVG inline sparklines */
+  .spark-svg { overflow: visible; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">S</div>
+    SponsorAI
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#" class="active">Explore</a></li>
+    <li><a href="#">Portfolio</a></li>
+    <li><a href="#">Opportunities</a></li>
+    <li><a href="#">Compare</a></li>
+    <li><a href="#">Watchlist</a></li>
+  </ul>
+
+  <div class="nav-search">
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5L14 14"/>
+      </svg>
+      <input class="search-input" type="text" placeholder="Search properties, sports, events…">
+      <span class="search-kbd">⌘K</span>
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <a class="btn-ghost" href="#">Sign in</a>
+    <a class="btn-primary" href="#">
+      Get started
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+    </a>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Explore</div>
+      <div class="page-subtitle">Discover sponsorship properties across sport and entertainment</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:12px;color:var(--text-tertiary);font-family:var(--mono);">1,284 properties</span>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <span class="filter-label">Sport</span>
+    <button class="filter-pill active" data-group="sport" data-value="all">All</button>
+    <button class="filter-pill" data-group="sport" data-value="Motorsport">🏎 Motorsport</button>
+    <button class="filter-pill" data-group="sport" data-value="Football">⚽ Football</button>
+    <button class="filter-pill" data-group="sport" data-value="Rugby">🏉 Rugby</button>
+    <button class="filter-pill" data-group="sport" data-value="Tennis">🎾 Tennis</button>
+    <button class="filter-pill" data-group="sport" data-value="Cricket">🏏 Cricket</button>
+    <button class="filter-pill" data-group="sport" data-value="Golf">⛳ Golf</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Type</span>
+    <button class="filter-pill active" data-group="cat" data-value="all">All</button>
+    <button class="filter-pill" data-group="cat" data-value="Team">Team</button>
+    <button class="filter-pill" data-group="cat" data-value="Driver">Individual</button>
+    <button class="filter-pill" data-group="cat" data-value="Event">Event</button>
+    <button class="filter-pill" data-group="cat" data-value="Series">Series</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Status</span>
+    <button class="filter-pill active" data-group="seeking" data-value="all">All</button>
+    <button class="filter-pill" data-group="seeking" data-value="seeking">Seeking sponsorship</button>
+    <div class="filter-divider"></div>
+    <button class="filter-pill" id="clear-filters-btn" style="display:none;color:var(--accent);border-color:rgba(232,82,26,0.3);">
+      ✕ Clear filters
+    </button>
+  </div>
+
+  <!-- ACTIVE FILTER SUMMARY -->
+  <div id="filter-summary" style="display:none;margin-bottom:16px;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">
+    <span id="filter-summary-text"></span>
+  </div>
+
+  <!-- DRAG HINT -->
+  <div class="drag-hint">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0"><path d="M5 1v12M9 1v12M1 5h12M1 9h12"/></svg>
+    Drag cards directly to Watchlist, Shortlist or Compare — or use the buttons on each card
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+    <div class="main-content">
+
+      <!-- PROPERTY IN FOCUS -->
+      <div class="focus-section">
+        <div class="section-label">
+          <span class="section-label-text">Property in Focus</span>
+          <span class="section-label-badge">Updated weekly</span>
+        </div>
+
+        <div class="focus-card">
+          <div class="focus-image">
+            <div class="focus-image-inner">🏎</div>
+            <div class="focus-overlay">
+              <div class="focus-category-tag">
+                🏎 Motorsport · Driver
+              </div>
+              <div class="focus-property-name">Lando Norris</div>
+              <div class="focus-property-sub">McLaren F1 · Global</div>
+            </div>
+          </div>
+
+          <div class="focus-content">
+            <div class="focus-top">
+              <div class="focus-insight">
+                <div class="focus-insight-label">Analytical insight</div>
+                <div class="focus-insight-text">
+                  <strong>30-day engagement growth of +18.4%</strong>, driven by sustained 
+                  podium finishes and expanding social media reach across younger demographics. 
+                  Audience composition shows strong crossover with technology and lifestyle verticals.
+                </div>
+              </div>
+
+              <div class="fanscore-badge">
+                <div class="fanscore-label">FanScore</div>
+                <div class="fanscore-value">84</div>
+                <div class="fanscore-trend">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 7L5 3l3 4"/></svg>
+                  +3.2
+                </div>
+              </div>
+            </div>
+
+            <div class="focus-metrics">
+              <div class="focus-metric">
+                <div class="focus-metric-label">Total Followers</div>
+                <div class="focus-metric-value">12.4M</div>
+                <div class="focus-metric-sub">Across platforms</div>
+              </div>
+              <div class="focus-metric">
+                <div class="focus-metric-label">Engagement Rate</div>
+                <div class="focus-metric-value">4.8%</div>
+                <div class="focus-metric-sub">30-day avg</div>
+              </div>
+              <div class="focus-metric">
+                <div class="focus-metric-label">Growth</div>
+                <div class="focus-metric-value">+18.4%</div>
+                <div class="focus-metric-sub">vs prior period</div>
+              </div>
+            </div>
+
+            <div class="focus-actions">
+              <button class="card-btn watching" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>
+                Watching
+              </button>
+              <button class="card-btn" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 6h8M6 2v8"/></svg>
+                Shortlist
+              </button>
+              <button class="card-btn" style="flex:0 0 auto;padding:6px 16px;font-size:13px;">
+                View detail →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTERED GRID VIEW (shown when filters active) -->
+      <div id="filtered-view" style="display:none;">
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title" id="filtered-title">Filtered results <span class="row-count" id="filtered-count"></span></div>
+            <button id="filtered-clear" class="row-show-all" style="background:none;border:none;cursor:pointer;font-family:var(--font);">Clear filters</button>
+          </div>
+          <div id="filtered-grid" class="cards-row" style="grid-template-columns:repeat(4,1fr);"></div>
+          <div id="filtered-empty" style="display:none;padding:40px 0;text-align:center;">
+            <div style="font-size:28px;margin-bottom:12px;">🔍</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:6px;">No properties match these filters</div>
+            <div style="font-size:13px;color:var(--text-tertiary);">Try adjusting your sport, type, or status selection</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEFAULT ROW VIEW -->
+      <div id="default-view">
+
+        <!-- ROW: Strong Momentum -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Strong Audience Momentum
+              <span class="row-count" id="count-momentum"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="momentum">Show all →</a>
+          </div>
+          <div class="cards-row" id="momentum-row"></div>
+        </div>
+
+        <!-- ROW: Seeking Sponsorship -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Actively Seeking Sponsorship
+              <span class="row-count" id="count-seeking"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="seeking">Show all →</a>
+          </div>
+          <div class="cards-row" id="seeking-row"></div>
+        </div>
+
+        <!-- ROW: Motorsport -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Motorsport
+              <span class="row-count" id="count-motorsport"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="motorsport">Show all →</a>
+          </div>
+          <div class="cards-row" id="motorsport-row"></div>
+        </div>
+
+        <!-- ROW: Football -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Football
+              <span class="row-count" id="count-football"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="football">Show all →</a>
+          </div>
+          <div class="cards-row" id="football-row"></div>
+        </div>
+
+        <!-- ROW: Rugby, Tennis, Cricket, Golf -->
+        <div class="row-section">
+          <div class="row-header">
+            <div class="row-title">
+              Rugby, Tennis &amp; Cricket
+              <span class="row-count" id="count-other"></span>
+            </div>
+            <a class="row-show-all" href="#" data-rowfilter="other">Show all →</a>
+          </div>
+          <div class="cards-row" id="other-row"></div>
+        </div>
+
+      </div>
+
+    </div><!-- /main-content -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">
+          My Watchlist
+          <a href="#" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;text-transform:none;letter-spacing:0;">View all</a>
+        </div>
+        <div id="watchlist-items"></div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">Market Snapshot</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Properties tracked</span>
+          <span class="sidebar-stat-value">1,284</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Seeking sponsorship</span>
+          <span class="sidebar-stat-value">23 <span class="sidebar-stat-trend" style="font-size:11px;">↑ 4</span></span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Avg FanScore (F1)</span>
+          <span class="sidebar-stat-value">71.2</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Avg FanScore (EPL)</span>
+          <span class="sidebar-stat-value">68.8</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Data last updated</span>
+          <span class="sidebar-stat-value" style="font-size:11px;color:var(--text-tertiary);">Today, 06:00</span>
+        </div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-title">Geography</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🇬🇧 United Kingdom</span>
+          <span class="sidebar-stat-value">342</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🇪🇺 Europe</span>
+          <span class="sidebar-stat-value">487</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🌍 Global</span>
+          <span class="sidebar-stat-value">218</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">🌎 Americas</span>
+          <span class="sidebar-stat-value">237</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── DATA ──
+const properties = [
+  { id:1,  name:'Red Bull Racing',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:91, trend:+1.2, delta:'+1.2', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:2,  name:'Mercedes AMG F1',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:87, trend:+0.8, delta:'+0.8', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:3,  name:'Max Verstappen',        sport:'Motorsport', cat:'Driver', geo:'Global',  score:89, trend:-0.4, delta:'-0.4', dir:'down', emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:4,  name:'Ducati MotoGP',         sport:'Motorsport', cat:'Team',   geo:'Europe',  score:76, trend:+2.1, delta:'+2.1', dir:'up',   emoji:'🏍', heroClass:'hero-moto',  seeking:true  },
+  { id:5,  name:'Arsenal FC',            sport:'Football',   cat:'Team',   geo:'UK',      score:82, trend:+1.8, delta:'+1.8', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:6,  name:'Manchester City',       sport:'Football',   cat:'Team',   geo:'Global',  score:88, trend:+0.3, delta:'+0.3', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:7,  name:'Rory McIlroy',          sport:'Golf',       cat:'Driver', geo:'Global',  score:74, trend:-0.6, delta:'-0.6', dir:'down', emoji:'⛳', heroClass:'hero-golf',  seeking:true  },
+  { id:8,  name:'Juventus FC',           sport:'Football',   cat:'Team',   geo:'Europe',  score:80, trend:+1.1, delta:'+1.1', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:9,  name:'Aprilia Racing',        sport:'Motorsport', cat:'Team',   geo:'Europe',  score:65, trend:+3.4, delta:'+3.4', dir:'up',   emoji:'🏍', heroClass:'hero-moto',  seeking:true  },
+  { id:10, name:'Carlos Sainz',          sport:'Motorsport', cat:'Driver', geo:'Global',  score:78, trend:+0.9, delta:'+0.9', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:11, name:'British & Irish Lions', sport:'Rugby',      cat:'Team',   geo:'UK',      score:72, trend:+2.6, delta:'+2.6', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true  },
+  { id:12, name:'Carlos Alcaraz',        sport:'Tennis',     cat:'Driver', geo:'Global',  score:81, trend:+4.1, delta:'+4.1', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false },
+  { id:13, name:'England Cricket',       sport:'Cricket',    cat:'Team',   geo:'UK',      score:69, trend:+1.3, delta:'+1.3', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:true  },
+  { id:14, name:'Haas F1 Team',          sport:'Motorsport', cat:'Team',   geo:'Global',  score:61, trend:+2.8, delta:'+2.8', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:true  },
+  { id:15, name:'Tottenham Hotspur',     sport:'Football',   cat:'Team',   geo:'UK',      score:77, trend:-0.2, delta:'-0.2', dir:'down', emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:16, name:'Aston Martin F1',       sport:'Motorsport', cat:'Team',   geo:'Global',  score:75, trend:+1.7, delta:'+1.7', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:17, name:'Saracens Rugby',        sport:'Rugby',      cat:'Team',   geo:'UK',      score:63, trend:+1.4, delta:'+1.4', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:true  },
+  { id:18, name:'Iga Swiatek',           sport:'Tennis',     cat:'Driver', geo:'Global',  score:79, trend:+2.2, delta:'+2.2', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false },
+  { id:19, name:'Surrey Cricket',        sport:'Cricket',    cat:'Team',   geo:'UK',      score:58, trend:+0.8, delta:'+0.8', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:true  },
+  { id:20, name:'Alpine F1 Team',        sport:'Motorsport', cat:'Team',   geo:'Europe',  score:64, trend:+1.9, delta:'+1.9', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:true  },
+  { id:21, name:'Chelsea FC',            sport:'Football',   cat:'Team',   geo:'UK',      score:84, trend:+0.6, delta:'+0.6', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:22, name:'Lionel Messi',          sport:'Football',   cat:'Driver', geo:'Global',  score:93, trend:+0.4, delta:'+0.4', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:23, name:'Novak Djokovic',        sport:'Tennis',     cat:'Driver', geo:'Global',  score:77, trend:-1.1, delta:'-1.1', dir:'down', emoji:'🎾', heroClass:'hero-ten',   seeking:false },
+  { id:24, name:'Wimbledon',             sport:'Tennis',     cat:'Event',  geo:'UK',      score:86, trend:+0.9, delta:'+0.9', dir:'up',   emoji:'🎾', heroClass:'hero-ten',   seeking:false },
+  { id:25, name:'British Grand Prix',    sport:'Motorsport', cat:'Event',  geo:'UK',      score:83, trend:+1.5, delta:'+1.5', dir:'up',   emoji:'🏎', heroClass:'hero-f1',    seeking:false },
+  { id:26, name:'FA Cup',                sport:'Football',   cat:'Series', geo:'UK',      score:79, trend:+0.7, delta:'+0.7', dir:'up',   emoji:'⚽', heroClass:'hero-epl',   seeking:false },
+  { id:27, name:'Six Nations Rugby',     sport:'Rugby',      cat:'Series', geo:'Europe',  score:75, trend:+2.0, delta:'+2.0', dir:'up',   emoji:'🏉', heroClass:'hero-rugby', seeking:false },
+  { id:28, name:'The Open Championship', sport:'Golf',       cat:'Event',  geo:'Global',  score:71, trend:+1.2, delta:'+1.2', dir:'up',   emoji:'⛳', heroClass:'hero-golf',  seeking:false },
+  { id:29, name:'The Ashes',             sport:'Cricket',    cat:'Series', geo:'Global',  score:73, trend:+1.6, delta:'+1.6', dir:'up',   emoji:'🏏', heroClass:'hero-cric',  seeking:false },
+  { id:30, name:'Formula E',             sport:'Motorsport', cat:'Series', geo:'Global',  score:68, trend:+3.1, delta:'+3.1', dir:'up',   emoji:'⚡', heroClass:'hero-f1',    seeking:true  },
+];
+
+// ── FILTER STATE ──
+const state = {
+  sport: 'all',
+  cat: 'all',
+  seeking: 'all',
+  search: ''
+};
+
+// ── SPARKLINE ──
+function generateSparkPath(seed, width=64, height=32) {
+  const points = [];
+  let v = 0.5;
+  const rand = (s) => { let x = Math.sin(s+1)*10000; return x - Math.floor(x); };
+  for (let i=0; i<8; i++) {
+    v = Math.max(0.05, Math.min(0.95, v + (rand(seed*17+i*7) - 0.5)*0.3));
+    points.push(v);
+  }
+  const xs = points.map((_, i) => (i / (points.length-1)) * width);
+  const ys = points.map(v => height - v*height*0.8 - 4);
+  let d = `M ${xs[0]},${ys[0]}`;
+  for (let i=1; i<xs.length; i++) {
+    const cpx = xs[i-1] + (xs[i]-xs[i-1])*0.5;
+    d += ` C ${cpx},${ys[i-1]} ${cpx},${ys[i]} ${xs[i]},${ys[i]}`;
+  }
+  return d;
+}
+
+function sparklineHTML(id, dir) {
+  const path = generateSparkPath(id);
+  const colour = dir === 'up' ? '#1a8a4a' : dir === 'down' ? '#d44614' : '#9c9c96';
+  return `<svg class="spark-svg" width="64" height="32" viewBox="0 0 64 32">
+    <path d="${path}" fill="none" stroke="${colour}" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ── CARD HTML ──
+function cardHTML(p, delay=0) {
+  const trendClass = p.dir === 'up' ? 'trend-up' : p.dir === 'down' ? 'trend-down' : 'trend-flat';
+  const trendArrow = p.dir === 'up' ? '↑' : p.dir === 'down' ? '↓' : '→';
+  return `
+    <div class="prop-card" style="animation-delay:${delay}s" draggable="true" data-id="${p.id}">
+      <div class="prop-card-hero ${p.heroClass}">
+        <div class="prop-card-hero-bg">${p.emoji}</div>
+        <div class="hero-noise"></div>
+        <div class="prop-category-tag">${p.cat}</div>
+        ${p.seeking ? '<div class="prop-seeking-badge">Seeking</div>' : ''}
+      </div>
+      <div class="prop-card-body">
+        <div class="prop-card-name">${p.name}</div>
+        <div class="prop-card-meta">
+          <span>${p.sport}</span>
+          <span class="meta-dot"></span>
+          <span>${p.geo}</span>
+        </div>
+        <div class="prop-card-scores">
+          <div class="score-item">
+            <div class="score-label">FanScore</div>
+            <div class="score-value">${p.score}</div>
+            <div class="score-trend ${trendClass}">${trendArrow} ${p.delta}</div>
+          </div>
+          <div class="sparkline-wrap">${sparklineHTML(p.id, p.dir)}</div>
+        </div>
+        <div class="prop-card-actions">
+          <button class="card-btn btn-watch">
+            <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg>
+            Watch
+          </button>
+          <button class="card-btn btn-short">
+            <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2h8v7l-4-2-4 2V2z"/></svg>
+            Shortlist
+          </button>
+          <button class="card-btn compare btn-compare" title="Compare">
+            <svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h4M2 3h8M2 9h8"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── APPLY FILTERS ──
+function applyFilters(list) {
+  return list.filter(p => {
+    if (state.sport !== 'all' && p.sport !== state.sport) return false;
+    if (state.cat !== 'all' && p.cat !== state.cat) return false;
+    if (state.seeking === 'seeking' && !p.seeking) return false;
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      if (!p.name.toLowerCase().includes(q) && !p.sport.toLowerCase().includes(q) && !p.geo.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ── IS FILTERED? ──
+function isFiltered() {
+  return state.sport !== 'all' || state.cat !== 'all' || state.seeking !== 'all' || state.search !== '';
+}
+
+// ── RENDER ──
+function render() {
+  const filtered = isFiltered();
+  const defaultView = document.getElementById('default-view');
+  const filteredView = document.getElementById('filtered-view');
+  const clearBtn = document.getElementById('clear-filters-btn');
+
+  clearBtn.style.display = filtered ? 'inline-flex' : 'none';
+
+  if (filtered) {
+    defaultView.style.display = 'none';
+    filteredView.style.display = 'block';
+    renderFiltered();
+  } else {
+    defaultView.style.display = 'block';
+    filteredView.style.display = 'none';
+    renderRows();
+  }
+}
+
+function renderFiltered() {
+  const results = applyFilters(properties);
+  const grid = document.getElementById('filtered-grid');
+  const empty = document.getElementById('filtered-empty');
+  const countEl = document.getElementById('filtered-count');
+  const titleEl = document.getElementById('filtered-title');
+
+  // Build title
+  const parts = [];
+  if (state.sport !== 'all') parts.push(state.sport);
+  if (state.cat !== 'all') parts.push(state.cat === 'Driver' ? 'Individuals' : state.cat + 's');
+  if (state.seeking === 'seeking') parts.push('Seeking Sponsorship');
+  if (state.search) parts.push(`"${state.search}"`);
+  titleEl.innerHTML = (parts.length ? parts.join(' · ') : 'All properties') + ` <span class="row-count" id="filtered-count"></span>`;
+
+  document.getElementById('filtered-count').textContent = results.length;
+
+  if (results.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+  } else {
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = results.map((p,i) => cardHTML(p, i*0.03)).join('');
+  }
+}
+
+function populateRowEl(rowId, list, count=4) {
+  const el = document.getElementById(rowId);
+  if (!el) return;
+  const slice = list.slice(0, count);
+  el.innerHTML = slice.length ? slice.map((p,i) => cardHTML(p, i*0.05)).join('') : '<div style="color:var(--text-tertiary);font-size:13px;padding:12px 0;">No properties available</div>';
+}
+
+function setCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = n;
+}
+
+function renderRows() {
+  const momentum   = properties.filter(p => p.dir === 'up' && p.trend > 1);
+  const seeking    = properties.filter(p => p.seeking);
+  const motorsport = properties.filter(p => p.sport === 'Motorsport');
+  const football   = properties.filter(p => p.sport === 'Football');
+  const other      = properties.filter(p => ['Rugby','Tennis','Cricket','Golf'].includes(p.sport));
+
+  populateRowEl('momentum-row',   momentum);
+  populateRowEl('seeking-row',    seeking);
+  populateRowEl('motorsport-row', motorsport);
+  populateRowEl('football-row',   football);
+  populateRowEl('other-row',      other);
+
+  setCount('count-momentum',   momentum.length);
+  setCount('count-seeking',    seeking.length);
+  setCount('count-motorsport', motorsport.length);
+  setCount('count-football',   football.length);
+  setCount('count-other',      other.length);
+}
+
+// ── FILTER PILL CLICKS ──
+document.querySelectorAll('.filter-pill[data-group]').forEach(pill => {
+  pill.addEventListener('click', function() {
+    const group = this.dataset.group;
+    const value = this.dataset.value;
+
+    // Deactivate siblings in same group
+    document.querySelectorAll(`.filter-pill[data-group="${group}"]`).forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+
+    state[group] = value;
+    render();
+  });
+});
+
+// ── CLEAR FILTERS ──
+function clearAllFilters() {
+  state.sport = 'all';
+  state.cat = 'all';
+  state.seeking = 'all';
+  state.search = '';
+
+  document.querySelectorAll('.filter-pill[data-group]').forEach(p => {
+    p.classList.remove('active');
+    if (p.dataset.value === 'all') p.classList.add('active');
+  });
+
+  const searchInput = document.querySelector('.search-input');
+  if (searchInput) searchInput.value = '';
+
+  render();
+}
+
+document.getElementById('clear-filters-btn').addEventListener('click', clearAllFilters);
+document.getElementById('filtered-clear').addEventListener('click', clearAllFilters);
+
+// ── SEARCH ──
+const searchInput = document.querySelector('.search-input');
+let searchTimeout;
+searchInput.addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    state.search = this.value.trim();
+    render();
+  }, 200);
+});
+
+// ── SHOW ALL ROW LINKS ──
+document.querySelectorAll('[data-rowfilter]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const rf = link.dataset.rowfilter;
+    const sportMap = { motorsport:'Motorsport', football:'Football', rugby:'Rugby', other:null };
+    if (rf === 'momentum') {
+      // No sport filter — just show all upward trending
+      clearAllFilters();
+      // Could add a trend filter in future — for now show all
+    } else if (rf === 'seeking') {
+      clearAllFilters();
+      document.querySelectorAll('.filter-pill[data-group="seeking"]').forEach(p => p.classList.remove('active'));
+      document.querySelector('.filter-pill[data-group="seeking"][data-value="seeking"]').classList.add('active');
+      state.seeking = 'seeking';
+      render();
+    } else if (sportMap[rf]) {
+      clearAllFilters();
+      document.querySelectorAll('.filter-pill[data-group="sport"]').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.filter-pill[data-group="sport"][data-value="${sportMap[rf]}"]`).classList.add('active');
+      state.sport = sportMap[rf];
+      render();
+    }
+  });
+});
+
+// ── CARD BUTTON INTERACTIONS ──
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-watch');
+  if (btn) {
+    btn.classList.toggle('watching');
+    if (btn.classList.contains('watching')) {
+      btn.innerHTML = `<svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg> Watching`;
+    } else {
+      btn.innerHTML = `<svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 1L7.5 4.5H11L8.5 6.8l.9 3.2L6 8.5l-3.4 1.5.9-3.2L1 4.5h3.5z"/></svg> Watch`;
+    }
+    return;
+  }
+
+  const shortBtn = e.target.closest('.btn-short');
+  if (shortBtn) {
+    shortBtn.classList.toggle('shortlisted');
+    if (shortBtn.classList.contains('shortlisted')) {
+      shortBtn.innerHTML = `<svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3l3 3 5-5"/></svg> Shortlisted`;
+    } else {
+      shortBtn.innerHTML = `<svg class="card-btn-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2h8v7l-4-2-4 2V2z"/></svg> Shortlist`;
+    }
+    return;
+  }
+
+  const compareBtn = e.target.closest('.btn-compare');
+  if (compareBtn) {
+    compareBtn.classList.toggle('compare-active');
+    compareBtn.style.background = compareBtn.classList.contains('compare-active') ? 'var(--amber-soft)' : '';
+    compareBtn.style.borderColor = compareBtn.classList.contains('compare-active') ? 'rgba(184,112,16,0.3)' : '';
+    compareBtn.style.color = compareBtn.classList.contains('compare-active') ? 'var(--amber)' : '';
+    return;
+  }
+});
+
+// ── WATCHLIST SIDEBAR ──
+const watchlistEl = document.getElementById('watchlist-items');
+const watchProps = [properties[0], properties[4], properties[11], properties[2]];
+watchlistEl.innerHTML = watchProps.map(p => `
+  <div class="watchlist-item">
+    <div class="watchlist-icon ${p.heroClass}" style="font-size:14px">${p.emoji}</div>
+    <div class="watchlist-info">
+      <div class="watchlist-name">${p.name}</div>
+      <div class="watchlist-sub">${p.sport}</div>
+    </div>
+    <div class="watchlist-score">${p.score}</div>
+  </div>`).join('');
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>

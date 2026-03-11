@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Component Demo</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─────────────────────────────────────────────────
+   CALM ANALYTICAL SAAS DESIGN SYSTEM — v1.0
+   Semantic tokens only. No hardcoded hex values
+   in component rules. Reference values bound here.
+───────────────────────────────────────────────── */
+:root {
+  /* Accent */
+  --color-accent-primary:      #F05A28;
+  --color-accent-primary-soft: #FFF1EB;
+  --color-accent-positive:     #15803D;
+  --color-accent-warning:      #B45309;
+  --color-accent-danger:       #B91C1C;
+
+  /* Backgrounds */
+  --color-bg-page:    #FCFCFD;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle:  #F6F7F9;
+
+  /* Text */
+  --color-text-primary:  #111318;
+  --color-text-muted:    #6B7280;
+  --color-text-on-accent:#FFFFFF;
+
+  /* Borders */
+  --color-border-subtle: #E6E8EC;
+  --color-border-strong: #C9CDD4;
+
+  /* Overlay */
+  --color-overlay-backdrop: rgba(17,19,24,0.4);
+
+  /* Spacing — 8pt scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 56px;
+
+  /* Radius */
+  --radius-sm: 5px;   /* controls, chips */
+  --radius-md: 8px;   /* cards, panels   */
+  --radius-lg: 12px;  /* feature callouts */
+
+  /* Shadows — prefer borders; use sparingly */
+  --shadow-none: none;
+  --shadow-sm:   0 1px 3px rgba(17,19,24,0.06), 0 1px 2px rgba(17,19,24,0.04);
+  --shadow-md:   0 4px 16px rgba(17,19,24,0.10), 0 1px 4px rgba(17,19,24,0.06);
+
+  /* Typography */
+  --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  --text-xs:  11px;
+  --text-sm:  12px;
+  --text-md:  14px;
+  --text-lg:  17px;
+  --text-xl:  20px;
+  --text-display: 28px;
+}
+
+/* ── Base ── */
+html { font-size: var(--text-md); }
+body {
+  font-family: var(--font-stack);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  line-height: 1.55;
+  padding: var(--space-8) var(--space-6);
+}
+
+/* ── Demo scaffolding ── */
+.demo-section { margin-bottom: var(--space-7); }
+.demo-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}
+.demo-row { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.demo-card-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+
+/* ─────────────────────────────────────────────────
+   BUTTONS — Interactive State Rules (v1.0 update)
+   - Flat colour only, no gradients
+   - Calm, controlled state transitions
+   - Focus: visible but not loud
+   - Disabled: neutralised contrast, no saturated fill
+───────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-stack);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+}
+.btn:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+/* Minor press effect only — no dramatic shift */
+.btn:active {
+  transform: translateY(1px);
+}
+/* Focus: visible but not loud — color.border.strong ring */
+.btn:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+/* Primary — accent fill, no gradient */
+.btn-primary {
+  background: var(--color-accent-primary);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-accent-primary);
+}
+.btn-primary:hover {
+  /* Subtle darkening only — no dramatic glow */
+  background: color-mix(in srgb, var(--color-accent-primary) 88%, #000);
+  border-color: color-mix(in srgb, var(--color-accent-primary) 88%, #000);
+  color: var(--color-text-on-accent);
+}
+.btn-primary:active {
+  background: color-mix(in srgb, var(--color-accent-primary) 80%, #000);
+  border-color: color-mix(in srgb, var(--color-accent-primary) 80%, #000);
+}
+/* Primary focus: subtle accent ring */
+.btn-primary:focus-visible {
+  outline-color: var(--color-accent-primary);
+  outline-offset: 2px;
+}
+/* Disabled primary: neutralised contrast, no saturated fill
+   Must not feel clickable or energetic */
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"] {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-muted);
+  opacity: 1;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Secondary — neutral surface, subordinate to primary */
+.btn-secondary {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-subtle);
+}
+.btn-secondary:hover {
+  /* Slightly strengthen border contrast only — no accent fill */
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+/* Subtle — low-pressure, muted by default */
+.btn-subtle {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+.btn-subtle:hover {
+  /* Increase text contrast slightly — avoid strong colour fill */
+  color: var(--color-text-primary);
+  background: var(--color-bg-subtle);
+  border-color: transparent;
+}
+
+/* Generic disabled for secondary/subtle */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+/* Primary disabled overrides the generic rule above */
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"] {
+  opacity: 1;
+}
+
+/* Icon helper */
+.btn svg { flex-shrink: 0; }
+
+/* ─────────────────────────────────────────────────
+   METRIC CARD
+   - Compact density: padding = space.4
+   - Border over shadow
+   - Semantic state colours for delta
+───────────────────────────────────────────────── */
+.metric-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  min-width: 180px;
+  max-width: 220px;
+  box-shadow: var(--shadow-none);
+  transition: border-color 0.12s;
+}
+.metric-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Label — text.xs, muted, uppercase */
+.metric-card__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* Value — text.display, primary, weight 600 */
+.metric-card__value {
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+/* Delta pill */
+.metric-card__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.metric-card__delta--positive {
+  background: color-mix(in srgb, var(--color-accent-positive) 12%, #fff);
+  color: var(--color-accent-positive);
+}
+.metric-card__delta--negative {
+  background: color-mix(in srgb, var(--color-accent-danger) 10%, #fff);
+  color: var(--color-accent-danger);
+}
+.metric-card__delta--neutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+}
+
+/* Context / confidence row */
+.metric-card__context {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+  line-height: 1.4;
+}
+.metric-card__conf {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Confidence indicator — calm, non-gamified */
+.conf-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.conf-indicator--high    { background: var(--color-accent-positive); }
+.conf-indicator--medium  { background: var(--color-accent-warning); }
+.conf-indicator--limited { background: var(--color-accent-danger); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PRIMARY BUTTON — all three variants            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="demo-section">
+  <div class="demo-label">Button</div>
+  <div class="demo-row">
+
+    <button class="btn btn-primary">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Add to Portfolio
+    </button>
+
+    <button class="btn btn-secondary">View Property</button>
+
+    <button class="btn btn-subtle">Dismiss</button>
+
+    <button class="btn btn-primary" disabled>Disabled</button>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- METRIC CARD — three instances                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="demo-section">
+  <div class="demo-label">Metric Card</div>
+  <div class="demo-card-row">
+
+    <!-- Positive delta -->
+    <div class="metric-card">
+      <div class="metric-card__label">FanScore</div>
+      <div class="metric-card__value">74</div>
+      <div class="metric-card__delta metric-card__delta--positive">
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor">
+          <path d="M5 2L8.5 7.5H1.5z"/>
+        </svg>
+        +3 this period
+      </div>
+      <div class="metric-card__conf">
+        <span class="conf-indicator conf-indicator--high"></span>
+        High confidence
+      </div>
+    </div>
+
+    <!-- Neutral delta -->
+    <div class="metric-card">
+      <div class="metric-card__label">FitScore</div>
+      <div class="metric-card__value">68</div>
+      <div class="metric-card__delta metric-card__delta--neutral">
+        No change
+      </div>
+      <div class="metric-card__conf">
+        <span class="conf-indicator conf-indicator--medium"></span>
+        Medium confidence
+      </div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="metric-card">
+      <div class="metric-card__label">Coverage</div>
+      <div class="metric-card__value">82%</div>
+      <div class="metric-card__delta metric-card__delta--negative">
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor">
+          <path d="M5 8L1.5 2.5H8.5z"/>
+        </svg>
+        −2% this period
+      </div>
+      <div class="metric-card__context">4 of 5 signal sources active</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -732,3 +732,10 @@ body {
     display: none;
   }
 }
+
+/* === Mobile image swaps === */
+@media (max-width: 767px) {
+  .bg-image {
+    background-image: url('images/sports-bg-mob.png');
+  }
+}

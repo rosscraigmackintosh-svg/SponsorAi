@@ -399,3 +399,10 @@
     font-size: 52px;
   }
 }
+
+/* === Mobile image swap === */
+@media (max-width: 767px) {
+  .bg-image--alt {
+    background-image: url('images/sports-bg3-mob.png');
+  }
+}

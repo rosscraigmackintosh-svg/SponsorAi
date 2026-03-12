@@ -206,3 +206,10 @@
     font-size: 24px;
   }
 }
+
+/* === Mobile image swap === */
+@media (max-width: 767px) {
+  .bg-image {
+    background-image: url('images/sports-bg2-mob.png');
+  }
+}

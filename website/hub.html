@@ -73,6 +73,17 @@
       color: rgba(255, 255, 255, 0.60);
       transform: translateX(3px);
     }
+
+    /* Hub background image */
+    .bg-image--hub {
+      background-image: url('images/hub.png');
+    }
+
+    @media (max-width: 767px) {
+      .bg-image--hub {
+        background-image: url('images/hub-mob.png');
+      }
+    }
   </style>
 </head>
 <body>
@@ -86,7 +97,7 @@
       <div class="sport-panel sport-panel--tennis"></div>
       <div class="sport-panel sport-panel--athletics"></div>
     </div>
-    <div class="bg-image" style="background-image: url('images/hub.png');"></div>
+    <div class="bg-image bg-image--hub"></div>
     <div class="bg-overlay"></div>
     <div class="bg-vignette"></div>
     <div class="bg-noise"></div>

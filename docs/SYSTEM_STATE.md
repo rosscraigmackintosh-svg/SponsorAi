@@ -2,7 +2,7 @@
 
 SponsorAI — Current System State
 
-Last updated: 2026-03-13
+Last updated: 2026-03-13 (repair sweep + Phase 1 complete)
 
 ---
 
@@ -42,7 +42,15 @@ GT World Challenge Europe 2024 — Sprint Cup rounds (Brands Hatch, Misano, Nurb
 
 All British GT properties: scored, High or Medium confidence.
 
-All GTWCE properties (6 teams, 8 athletes, 6 venues, 8 events): scored, all High confidence as of 2026-03-13.
+All GTWCE properties (6 teams, 8 athletes): scored, all High confidence.
+
+GTWCE venues (6) and events (7 of 8): intentionally suppressed -- no dedicated social accounts.
+
+GTWCE Sprint Cup Brands Hatch 2024: scored, High confidence (has dedicated social accounts).
+
+SRO Motorsports Group (governing_body): scored 70.65, Low confidence. Posts added 2026-03-13 repair sweep.
+
+GT World Challenge Europe (series): scored 57.79, High confidence.
 
 ---
 
@@ -83,17 +91,18 @@ All GTWCE properties (6 teams, 8 athletes, 6 venues, 8 events): scored, all High
 | Watchlist persistence | Not started (console stub only) |
 | Compare view | Stub |
 | Portfolio view | Stub |
-| Panel relationship sections | Planned |
-| Momentum Signals badges | Planned |
-| Trending sort | Planned |
+| Panel relationship sections | Active -- DB-backed, all 10 relationship types, 20 label mappings |
+| Momentum signals badges | Active -- up to 2 badges per card; panel section conditional |
+| Trending sort | Active |
+| Key Facts enrichment (sport, region, city) | Active -- view updated; panel Key Facts populated |
 
 ---
 
 ## Image Asset Coverage
 
-Images registered in `images.js` as of 2026-03-13:
+Images registered in `images.js` as of 2026-03-13 (repair sweep):
 
-Venues: Circuit de Barcelona-Catalunya, Circuit de Nevers Magny-Cours, Circuit Paul Ricard, Misano World Circuit, Nurburgring, Autodromo Nazionale Monza, plus British GT circuits.
+Venues: Circuit de Barcelona-Catalunya (Wikimedia Commons), Circuit de Nevers Magny-Cours (Wikimedia Commons), Circuit Paul Ricard (Wikimedia Commons SkySat), Misano World Circuit (Wikimedia Commons), Autodromo Nazionale Monza (Wikimedia Commons), Nurburgring (official site -- known hotlink risk), plus British GT circuits.
 
 Teams: Manthey EMA, Akkodis ASP, Iron Lynx, Haupt Racing Team, Emil Frey Racing, Boutsen VDS — all as kind: logo.
 

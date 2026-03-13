@@ -145,7 +145,8 @@ function sortLabel(sort) {
     'followers-desc':  'Followers high to low',
     'engagement-desc': 'Engagement rate high to low',
     'trend-up':        'Trend up first',
-    'trend-down':      'Trend down first'
+    'trend-down':      'Trend down first',
+    'trending':        'Trending first'
   };
   return labels[sort] || 'Sorted A\u2013Z';
 }
@@ -167,6 +168,13 @@ function sortCards(cards) {
       s.sort(function(a,b){ return (b.t30!=null?b.t30:-999)-(a.t30!=null?a.t30:-999); }); break;
     case 'trend-down':
       s.sort(function(a,b){ return (a.t30!=null?a.t30:999)-(b.t30!=null?b.t30:999); }); break;
+    case 'trending':
+      s.sort(function(a,b){
+        var sa = computeMomentumScore(a).length;
+        var sb = computeMomentumScore(b).length;
+        if (sb !== sa) return sb - sa;
+        return (b.t30!=null?b.t30:-999)-(a.t30!=null?a.t30:-999);
+      }); break;
     default: /* alpha-asc */
       s.sort(function(a,b){ return a.name.localeCompare(b.name); }); break;
   }

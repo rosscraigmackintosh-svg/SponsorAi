@@ -30,7 +30,9 @@ var PROPERTY_IMAGES = {
   },
 
   'gt-world-challenge-europe': {
-    src:  'https://www.sro-motorsports.com/assets/img/gtwce-europe-neg-250x140-2026.svg',
+    /* Active header logo from gt-world-challenge-europe.com — verified 200 2026-03-13
+       Previous URL (sro-motorsports.com/assets/img/gtwce-europe-neg-250x140-2026.svg) returned 404 */
+    src:  'https://www.gt-world-challenge-europe.com/assets/img/gt-world-challenge-europe-aws-neg-logo-2026.svg',
     kind: 'series',
     fit:  'contain',
     pos:  'center center',
@@ -468,44 +470,59 @@ var PROPERTY_IMAGES = {
   /* callum-macleod — no profile page found on britishgt.com or GTWCE;
      falls through to placeholder hero icon */
 
+  /* Note: Several GTWCE athlete portraits confirmed missing (2026-03-13 audit):
+     - timur-boguslavskiy: GTWCE gallery exists (driver_id 2090/2692) but portrait
+       photo_id could not be confirmed without direct portal access; falls through
+       to placeholder hero icon.
+     - marco-varrone: no driver page found on GTWCE portal under this name; the
+       Varrone drivers on GTWCE are "Nico Varrone" / "Nicolas Varrone" — entity
+       name may need reconciliation; falls through to placeholder hero icon.
+     Both should be revisited when GTWCE portal access is confirmed. */
+
   /* ── GTWCE Venues — circuit aerial / pitlane photography ─────────────── */
   'circuit-de-barcelona-catalunya': {
-    src:  'https://www.circuitcat.com/en/content/uploads/2023/09/Circuit-de-Barcelona-Catalunya-aereo.jpg',
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Circuit_de_Barcelona-Catalunya,_April_19,_2018_SkySat.jpg/1280px-Circuit_de_Barcelona-Catalunya,_April_19,_2018_SkySat.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
   },
 
   'autodromo-nazionale-monza': {
-    src:  'https://www.monzanet.it/wp-content/uploads/2022/06/monza-pista-aerea-2022.jpg',
+    /* Wikimedia Commons aerial — hotlink-safe, no referer required */
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Monza_aerial_photo.jpg/1280px-Monza_aerial_photo.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
   },
 
   'circuit-paul-ricard': {
-    src:  'https://www.circuitpaulricard.com/sites/default/files/assets/circuit-paul-ricard-vue-aerienne.jpg',
+    /* Wikimedia Commons SkySat aerial, April 22 2018 — hotlink-safe */
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Circuit_Paul_Ricard,_April_22,_2018_SkySat.jpg/1280px-Circuit_Paul_Ricard,_April_22,_2018_SkySat.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
   },
 
   'misano-world-circuit': {
-    src:  'https://www.misanocircuit.com/wp-content/uploads/2022/09/MISANO-WORLD-CIRCUIT.jpg',
+    /* Wikimedia Commons aerial — hotlink-safe, no referer required */
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Misano_World_Circuit_Marco_Simoncelli.jpg/1280px-Misano_World_Circuit_Marco_Simoncelli.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
   },
 
   'circuit-de-nevers-magny-cours': {
-    src:  'https://www.magnycours.com/wp-content/uploads/2019/06/circuit-de-nevers-magny-cours-vue-aerienne.jpg',
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Circuit_de_Nevers_Magny-Cours-Northeast_side.jpg/1280px-Circuit_de_Nevers_Magny-Cours-Northeast_side.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
   },
 
   'nurburgring': {
-    src:  'https://www.nuerburgring.de/fileadmin/_processed_/3/9/csm_nuerburgring-gp-strecke-luftbild_e3d2e4a5bc.jpg',
+    /* Wikimedia Commons — Nürburgring Mercedesarena aerial — hotlink-safe, verified 200 2026-03-13
+       File: Nürburgring,_Mercedesarena_105x.jpg (MD5 prefix: 7/7c)
+       Previous URL (nuerburgring.de official) redirected to homepage (hotlink blocked) */
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/N%C3%BCrburgring%2C_Mercedesarena_105x.jpg/1280px-N%C3%BCrburgring%2C_Mercedesarena_105x.jpg',
     kind: 'venue',
     fit:  'cover',
     pos:  'center center'
@@ -524,7 +541,8 @@ var PROPERTY_IMAGES = {
   },
 
   'iron-lynx': {
-    src:  'https://www.ironlynx.it/wp-content/uploads/2022/01/iron-lynx-logo.png',
+    /* SVG from ironlynx.com (site migrated from .it to .com; old path returned 404) — verified 200 2026-03-13 */
+    src:  'https://www.ironlynx.com/wp-content/themes/IRON_LYNX/assets/img/logos/iron-lynx-motorsport-lab.svg',
     kind: 'logo',
     fit:  'contain',
     pos:  'center center',
@@ -551,7 +569,9 @@ var PROPERTY_IMAGES = {
   },
 
   'manthey-ema': {
-    src:  'https://www.manthey-racing.de/wp-content/uploads/2022/01/manthey-ema-logo.png',
+    /* PNG from manthey-racing.com (old .de path returned 404; site migrated) — verified 200 2026-03-13
+       Note: positive (dark) logo; renders correctly on --surface-muted background */
+    src:  'https://www.manthey-racing.com/themes/custom/grounded_manthey/src/images/30Years_Manthey_Logo_RGB_positiv.png',
     kind: 'logo',
     fit:  'contain',
     pos:  'center center',
@@ -560,7 +580,9 @@ var PROPERTY_IMAGES = {
   },
 
   'emil-frey-racing': {
-    src:  'https://www.emilfreyracing.com/wp-content/uploads/2021/09/emil-frey-racing-logo.png',
+    /* Gatsby static asset from emilfreyracing.com — verified 200 2026-03-13
+       WARNING: Gatsby content-hash paths change on site rebuild. Recheck if image breaks. */
+    src:  'https://emilfreyracing.com/static/5f6060afd22983f8e634b02ecb154415/80f52/logo.png',
     kind: 'logo',
     fit:  'contain',
     pos:  'center center',

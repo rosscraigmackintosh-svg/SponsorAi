@@ -1,0 +1,2906 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<style>
+
+/* ─────────────────────────────────────────────────────────────────
+   CONTROL ROOM — page layout
+───────────────────────────────────────────────────────────────── */
+
+.cr-shell {
+  margin-left: 60px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.cr-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  box-sizing: border-box;
+}
+
+/* ─── page header ─── */
+.cr-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-4xl);
+  padding-bottom: var(--spacing-3xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.cr-page-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.cr-page-sub {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  line-height: 1;
+}
+
+.cr-internal-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .cr-internal-badge {
+  color: var(--color-warning-300);
+  background: rgba(181, 71, 8, 0.15);
+  border-color: rgba(181, 71, 8, 0.3);
+}
+
+/* ─── section ─── */
+.cr-section {
+  margin-bottom: var(--spacing-4xl);
+}
+
+.cr-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.cr-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cr-section-count {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
+.cr-section-action {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font);
+  font-weight: 500;
+}
+
+.cr-section-action:hover { text-decoration: underline; }
+
+/* ─── ingestion form ─── */
+.cr-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3xl);
+}
+
+.cr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--spacing-xl) var(--spacing-3xl);
+  margin-bottom: var(--spacing-3xl);
+}
+
+.cr-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.cr-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.cr-input {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px var(--spacing-lg);
+  outline: none;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.cr-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.cr-input::placeholder { color: var(--text-3); }
+
+.cr-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+/* toggles row */
+.cr-toggles-row {
+  display: flex;
+  gap: var(--spacing-3xl);
+  margin-bottom: var(--spacing-3xl);
+  flex-wrap: wrap;
+}
+
+.cr-toggle-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  cursor: pointer;
+}
+
+.cr-toggle-item input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.cr-toggle-label {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+/* form footer */
+.cr-form-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.cr-btn-primary {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px var(--spacing-xl);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cr-btn-primary:hover { background: var(--accent-hover); }
+.cr-btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cr-btn-secondary {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px var(--spacing-xl);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cr-btn-secondary:hover { background: var(--surface-muted); color: var(--text-1); }
+
+.cr-btn-primary:disabled,
+.cr-btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cr-form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-left: auto;
+}
+
+/* ─── tables ─── */
+.cr-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.cr-table thead tr {
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.cr-table th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cr-table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.cr-table tbody tr:last-child td { border-bottom: none; }
+
+.cr-table tbody tr:hover td {
+  background: var(--surface-muted);
+}
+
+/* mono values */
+.cr-mono {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+/* ─── status badges ─── */
+.cr-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.cr-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cr-status[data-status="complete"] {
+  color: var(--color-success-700);
+  background: var(--color-success-50);
+}
+.cr-status[data-status="complete"] .cr-status-dot { background: var(--color-success-500); }
+
+.cr-status[data-status="needs-review"] {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+}
+.cr-status[data-status="needs-review"] .cr-status-dot { background: var(--color-warning-400); }
+
+.cr-status[data-status="running"] {
+  color: var(--color-blue-700);
+  background: var(--color-blue-50);
+}
+.cr-status[data-status="running"] .cr-status-dot {
+  background: var(--color-blue-400);
+  animation: cr-pulse 1.2s ease-in-out infinite;
+}
+
+.cr-status[data-status="pending"] {
+  color: var(--text-2);
+  background: var(--surface-muted);
+}
+.cr-status[data-status="pending"] .cr-status-dot { background: var(--text-3); }
+
+@keyframes cr-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+[data-theme="dark"] .cr-status[data-status="complete"] {
+  color: var(--color-success-300);
+  background: rgba(9, 148, 85, 0.15);
+}
+[data-theme="dark"] .cr-status[data-status="needs-review"] {
+  color: var(--color-warning-300);
+  background: rgba(220, 104, 3, 0.15);
+}
+[data-theme="dark"] .cr-status[data-status="running"] {
+  color: var(--color-blue-300);
+  background: rgba(21, 112, 239, 0.15);
+}
+
+/* ─── severity badges ─── */
+.cr-sev {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
+.cr-sev[data-sev="high"] {
+  color: var(--color-error-700);
+  background: var(--color-error-50);
+}
+.cr-sev[data-sev="medium"] {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+}
+.cr-sev[data-sev="low"] {
+  color: var(--text-3);
+  background: var(--surface-muted);
+}
+
+[data-theme="dark"] .cr-sev[data-sev="high"] {
+  color: var(--color-error-400);
+  background: rgba(185, 28, 28, 0.15);
+}
+[data-theme="dark"] .cr-sev[data-sev="medium"] {
+  color: var(--color-warning-300);
+  background: rgba(220, 104, 3, 0.15);
+}
+
+/* ─── duplicate flag chips in status table ─── */
+.cr-dup-flags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cr-dup-flag {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  padding: 2px 5px;
+  background: var(--color-error-50);
+  color: var(--color-error-600);
+  border: 1px solid var(--color-error-100);
+}
+
+[data-theme="dark"] .cr-dup-flag {
+  background: rgba(185, 28, 28, 0.15);
+  color: var(--color-error-400);
+  border-color: rgba(185, 28, 28, 0.25);
+}
+
+.cr-dup-none {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* ─── action button (stub) ─── */
+.cr-action-btn {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.cr-action-btn:hover {
+  background: var(--accent-border);
+}
+
+.cr-action-btn[data-stub] {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.cr-action-btn[data-stub]:hover::after {
+  content: ' (stub)';
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+/* ─── progress bars for coverage columns ─── */
+.cr-coverage {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.cr-coverage-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--surface-muted);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 48px;
+}
+
+.cr-coverage-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.cr-coverage-fill[data-low="true"] { background: var(--color-warning-400); }
+.cr-coverage-fill[data-critical="true"] { background: var(--color-error-400); }
+
+.cr-coverage-val {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ─── run log ─── */
+.cr-log-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cr-log-entry {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: var(--spacing-xl);
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.cr-log-entry:last-child { border-bottom: none; }
+
+.cr-log-ts {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.cr-log-msg {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+}
+
+.cr-log-msg strong {
+  font-weight: 500;
+}
+
+.cr-log-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  background: var(--surface-muted);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.cr-log-tag[data-tag="audit"]   { background: var(--accent-soft); color: var(--accent); }
+.cr-log-tag[data-tag="ingest"]  { background: var(--color-success-50); color: var(--color-success-700); }
+.cr-log-tag[data-tag="repair"]  { background: var(--color-warning-50); color: var(--color-warning-700); }
+.cr-log-tag[data-tag="error"]   { background: var(--color-error-50);   color: var(--color-error-700); }
+
+[data-theme="dark"] .cr-log-tag[data-tag="ingest"] {
+  background: rgba(9, 148, 85, 0.15);
+  color: var(--color-success-300);
+}
+[data-theme="dark"] .cr-log-tag[data-tag="repair"] {
+  background: rgba(220, 104, 3, 0.15);
+  color: var(--color-warning-300);
+}
+[data-theme="dark"] .cr-log-tag[data-tag="error"] {
+  background: rgba(185, 28, 28, 0.15);
+  color: var(--color-error-400);
+}
+
+/* ─── empty states ─── */
+.cr-empty {
+  padding: var(--spacing-4xl);
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+/* ─── modal stub ─── */
+.cr-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 400;
+  align-items: center;
+  justify-content: center;
+}
+
+.cr-modal-overlay.open {
+  display: flex;
+}
+
+.cr-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3xl);
+  width: 420px;
+  max-width: calc(100vw - 48px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.cr-modal-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: var(--spacing-xs);
+}
+
+.cr-modal-sub {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin-bottom: var(--spacing-xl);
+}
+
+.cr-modal-field {
+  margin-bottom: var(--spacing-xl);
+}
+
+.cr-modal-footer {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+  margin-top: var(--spacing-3xl);
+}
+
+.cr-stub-notice {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.cr-stub-notice-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+/* ─── responsiveness ─── */
+@media (max-width: 900px) {
+  .cr-form-grid { grid-template-columns: 1fr 1fr; }
+  .cr-container { padding: var(--spacing-3xl) var(--spacing-xl) var(--spacing-9xl); }
+}
+
+@media (max-width: 640px) {
+  .cr-form-grid { grid-template-columns: 1fr; }
+  .cr-log-entry { grid-template-columns: 1fr; gap: var(--spacing-xs); }
+}
+
+/* ─── form textarea (notes field) ─── */
+.cr-textarea {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px var(--spacing-lg);
+  outline: none;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
+}
+
+.cr-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.cr-textarea::placeholder { color: var(--text-3); }
+
+/* ─── slug auto-hint ─── */
+.cr-field-hint {
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+/* ─── sport custom input (revealed when Other is selected) ─── */
+.cr-sport-custom {
+  display: none;
+  margin-top: var(--spacing-xs);
+}
+
+.cr-sport-custom.visible {
+  display: block;
+}
+
+/* ─── ingestion preview strip ─── */
+.cr-ingest-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-3xl);
+  flex-wrap: wrap;
+}
+
+.cr-preview-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 3px;
+}
+
+.cr-preview-fields {
+  display: flex;
+  gap: var(--spacing-3xl);
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.cr-preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cr-preview-key {
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.cr-preview-val {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.cr-preview-val.cr-mono {
+  font-size: var(--text-xs);
+  padding-top: 2px;
+}
+
+.cr-preview-val.is-empty {
+  color: var(--text-3);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ─── UI visibility badges ─── */
+.cr-vis-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.cr-vis-badge[data-vis="live"] {
+  color: var(--color-success-700);
+  background: var(--color-success-50);
+}
+.cr-vis-badge[data-vis="ready"] {
+  color: var(--color-blue-700);
+  background: var(--color-blue-50);
+}
+.cr-vis-badge[data-vis="hidden"] {
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .cr-vis-badge[data-vis="live"] {
+  color: var(--color-success-300);
+  background: rgba(9, 148, 85, 0.15);
+}
+[data-theme="dark"] .cr-vis-badge[data-vis="ready"] {
+  color: var(--color-blue-300);
+  background: rgba(21, 112, 239, 0.15);
+}
+
+/* ─── run checklist (expandable row below each series) ─── */
+
+.cr-checklist-row td {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--surface-muted);
+  border-top: none;
+}
+
+.cr-checklist-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.cr-checklist-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cr-stage-list {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.cr-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  white-space: nowrap;
+}
+
+.cr-stage:hover { background: var(--bg); }
+
+.cr-stage-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--text-3);
+}
+
+/* state variants */
+.cr-stage[data-state="in_progress"] {
+  color: var(--color-blue-700);
+  background: var(--color-blue-50);
+  border-color: var(--color-blue-200, #bfdbfe);
+}
+.cr-stage[data-state="in_progress"] .cr-stage-dot { background: var(--color-blue-400); }
+
+.cr-stage[data-state="complete"] {
+  color: var(--color-success-700);
+  background: var(--color-success-50);
+  border-color: var(--color-success-200, #bbf7d0);
+}
+.cr-stage[data-state="complete"] .cr-stage-dot { background: var(--color-success-500); }
+
+.cr-stage[data-state="blocked"] {
+  color: var(--color-error-700);
+  background: var(--color-error-50);
+  border-color: var(--color-error-200, #fecaca);
+}
+.cr-stage[data-state="blocked"] .cr-stage-dot { background: var(--color-error-400); }
+
+/* dark-mode overrides */
+[data-theme="dark"] .cr-checklist-row td {
+  background: rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .cr-stage[data-state="in_progress"] {
+  color: var(--color-blue-300);
+  background: rgba(21, 112, 239, 0.15);
+  border-color: rgba(21, 112, 239, 0.25);
+}
+[data-theme="dark"] .cr-stage[data-state="complete"] {
+  color: var(--color-success-300);
+  background: rgba(9, 148, 85, 0.15);
+  border-color: rgba(9, 148, 85, 0.25);
+}
+[data-theme="dark"] .cr-stage[data-state="blocked"] {
+  color: var(--color-error-400);
+  background: rgba(185, 28, 28, 0.15);
+  border-color: rgba(185, 28, 28, 0.25);
+}
+
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#cr-main">Skip to content</a>
+
+<!-- ────────────────── LEFT FLOATING BAR ────────────────── -->
+<div class="float-bar bar-left" role="banner">
+
+  <button class="bar-btn" id="menu-btn"
+    onclick="toggleNavMenu()"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="nav-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <g filter="url(#filter0_i_18_100)">
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+        <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="1"/>
+          <feGaussianBlur stdDeviation="0.5"/>
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+          <feBlend mode="normal" in2="shape" result="effect1_innerShadow_18_100"/>
+        </filter>
+      </defs>
+    </svg>
+  </button>
+
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SponsorAI">
+    <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+    <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+    <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+    <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+    <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+    <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+    <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+    <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_linear_21_11)"/>
+    <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_linear_21_11)"/>
+    <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+    <defs>
+      <linearGradient id="paint0_linear_21_11" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#FD7E14"/>
+        <stop offset="1" stop-color="#BE4BDB"/>
+      </linearGradient>
+      <linearGradient id="paint1_linear_21_11" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#FD7E14"/>
+        <stop offset="1" stop-color="#BE4BDB"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="bar-divider"></div>
+  <span class="bar-page-title">Control Room</span>
+
+</div>
+
+<!-- Nav dropdown -->
+<nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
+  <div class="menu-cols">
+    <div class="menu-col">
+      <button class="menu-item" onclick="location.href='explore.html'; closeNavMenu()">Explore</button>
+      <button class="menu-item" onclick="location.href='portfolio.html'; closeNavMenu()">Portfolio</button>
+      <button class="menu-item" onclick="location.href='compare.html'; closeNavMenu()">Compare</button>
+    </div>
+    <div class="menu-col">
+      <div class="menu-col-divider"></div>
+      <button class="menu-item active" aria-current="page">Control Room</button>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">Appearance</span>
+    <div class="theme-toggle-pill" role="group" aria-label="Theme">
+      <button class="theme-opt" id="theme-light" onclick="setTheme('light')" aria-label="Light mode" title="Light">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="2.2"/>
+          <line x1="6.5" y1="1" x2="6.5" y2="2.2"/><line x1="6.5" y1="10.8" x2="6.5" y2="12"/>
+          <line x1="1" y1="6.5" x2="2.2" y2="6.5"/><line x1="10.8" y1="6.5" x2="12" y2="6.5"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="theme-dark" onclick="setTheme('dark')" aria-label="Dark mode" title="Dark">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M10.5 7.5A4.5 4.5 0 0 1 4.5 1.5c0-.27.03-.54.07-.8A4.5 4.5 0 1 0 10.8 8.43 4.5 4.5 0 0 1 10.5 7.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-model-label">Control Room v0.1 — internal</div>
+</nav>
+
+
+<!-- ────────────────── MAIN CONTENT ────────────────── -->
+<main id="cr-main" class="cr-shell">
+<div class="cr-container">
+
+  <!-- PAGE HEADER -->
+  <div class="cr-page-header">
+    <h1 class="cr-page-title">Control Room</h1>
+    <span class="cr-page-sub">Ingestion, validation, and repair</span>
+    <span class="cr-internal-badge">Internal</span>
+  </div>
+
+
+  <!-- ── SECTION 1: INGESTION FORM ── -->
+  <section class="cr-section" aria-labelledby="section-ingest">
+
+    <div class="cr-section-header">
+      <h2 class="cr-section-title" id="section-ingest">New Ingestion</h2>
+    </div>
+
+    <div class="cr-form-card">
+
+      <div class="cr-form-grid">
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-series">Series / League name</label>
+          <input class="cr-input" id="f-series" type="text" placeholder="e.g. GT World Challenge Europe" autocomplete="off" oninput="autoSlug()">
+        </div>
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-slug">Series slug</label>
+          <input class="cr-input" id="f-slug" type="text" placeholder="e.g. gt-world-challenge-europe" autocomplete="off" style="font-family: var(--mono); font-size: 13px;" oninput="slugLocked = true">
+          <span class="cr-field-hint" id="slug-hint">Auto-generated from series name</span>
+        </div>
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-season">Season / year</label>
+          <input class="cr-input" id="f-season" type="text" placeholder="e.g. 2025" autocomplete="off">
+        </div>
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-sport">Sport category</label>
+          <select class="cr-input cr-select" id="f-sport" onchange="handleSportChange()">
+            <option value="">Select sport</option>
+            <option value="Motorsport">Motorsport</option>
+            <option value="Rugby">Rugby</option>
+            <option value="Football">Football</option>
+            <option value="Basketball">Basketball</option>
+            <option value="Cricket">Cricket</option>
+            <option value="Tennis">Tennis</option>
+            <option value="Golf">Golf</option>
+            <option value="other">Other...</option>
+          </select>
+          <div class="cr-sport-custom" id="sport-custom-wrap">
+            <input class="cr-input" id="f-sport-custom" type="text" placeholder="Enter sport category" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-govbody">Governing body slug</label>
+          <input class="cr-input" id="f-govbody" type="text" placeholder="e.g. sro-motorsports-group" autocomplete="off" style="font-family: var(--mono); font-size: 13px;">
+        </div>
+
+        <div class="cr-field">
+          <label class="cr-label" for="f-notes">Notes</label>
+          <textarea class="cr-textarea" id="f-notes" placeholder="Optional — ingestion context, source, caveats" rows="3"></textarea>
+        </div>
+
+      </div>
+
+      <!-- ── INGESTION PREVIEW ── -->
+      <div class="cr-ingest-preview" id="ingest-preview">
+        <span class="cr-preview-label">Preview</span>
+        <div class="cr-preview-fields">
+          <div class="cr-preview-item">
+            <span class="cr-preview-key">Series</span>
+            <span class="cr-preview-val is-empty" id="prev-name">Not set</span>
+          </div>
+          <div class="cr-preview-item">
+            <span class="cr-preview-key">Slug</span>
+            <span class="cr-preview-val cr-mono is-empty" id="prev-slug">Not set</span>
+          </div>
+          <div class="cr-preview-item">
+            <span class="cr-preview-key">Season</span>
+            <span class="cr-preview-val is-empty" id="prev-season">Not set</span>
+          </div>
+          <div class="cr-preview-item">
+            <span class="cr-preview-key">Sport</span>
+            <span class="cr-preview-val is-empty" id="prev-sport">Not set</span>
+          </div>
+          <div class="cr-preview-item">
+            <span class="cr-preview-key">Visibility</span>
+            <span class="cr-preview-val"><span class="cr-vis-badge" data-vis="hidden">Hidden from UI</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cr-toggles-row">
+        <label class="cr-toggle-item">
+          <input type="checkbox" id="f-teams" checked>
+          <span class="cr-toggle-label">Include teams</span>
+        </label>
+        <label class="cr-toggle-item">
+          <input type="checkbox" id="f-athletes" checked>
+          <span class="cr-toggle-label">Include athletes</span>
+        </label>
+        <label class="cr-toggle-item">
+          <input type="checkbox" id="f-events" checked>
+          <span class="cr-toggle-label">Include events</span>
+        </label>
+        <label class="cr-toggle-item">
+          <input type="checkbox" id="f-venues" checked>
+          <span class="cr-toggle-label">Include venues</span>
+        </label>
+        <label class="cr-toggle-item">
+          <input type="checkbox" id="f-synthetic">
+          <span class="cr-toggle-label">Generate synthetic signals</span>
+        </label>
+      </div>
+
+      <div class="cr-form-footer">
+        <button id="ingest-btn" class="cr-btn-primary" onclick="handleStartIngestion()">Start ingestion</button>
+        <button id="audit-btn" class="cr-btn-secondary" onclick="handleRunAudit()">Run audit only</button>
+        <span class="cr-form-hint">Start ingestion creates a run record and checks for existing entities. Entity generation is not yet automated — build entities manually via the SQL editor, then use Run audit.</span>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 2: INGESTION STATUS ── -->
+  <section class="cr-section" aria-labelledby="section-status">
+
+    <div class="cr-section-header">
+      <h2 class="cr-section-title" id="section-status">Ingestion Status</h2>
+      <span class="cr-section-count" id="status-count">2 series</span>
+    </div>
+
+    <div class="cr-table-wrap">
+      <table class="cr-table" aria-label="Ingestion status by series">
+        <thead>
+          <tr>
+            <th>Series</th>
+            <th>Season</th>
+            <th>Sport</th>
+            <th>Entities</th>
+            <th>Images</th>
+            <th>FanScore cov.</th>
+            <th>Duplicate flags</th>
+            <th>Status</th>
+            <th>Last run</th>
+            <th>UI</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="status-tbody">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 3: ISSUES ── -->
+  <section class="cr-section" aria-labelledby="section-issues">
+
+    <div class="cr-section-header">
+      <h2 class="cr-section-title" id="section-issues">Issues</h2>
+      <span class="cr-section-count" id="issues-count">0 open</span>
+      <button class="cr-section-action" onclick="filterIssues('all')">Show all</button>
+    </div>
+
+    <!-- filter chips -->
+    <div style="display:flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); flex-wrap: wrap;">
+      <button class="cr-action-btn" style="font-size:11px;" onclick="filterIssues('all')" id="f-all">All</button>
+      <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('image')" id="f-image">Image</button>
+      <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('fanscore')" id="f-fanscore">FanScore</button>
+      <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('duplicate')" id="f-duplicate">Duplicates</button>
+      <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('relationship')" id="f-relationship">Relationships</button>
+    </div>
+
+    <div class="cr-table-wrap">
+      <table class="cr-table" aria-label="Ingestion issues">
+        <thead>
+          <tr>
+            <th>Entity</th>
+            <th>Type</th>
+            <th>Issue</th>
+            <th>Severity</th>
+            <th>Suggested fix</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="issues-tbody">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+
+  <!-- ── SECTION 4: RUN LOG ── -->
+  <section class="cr-section" aria-labelledby="section-log">
+
+    <div class="cr-section-header">
+      <h2 class="cr-section-title" id="section-log">Run log</h2>
+      <span class="cr-section-count" id="log-count">0 entries</span>
+    </div>
+
+    <div class="cr-log-wrap" id="run-log">
+      <!-- populated by JS -->
+    </div>
+
+  </section>
+
+</div><!-- /cr-container -->
+</main><!-- /cr-shell -->
+
+
+<!-- ── ACTION MODAL (shared for all stub actions) ── -->
+<div class="cr-modal-overlay" id="action-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="cr-modal">
+    <div class="cr-modal-title" id="modal-title">Action</div>
+    <div class="cr-modal-sub" id="modal-sub"></div>
+
+    <div class="cr-stub-notice" id="modal-stub-notice">
+      <span class="cr-stub-notice-icon">&#x26A0;</span>
+      <span>This action is a stub. Full automation is not yet wired. Copy the suggested fix and apply it manually via the Supabase SQL editor or images.js.</span>
+    </div>
+
+    <div class="cr-modal-field" id="modal-body">
+      <!-- dynamic content -->
+    </div>
+
+    <div class="cr-modal-footer">
+      <button class="cr-btn-secondary" onclick="closeModal()">Close</button>
+      <button class="cr-btn-primary" id="modal-confirm" onclick="closeModal()">Mark reviewed</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── SCRIPTS ── -->
+<script>
+
+// ──────────────────────────────────────────────
+// DATA — mock audit results derived from
+// series_ingestion_audit.sql output for GTWCE 2024
+// In a future version, this is fetched from Supabase.
+// ──────────────────────────────────────────────
+
+const SERIES_STATUS = [
+  {
+    slug:        'gt-world-challenge-europe',
+    name:        'GT World Challenge Europe',
+    season:      '2024',
+    sport:       'Motorsport — GT',
+    entities:    27,
+    images_pct:  74,   // approx: ~20/27 registered
+    fs_pct:      52,   // many athletes/teams without FanScore data
+    dup_flags:   ['dup-event'],
+    status:      'needs-review',
+    last_run:    '2026-03-13 14:42'
+  },
+  {
+    slug:        'british-gt-championship',
+    name:        'British GT Championship',
+    season:      '2024',
+    sport:       'Motorsport — GT',
+    entities:    48,
+    images_pct:  88,
+    fs_pct:      71,
+    dup_flags:   [],
+    status:      'complete',
+    last_run:    '2026-03-12 09:15'
+  }
+];
+
+// Issues table — starts with mock data; replaced by live audit results after handleRunAudit()
+// flag source column is noted in each row for traceability
+let CURRENT_ISSUES = [
+  {
+    id: 'i1',
+    entity:   'gtwce-sprint-misano-2024',
+    type:     'event',
+    issue:    'Duplicate event',
+    issue_type: 'duplicate',
+    flag:     'flag_duplicate_event',
+    severity: 'medium',
+    fix:      'Confirm this is a distinct sprint-cup round (not a data entry error). If intentional, mark as suppressed.',
+    action:   'review-duplicate'
+  },
+  {
+    id: 'i2',
+    entity:   'gtwce-misano-2024',
+    type:     'event',
+    issue:    'Duplicate event',
+    issue_type: 'duplicate',
+    flag:     'flag_duplicate_event',
+    severity: 'medium',
+    fix:      'Verify against series calendar. Both events share misano-world-circuit + 2024. If intentional, mark suppressed.',
+    action:   'review-duplicate'
+  },
+  {
+    id: 'i3',
+    entity:   'gtwce-sprint-nurburgring-2024',
+    type:     'event',
+    issue:    'Duplicate event',
+    issue_type: 'duplicate',
+    flag:     'flag_duplicate_event',
+    severity: 'medium',
+    fix:      'Confirm sprint-cup round at Nurburgring is a separate entry from gtwce-nurburgring-2024.',
+    action:   'review-duplicate'
+  },
+  {
+    id: 'i4',
+    entity:   'gtwce-nurburgring-2024',
+    type:     'event',
+    issue:    'Duplicate event',
+    issue_type: 'duplicate',
+    flag:     'flag_duplicate_event',
+    severity: 'medium',
+    fix:      'Confirm sprint-cup round at Nurburgring is a separate entry from gtwce-sprint-nurburgring-2024.',
+    action:   'review-duplicate'
+  },
+  {
+    id: 'i5',
+    entity:   'timur-boguslavskiy',
+    type:     'athlete',
+    issue:    'Missing image',
+    issue_type: 'image',
+    flag:     'flag_missing_image',
+    severity: 'low',
+    fix:      'No confirmed image available. Add a portrait URL to PROPERTY_IMAGES in app/images.js when sourced.',
+    action:   'add-image'
+  },
+  {
+    id: 'i6',
+    entity:   'marco-varrone',
+    type:     'athlete',
+    issue:    'Missing image',
+    issue_type: 'image',
+    flag:     'flag_missing_image',
+    severity: 'low',
+    fix:      'Name reconciliation pending. Confirm slug matches properties table before sourcing image.',
+    action:   'add-image'
+  },
+  {
+    id: 'i7',
+    entity:   'iron-lynx',
+    type:     'team',
+    issue:    'Hotlink risk',
+    issue_type: 'image',
+    flag:     'flag_image_hotlink_risk',
+    severity: 'low',
+    fix:      'Image URL contains "motorsport-lab" (SVG path). Verify ironlynx.com permits hotlinking or find a direct CDN URL.',
+    action:   'retry-image'
+  },
+  {
+    id: 'i8',
+    entity:   'sro-motorsports-group',
+    type:     'series',
+    issue:    'Hotlink risk',
+    issue_type: 'image',
+    flag:     'flag_image_hotlink_risk',
+    severity: 'low',
+    fix:      'Image domain is sro-motorsports.com. Verify the URL remains valid and permits hotlinking from SponsorAI.',
+    action:   'retry-image'
+  }
+];
+
+// Run log — populated from Supabase on init; new entries added in-memory and persisted in background
+let LOG_DATA = [];
+
+// Tracks the UUID of the currently active ingestion run (set during handleStartIngestion)
+let currentRunId = null;
+
+// Tracks whether the user has manually edited the slug field.
+// When false, the slug is auto-derived from the series name on each keystroke.
+// Set to true on any manual edit; reset to false when the series name is cleared.
+let slugLocked = false;
+
+// ──────────────────────────────────────────────
+// FORM HELPERS — slug auto-generation and sport
+// ──────────────────────────────────────────────
+
+function autoSlug() {
+  const name = document.getElementById('f-series').value;
+
+  // If series name is cleared, unlock auto-generation and clear the slug
+  if (!name.trim()) {
+    slugLocked = false;
+    document.getElementById('f-slug').value = '';
+    return;
+  }
+
+  // If the user has manually edited the slug, leave it alone
+  if (slugLocked) return;
+
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, '')   // strip all non-alphanumeric non-space chars
+    .replace(/\s+/g, '-')           // collapse whitespace to hyphens
+    .replace(/-+/g, '-')            // collapse consecutive hyphens
+    .replace(/^-|-$/g, '');         // trim leading/trailing hyphens
+
+  document.getElementById('f-slug').value = slug;
+}
+
+function handleSportChange() {
+  const val  = document.getElementById('f-sport').value;
+  const wrap = document.getElementById('sport-custom-wrap');
+  if (!wrap) return;
+  if (val === 'other') {
+    wrap.classList.add('visible');
+    document.getElementById('f-sport-custom').focus();
+  } else {
+    wrap.classList.remove('visible');
+    document.getElementById('f-sport-custom').value = '';
+  }
+}
+
+function updatePreview() {
+  var name     = document.getElementById('f-series').value.trim();
+  var slug     = document.getElementById('f-slug').value.trim();
+  var season   = document.getElementById('f-season').value.trim();
+  var sportRaw = document.getElementById('f-sport').value;
+  var sport    = sportRaw === 'other'
+    ? document.getElementById('f-sport-custom').value.trim()
+    : sportRaw;
+
+  function setVal(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (text) {
+      el.textContent = text;
+      el.classList.remove('is-empty');
+    } else {
+      el.textContent = 'Not set';
+      el.classList.add('is-empty');
+    }
+  }
+
+  setVal('prev-name',   name);
+  setVal('prev-slug',   slug);
+  setVal('prev-season', season);
+  setVal('prev-sport',  sport);
+}
+
+// ──────────────────────────────────────────────
+// RENDER — status table
+// ──────────────────────────────────────────────
+
+function renderStatus() {
+  const tbody = document.getElementById('status-tbody');
+  document.getElementById('status-count').textContent = SERIES_STATUS.length + ' series';
+
+  tbody.innerHTML = SERIES_STATUS.map(function(s) {
+    const imgLow  = s.images_pct < 60;
+    const imgCrit = s.images_pct < 40;
+    const fsLow   = s.fs_pct < 50;
+    const fsCrit  = s.fs_pct < 30;
+
+    const dupHtml = s.dup_flags.length
+      ? s.dup_flags.map(function(f) { return '<span class="cr-dup-flag">' + f + '</span>'; }).join('')
+      : '<span class="cr-dup-none">None</span>';
+
+    // Checklist button — disabled if no persisted run record yet
+    const clBtn = s.run_id
+      ? '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
+          + ' onclick="toggleChecklist(\'' + s.run_id + '\', \'' + s.slug + '\')"'
+          + '>Checklist</button>'
+      : '<button class="cr-action-btn" style="font-size:11px; opacity:0.4; cursor:not-allowed;" disabled'
+          + ' title="Start an ingestion run to enable the checklist">Checklist</button>';
+
+    // Default stage pills (not_started) for the hidden panel.
+    // renderChecklist() overwrites these with real states when the row is expanded.
+    const defaultStages = STAGE_DEFS.map(function(st) {
+      return '<button class="cr-stage" data-state="not_started"'
+        + (s.run_id
+            ? ' onclick="cycleStageState(\'' + s.run_id + '\', \'' + st.key + '\', \'' + s.slug + '\')"'
+            : ' disabled style="cursor:default;opacity:0.5;"')
+        + ' title="Not started \u2014 click to advance">'
+        + '<span class="cr-stage-dot"></span>'
+        + '<span class="cr-stage-label">' + st.label + '</span>'
+        + '</button>';
+    }).join('');
+
+    const mainRow =
+      '<tr>'
+      + '<td>'
+        + '<div style="font-weight:500; color: var(--text-1);">' + s.name + '</div>'
+        + '<div class="cr-mono">' + s.slug + '</div>'
+      + '</td>'
+      + '<td class="cr-mono">' + s.season + '</td>'
+      + '<td style="color: var(--text-2); font-size: var(--text-xs);">' + s.sport + '</td>'
+      + '<td class="cr-mono">' + s.entities + '</td>'
+      + '<td>'
+        + '<div class="cr-coverage">'
+          + '<div class="cr-coverage-bar">'
+            + '<div class="cr-coverage-fill" style="width:' + s.images_pct + '%"'
+              + ' data-low="' + imgLow + '" data-critical="' + imgCrit + '"></div>'
+          + '</div>'
+          + '<span class="cr-coverage-val">' + s.images_pct + '%</span>'
+        + '</div>'
+      + '</td>'
+      + '<td>'
+        + '<div class="cr-coverage">'
+          + '<div class="cr-coverage-bar">'
+            + '<div class="cr-coverage-fill" style="width:' + s.fs_pct + '%"'
+              + ' data-low="' + fsLow + '" data-critical="' + fsCrit + '"></div>'
+          + '</div>'
+          + '<span class="cr-coverage-val">' + s.fs_pct + '%</span>'
+        + '</div>'
+      + '</td>'
+      + '<td><div class="cr-dup-flags">' + dupHtml + '</div></td>'
+      + '<td>'
+        + '<span class="cr-status" data-status="' + s.status + '">'
+          + '<span class="cr-status-dot"></span>'
+          + statusLabel(s.status)
+        + '</span>'
+      + '</td>'
+      + '<td class="cr-mono">' + s.last_run + '</td>'
+      + '<td style="min-width:80px;">'
+        + visBadge(s)
+        + '<div style="display:flex; gap: var(--spacing-xs); flex-wrap:wrap; margin-top:5px;">'
+          + visActionBtns(s)
+        + '</div>'
+      + '</td>'
+      + '<td>'
+        + '<div style="display:flex; gap: var(--spacing-xs); flex-wrap:wrap;">'
+          + '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
+            + ' onclick="runAuditForSeries(\'' + s.slug + '\')">Run audit</button>'
+          + clBtn
+        + '</div>'
+      + '</td>'
+      + '</tr>';
+
+    const checklistRow =
+      '<tr id="cl-row-' + s.slug + '" class="cr-checklist-row" style="display:none;">'
+      + '<td colspan="11">'
+        + '<div class="cr-checklist-panel">'
+          + '<span class="cr-checklist-label">Lifecycle stages</span>'
+          + '<div class="cr-stage-list">' + defaultStages + '</div>'
+        + '</div>'
+      + '</td>'
+      + '</tr>';
+
+    return mainRow + checklistRow;
+  }).join('');
+}
+
+function statusLabel(s) {
+  return { complete:'Complete', 'needs-review':'Needs review', running:'Running', pending:'Pending' }[s] || s;
+}
+
+// ──────────────────────────────────────────────
+// RENDER — issues table
+// ──────────────────────────────────────────────
+
+let activeFilter = 'all';
+let issueStates  = {}; // { id: 'resolved' | 'intentional' }
+
+function filterIssues(type) {
+  activeFilter = type;
+  ['all','image','fanscore','duplicate','relationship'].forEach(t => {
+    const btn = document.getElementById('f-'+t);
+    if (btn) btn.style.opacity = t === type ? '1' : '0.6';
+  });
+  renderIssues();
+}
+
+function renderIssueRow(i, state) {
+  const isSuppressed = state && state !== 'open';
+  const rowStyle  = isSuppressed ? ' style="opacity:0.45;"' : '';
+  const stateBadge = isSuppressed
+    ? '<span style="display:inline-block;margin-top:3px;font-size:10px;color:var(--text-3);background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1px 6px;text-transform:capitalize;">' + state + '</span>'
+    : '';
+  const actions = isSuppressed
+    ? '<button class="cr-action-btn" onclick="reopenIssue(\'' + i.id + '\')" style="font-size:11px;">Reopen</button>'
+    : '<div style="display:flex; gap: var(--spacing-xs); flex-wrap: wrap;">'
+        + actionBtn(i)
+        + '<button class="cr-action-btn" style="font-size:11px; opacity:0.6;" data-stub onclick="openModal(\'suppress\', \'' + i.id + '\', \'' + i.entity + '\')">Suppress</button>'
+      + '</div>';
+  return '<tr id="row-' + i.id + '"' + rowStyle + '>'
+    + '<td><div class="cr-mono">' + i.entity + '</div>' + stateBadge + '</td>'
+    + '<td style="color: var(--text-2); font-size: var(--text-xs); text-transform: capitalize;">' + (i.type || '') + '</td>'
+    + '<td>'
+      + '<div style="font-size: var(--text-sm); color: var(--text-1);">' + i.issue + '</div>'
+      + '<div class="cr-mono" style="font-size:10px; color: var(--text-3); margin-top:2px;">' + i.flag + '</div>'
+    + '</td>'
+    + '<td><span class="cr-sev" data-sev="' + i.severity + '">' + i.severity + '</span></td>'
+    + '<td style="font-size: var(--text-xs); color: var(--text-2); max-width: 260px;">' + i.fix + '</td>'
+    + '<td>' + actions + '</td>'
+    + '</tr>';
+}
+
+function renderIssues() {
+  const tbody = document.getElementById('issues-tbody');
+
+  // Apply type filter, then split into open vs suppressed
+  const filtered   = CURRENT_ISSUES.filter(function(i) {
+    if (activeFilter === 'all') return true;
+    return i.issue_type === activeFilter;
+  });
+  const openIssues = filtered.filter(function(i) { return !issueStates[i.id]; });
+  const suppressed = filtered.filter(function(i) { return !!issueStates[i.id]; });
+
+  // Counts always across all issues (not filtered)
+  const openCount        = CURRENT_ISSUES.filter(function(i) { return !issueStates[i.id]; }).length;
+  const resolvedCount    = Object.values(issueStates).filter(function(v) { return v === 'resolved'; }).length;
+  const intentionalCount = Object.values(issueStates).filter(function(v) { return v === 'intentional'; }).length;
+  let countStr = openCount + ' open';
+  if (resolvedCount)    countStr += ' \xb7 ' + resolvedCount + ' resolved';
+  if (intentionalCount) countStr += ' \xb7 ' + intentionalCount + ' intentional';
+  document.getElementById('issues-count').textContent = countStr;
+
+  if (openIssues.length === 0 && suppressed.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="cr-empty">No issues matching this filter.</td></tr>';
+    return;
+  }
+
+  // Open issues first, then suppressed (muted, with Reopen)
+  tbody.innerHTML = openIssues.map(function(i) { return renderIssueRow(i, null); }).join('')
+    + suppressed.map(function(i) { return renderIssueRow(i, issueStates[i.id]); }).join('');
+}
+
+function actionBtn(i) {
+  const map = {
+    'add-image':        { label: 'Add image URL',    stub: false },
+    'retry-image':      { label: 'Validate image',   stub: false },
+    'review-duplicate': { label: 'Review duplicate', stub: false },
+    'recompute-fs':     { label: 'Check FanScore',   stub: false },
+  };
+  const cfg = map[i.action] || { label: 'Action', stub: true };
+  return `<button class="cr-action-btn" ${cfg.stub ? 'data-stub' : ''} onclick="openModal('${i.action}', '${i.id}', '${i.entity}')">${cfg.label}</button>`;
+}
+
+// ──────────────────────────────────────────────
+// RENDER — run log
+// ──────────────────────────────────────────────
+
+function renderLog() {
+  const log = document.getElementById('run-log');
+  document.getElementById('log-count').textContent = LOG_DATA.length + ' entries';
+
+  if (LOG_DATA.length === 0) {
+    log.innerHTML = `<div class="cr-empty">No runs recorded yet.</div>`;
+    return;
+  }
+
+  log.innerHTML = LOG_DATA.map(e => `
+    <div class="cr-log-entry">
+      <span class="cr-log-ts">${e.ts}</span>
+      <span class="cr-log-msg">${e.msg}</span>
+      <span class="cr-log-tag" data-tag="${e.tag}">${e.tag}</span>
+    </div>
+  `).join('');
+}
+
+// ──────────────────────────────────────────────
+// IMAGE + FANSCORE CHECKS (live actions)
+// ──────────────────────────────────────────────
+
+function checkImageUrl(url) {
+  return new Promise(function(resolve) {
+    const img   = new Image();
+    const timer = setTimeout(function() { resolve({ ok: null }); }, 8000);
+    img.onload  = function() { clearTimeout(timer); resolve({ ok: true }); };
+    img.onerror = function() { clearTimeout(timer); resolve({ ok: false }); };
+    img.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now();
+  });
+}
+
+async function checkFanscoreStatus(propertyId) {
+  if (!propertyId) return { found: false, noId: true };
+  try {
+    const data = await fetch(
+      API_URL + '/fanscore_windows?property_id=eq.' + propertyId +
+      '&window_days=eq.30&order=as_of_day.desc&limit=1',
+      { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY } }
+    ).then(function(r) { return r.json(); });
+    return data.length > 0
+      ? { found: true, score: data[0].avg_score, asOf: data[0].as_of_day }
+      : { found: false };
+  } catch(e) { return { error: e.message }; }
+}
+
+// ──────────────────────────────────────────────
+// ISSUE STATE + CONFIRM HANDLER
+// ──────────────────────────────────────────────
+
+let currentModal = { action: null, id: null, entity: null, issue: null, checkResult: null };
+
+function setIssueState(id, state, entity, reason) {
+  const issue = CURRENT_ISSUES.find(function(i) { return i.id === id; });
+  issueStates[id] = state;
+  renderIssues();
+  const label = state === 'resolved' ? 'Resolved' : 'Marked intentional';
+  addLogEntry(label + ': <strong>' + entity + '</strong> \u2014 ' + reason, 'repair');
+  persistIssueState(issue, state, reason);
+  closeModal();
+}
+
+async function reopenIssue(id) {
+  const issue = CURRENT_ISSUES.find(function(i) { return i.id === id; });
+  delete issueStates[id];
+  renderIssues();
+  if (issue) {
+    addLogEntry('Reopened: <strong>' + issue.entity + '</strong> \u2014 ' + issue.issue, 'audit');
+    await deletePersistedState(issue);
+  }
+}
+
+async function runModalImageCheck() {
+  const url = currentModal.issue && currentModal.issue.image_url;
+  const btn = document.getElementById('img-check-btn');
+  const res = document.getElementById('img-check-result');
+  const cfm = document.getElementById('modal-confirm');
+  if (!url) {
+    res.innerHTML = '<span style="color:var(--color-warning-700)">No image URL stored \u2014 run a live audit first.</span>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Checking\u2026';
+  res.innerHTML = '<span style="color:var(--text-3)">Loading image\u2026</span>';
+  const result = await checkImageUrl(url);
+  currentModal.checkResult = result;
+  if (result.ok === true) {
+    res.innerHTML = '<span style="color:var(--color-success-700)">&#10003; Image loads correctly</span>';
+    cfm.textContent = 'Mark as resolved'; cfm.disabled = false;
+  } else if (result.ok === false) {
+    res.innerHTML = '<span style="color:var(--color-error-700)">&#10007; Image failed to load \u2014 may be blocking hotlinks or URL is broken</span>';
+    cfm.textContent = 'Mark for replacement'; cfm.disabled = false;
+  } else {
+    res.innerHTML = '<span style="color:var(--color-warning-700)">Request timed out \u2014 check the URL manually</span>';
+  }
+  btn.disabled = false; btn.textContent = 'Re-test URL';
+}
+
+async function runModalFanscoreCheck() {
+  const pid = currentModal.issue && currentModal.issue.property_id;
+  const btn = document.getElementById('fs-check-btn');
+  const res = document.getElementById('fs-check-result');
+  const cfm = document.getElementById('modal-confirm');
+  btn.disabled = true; btn.textContent = 'Checking\u2026';
+  res.innerHTML = '<span style="color:var(--text-3)">Querying Supabase\u2026</span>';
+  const result = await checkFanscoreStatus(pid);
+  currentModal.checkResult = result;
+  if (result.noId) {
+    res.innerHTML = '<span style="color:var(--color-warning-700)">Property ID not available \u2014 run a live audit first, then re-open this issue.</span>';
+  } else if (result.error) {
+    res.innerHTML = '<span style="color:var(--color-error-700)">Error: ' + result.error + '</span>';
+  } else if (result.found) {
+    res.innerHTML = '<span style="color:var(--color-success-700)">&#10003; FanScore found: ' + result.score + ' (as of ' + result.asOf + ')</span>';
+    cfm.textContent = 'Mark as resolved'; cfm.disabled = false;
+  } else {
+    res.innerHTML = '<span style="color:var(--text-2)">No FanScore window found. The scoring pipeline has not run for this entity.</span>';
+    cfm.textContent = 'Mark as intentional'; cfm.disabled = false;
+  }
+  btn.disabled = false; btn.textContent = 'Re-check';
+}
+
+function handleModalConfirm() {
+  const { action, id, entity, checkResult } = currentModal;
+  switch(action) {
+    case 'retry-image':
+      if (checkResult && checkResult.ok === true) {
+        setIssueState(id, 'resolved', entity, 'Image URL validated \u2014 loads correctly');
+      } else {
+        addLogEntry('Image URL flagged for replacement: <strong>' + entity + '</strong>', 'repair');
+        closeModal();
+      }
+      break;
+    case 'add-image':
+      setIssueState(id, 'intentional', entity, 'No image available \u2014 marked as intentional placeholder');
+      break;
+    case 'recompute-fs':
+      if (checkResult && checkResult.found) {
+        setIssueState(id, 'resolved', entity, 'FanScore confirmed \u2014 ' + checkResult.score + ' as of ' + checkResult.asOf);
+      } else {
+        setIssueState(id, 'intentional', entity, 'No FanScore expected \u2014 marked as intentional');
+      }
+      break;
+    case 'review-duplicate':
+    case 'suppress':
+    default:
+      setIssueState(id, 'intentional', entity, 'Confirmed intentional');
+      break;
+  }
+}
+
+// ──────────────────────────────────────────────
+// MODAL
+// ──────────────────────────────────────────────
+
+function openModal(action, id, entity) {
+  const overlay = document.getElementById('action-modal');
+  const title   = document.getElementById('modal-title');
+  const sub     = document.getElementById('modal-sub');
+  const body    = document.getElementById('modal-body');
+  const confirm = document.getElementById('modal-confirm');
+  const stub    = document.getElementById('modal-stub-notice');
+
+  const issue = CURRENT_ISSUES.find(function(i) { return i.id === id; }) || {};
+  currentModal = { action: action, id: id, entity: entity, issue: issue, checkResult: null };
+
+  // Hide the stub notice for fully live actions
+  const liveActions = ['retry-image', 'recompute-fs'];
+  if (stub) stub.style.display = liveActions.indexOf(action) >= 0 ? 'none' : '';
+
+  // Image URL display block (reused in retry-image and add-image)
+  const imgUrlBlock = issue.image_url
+    ? '<div class="cr-mono" style="word-break:break-all;font-size:11px;color:var(--text-2);padding:6px 8px;background:var(--surface-muted);border-radius:var(--radius-sm);">' + issue.image_url + '</div>'
+    : '<div style="font-size:var(--text-xs);color:var(--color-warning-700)">No image URL stored \u2014 run a live audit first.</div>';
+
+  const templates = {
+    'retry-image': {
+      title:           'Validate image URL',
+      confirm:         'Test URL first',
+      confirmDisabled: true,
+      body: '<div style="margin-bottom:var(--spacing-lg)"><div class="cr-label" style="margin-bottom:4px;">Image URL</div>' + imgUrlBlock + '</div>' +
+            (issue.image_url
+              ? '<button class="cr-btn-secondary" id="img-check-btn" onclick="runModalImageCheck()" style="font-size:var(--text-xs);">Test URL now</button>'
+              : '') +
+            '<div id="img-check-result" style="margin-top:var(--spacing-md);font-size:var(--text-xs);"></div>'
+    },
+    'add-image': {
+      title:           'Missing image',
+      confirm:         'Mark as intentional placeholder',
+      confirmDisabled: false,
+      body: '<div style="font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--spacing-lg);">No image is registered for this entity. Add a URL to <code>PROPERTY_IMAGES</code> in <code>app/images.js</code>, or mark as an intentional placeholder if no image is currently available.</div>' +
+            '<label class="cr-label" for="m-img-url" style="display:block;margin-bottom:4px;">Replacement image URL</label>' +
+            '<input class="cr-input" id="m-img-url" type="url" placeholder="https://\u2026" style="width:100%;box-sizing:border-box;">' +
+            '<div style="font-size:11px;color:var(--text-3);margin-top:6px;">Paste into PROPERTY_IMAGES under slug <strong>' + entity + '</strong>, then re-run the audit.</div>'
+    },
+    'recompute-fs': {
+      title:           'FanScore status',
+      confirm:         'Check status first',
+      confirmDisabled: true,
+      body: '<div style="font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--spacing-lg);">This entity has social accounts but no 30-day FanScore window. Check whether scoring has since run, or mark as intentional if this entity should remain unscored (venues and events typically have no FanScore).</div>' +
+            (issue.property_id
+              ? '<button class="cr-btn-secondary" id="fs-check-btn" onclick="runModalFanscoreCheck()" style="font-size:var(--text-xs);">Check FanScore status</button>'
+              : '<div style="font-size:var(--text-xs);color:var(--color-warning-700)">Property ID not available \u2014 run a live audit first.</div>') +
+            '<div id="fs-check-result" style="margin-top:var(--spacing-md);font-size:var(--text-xs);"></div>'
+    },
+    'review-duplicate': {
+      title:           'Review duplicate',
+      confirm:         'Mark as intentional',
+      confirmDisabled: false,
+      body: '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;">This entity shares a name, slug, or venue+year with at least one other property in the ecosystem. This may be intentional (e.g. sprint and endurance rounds at the same circuit) or a data entry error.<br><br>If intentional, mark as such to remove it from the open issues list. If a data error, correct the slug or name directly in the properties table.</div>'
+    },
+    'suppress': {
+      title:           'Mark as intentional',
+      confirm:         'Mark as intentional',
+      confirmDisabled: false,
+      body: '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;">Marking this issue as intentional removes it from the open issues list. It will reappear if a new audit is run and the underlying flag remains TRUE.<br><br>Use this for known, deliberate states: placeholder images, unscored venue nodes, or confirmed duplicate rounds.</div>'
+    }
+  };
+
+  const tmpl      = templates[action] || templates['suppress'];
+  title.textContent   = tmpl.title;
+  sub.textContent     = 'Entity: ' + entity;
+  body.innerHTML      = tmpl.body;
+  confirm.textContent = tmpl.confirm;
+  confirm.disabled    = !!tmpl.confirmDisabled;
+  confirm.onclick     = handleModalConfirm;
+
+  overlay.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('action-modal').classList.remove('open');
+}
+
+document.getElementById('action-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ──────────────────────────────────────────────
+// LOG HELPERS
+// ──────────────────────────────────────────────
+
+function addLogEntry(msg, tag) {
+  const now = new Date();
+  const ts  = now.toISOString().slice(0, 16).replace('T', ' ');
+  LOG_DATA.unshift({ ts, msg, tag });
+  renderLog();
+  // Fire-and-forget — UI is never blocked by the write
+  persistLogEntry(msg, tag);
+}
+
+// ──────────────────────────────────────────────
+// LOG PERSISTENCE (Supabase REST)
+// ──────────────────────────────────────────────
+
+// Max entries to fetch on load. Keeps the payload bounded.
+const LOG_LIMIT = 200;
+
+async function persistLogEntry(msg, tag) {
+  try {
+    await fetch(API_URL + '/control_room_log', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({
+        run_id:      currentRunId      || null,
+        series_slug: currentAuditSlug  || null,
+        tag:         tag,
+        message:     msg
+      })
+    });
+  } catch(e) {
+    console.warn('persistLogEntry failed:', e);
+  }
+}
+
+async function loadLog() {
+  try {
+    const url = API_URL + '/control_room_log'
+      + '?select=tag,message,created_at'
+      + '&order=created_at.desc'
+      + '&limit=' + LOG_LIMIT;
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    // Replace in-memory log with the persisted history (already newest-first)
+    LOG_DATA = rows.map(function(r) {
+      return {
+        ts:  r.created_at.slice(0, 16).replace('T', ' '),
+        msg: r.message,
+        tag: r.tag
+      };
+    });
+    renderLog();
+  } catch(e) {
+    console.warn('loadLog failed:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
+// TIMESTAMP HELPER
+// ──────────────────────────────────────────────
+
+function formatTimestamp(d) {
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0') + ' '
+    + String(d.getHours()).padStart(2, '0') + ':'
+    + String(d.getMinutes()).padStart(2, '0');
+}
+
+// ──────────────────────────────────────────────
+// INGESTION RUNS (Supabase REST)
+// Loads most-recent run per series on init.
+// Creates + updates run records during ingestion.
+// ──────────────────────────────────────────────
+
+async function loadIngestionRuns() {
+  try {
+    const url = API_URL + '/ingestion_runs'
+      + '?select=id,series_slug,series_name,season,sport,status,entity_count,issue_count,created_at'
+      + '&order=created_at.desc&limit=100';
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    if (!Array.isArray(rows) || rows.length === 0) return;
+
+    // Deduplicate: keep only the most recent run per slug
+    const seen  = new Set();
+    const recent = rows.filter(function(r) {
+      if (seen.has(r.series_slug)) return false;
+      seen.add(r.series_slug);
+      return true;
+    });
+
+    // Merge into SERIES_STATUS (overrides mock rows for matching slugs, appends new ones)
+    recent.forEach(function(r) {
+      const ts  = r.created_at ? r.created_at.slice(0, 16).replace('T', ' ') : '--';
+      const live = {
+        run_id:     r.id,
+        slug:       r.series_slug,
+        name:       r.series_name || r.series_slug,
+        season:     r.season  || '--',
+        sport:      r.sport   || '--',
+        entities:   r.entity_count  || 0,
+        images_pct: 0,   // coverage detail requires a live audit; not stored in runs
+        fs_pct:     0,
+        dup_flags:  [],
+        status:     r.status,
+        last_run:   ts
+      };
+      const idx = SERIES_STATUS.findIndex(function(s) { return s.slug === r.series_slug; });
+      if (idx >= 0) {
+        SERIES_STATUS[idx] = Object.assign({}, SERIES_STATUS[idx], live);
+      } else {
+        SERIES_STATUS.push(live);
+      }
+    });
+    renderStatus();
+  } catch(e) {
+    console.warn('loadIngestionRuns failed:', e);
+  }
+}
+
+async function createIngestionRun(data) {
+  try {
+    const resp = await fetch(API_URL + '/ingestion_runs', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const result = await resp.json();
+    return Array.isArray(result) ? result[0] : result;
+  } catch(e) {
+    console.warn('createIngestionRun failed:', e);
+    return null;
+  }
+}
+
+async function updateIngestionRun(id, fields) {
+  try {
+    await fetch(API_URL + '/ingestion_runs?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify(fields)
+    });
+  } catch(e) {
+    console.warn('updateIngestionRun failed:', e);
+  }
+}
+
+// Triggered from the Actions column of the status table.
+// Fills the form slug and runs the audit immediately.
+async function runAuditForSeries(slug) {
+  document.getElementById('f-slug').value = slug;
+  await handleRunAudit();
+  const issuesSection = document.getElementById('section-issues');
+  if (issuesSection) issuesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ──────────────────────────────────────────────
+// START INGESTION
+// Creates a run record, runs the live audit,
+// updates the run record with results.
+// Full entity automation is not yet wired.
+// ──────────────────────────────────────────────
+
+async function handleStartIngestion() {
+  const slug        = document.getElementById('f-slug').value.trim();
+  const seriesName  = document.getElementById('f-series').value.trim();
+  const season      = document.getElementById('f-season').value.trim();
+  const sportRaw    = document.getElementById('f-sport').value;
+  const sport       = sportRaw === 'other'
+    ? (document.getElementById('f-sport-custom').value.trim() || null)
+    : (sportRaw || null);
+  const govBody     = document.getElementById('f-govbody').value.trim();
+  const notes       = document.getElementById('f-notes').value.trim();
+  const incTeams    = document.getElementById('f-teams').checked;
+  const incAthletes = document.getElementById('f-athletes').checked;
+  const incEvents   = document.getElementById('f-events').checked;
+  const incVenues   = document.getElementById('f-venues').checked;
+  const synthetic   = document.getElementById('f-synthetic').checked;
+
+  if (!slug) {
+    alert('Please enter a series slug before starting ingestion.');
+    return;
+  }
+
+  // Set slug early so every log entry in this flow is correctly tagged
+  currentAuditSlug = slug;
+
+  const ingestBtn = document.getElementById('ingest-btn');
+  const auditBtn  = document.getElementById('audit-btn');
+  ingestBtn.disabled = true;
+  auditBtn.disabled  = true;
+  ingestBtn.textContent = 'Creating run\u2026';
+
+  const label   = seriesName || slug;
+  const started = Date.now();
+
+  // ── STEP 1: Create run record (status = running) ──────────────────
+  const run = await createIngestionRun({
+    series_slug:       slug,
+    series_name:       seriesName  || null,
+    season:            season      || null,
+    sport:             sport       || null,
+    gov_body_slug:     govBody     || null,
+    notes:             notes       || null,
+    include_teams:     incTeams,
+    include_athletes:  incAthletes,
+    include_events:    incEvents,
+    include_venues:    incVenues,
+    synthetic_signals: synthetic,
+    status:            'running',
+    started_at:        new Date().toISOString()
+  });
+
+  // Bind run_id so all subsequent log entries in this flow carry it
+  currentRunId = run ? run.id : null;
+
+  addLogEntry(
+    'Ingestion run started for <strong>' + label + (season ? ' ' + season : '') + '</strong>',
+    'ingest'
+  );
+
+  // ── Show immediately in status table as Running ───────────────────
+  const runningEntry = {
+    run_id:     run ? run.id : null,
+    slug,
+    name:       seriesName || slug,
+    season:     season     || '--',
+    sport:      sport      || '--',
+    entities:   0,
+    images_pct: 0,
+    fs_pct:     0,
+    dup_flags:  [],
+    status:     'running',
+    last_run:   formatTimestamp(new Date())
+  };
+  const existingIdx = SERIES_STATUS.findIndex(function(s) { return s.slug === slug; });
+  if (existingIdx >= 0) {
+    SERIES_STATUS[existingIdx] = Object.assign({}, SERIES_STATUS[existingIdx], runningEntry);
+  } else {
+    SERIES_STATUS.unshift(runningEntry);
+  }
+  renderStatus();
+
+  // ── STEP 2: Call build_series_structure RPC ───────────────────────
+  ingestBtn.textContent = 'Building structure\u2026';
+  addLogEntry('Calling structure builder for <strong>' + slug + '</strong>\u2026', 'ingest');
+
+  let structureResult = null;
+  let structureError  = null;
+  let entitiesCreated = 0;
+  let entitiesUpdated = 0;
+  let relsCreated     = 0;
+
+  try {
+    structureResult = await callRPC('build_series_structure', {
+      p_series_slug:       slug,
+      p_season:            season ? parseInt(season, 10) : null,
+      p_sport:             sport  || null,
+      p_include_flags: {
+        include_teams:     incTeams,
+        include_athletes:  incAthletes,
+        include_events:    incEvents,
+        include_venues:    incVenues
+      },
+      p_synthetic_signals: synthetic
+    });
+
+    entitiesCreated = (structureResult && structureResult.entities_created) || 0;
+    entitiesUpdated = (structureResult && structureResult.entities_updated) || 0;
+    relsCreated     = (structureResult && structureResult.relationships_created) || 0;
+
+    const warnings      = (structureResult && structureResult.warnings)         || [];
+    const unsupported   = (structureResult && structureResult.unsupported_steps) || [];
+
+    const structElapsed = ((Date.now() - started) / 1000).toFixed(1);
+
+    if (unsupported.length > 0) {
+      // Slug not covered by an automated template
+      addLogEntry(
+        'Structure builder: <strong>' + slug + '</strong> has no automated template. '
+          + unsupported.join('; ') + ' '
+          + 'Build entities manually via the SQL editor, then re-run audit to verify.',
+        'ingest'
+      );
+    } else {
+      addLogEntry(
+        'Structure builder complete for <strong>' + slug + '</strong> \u2014 '
+          + entitiesCreated + ' created, '
+          + entitiesUpdated + ' updated, '
+          + relsCreated + ' relationship' + (relsCreated !== 1 ? 's' : '') + ' added'
+          + (warnings.length ? ' (' + warnings.length + ' warning' + (warnings.length !== 1 ? 's' : '') + ')' : '')
+          + ' (' + structElapsed + 's)',
+        'ingest'
+      );
+      // Log each warning individually
+      warnings.forEach(function(w) {
+        addLogEntry('Warning: ' + w, 'ingest');
+      });
+    }
+
+    // ── STEP 3: Auto-advance checklist (Part 6) ───────────────────
+    if (run && run.id) {
+      const totalStructure = entitiesCreated + entitiesUpdated + relsCreated;
+      if (totalStructure > 0 && unsupported.length === 0) {
+        // Structural creation is complete
+        if (!CHECKLIST_DATA[run.id]) CHECKLIST_DATA[run.id] = {};
+        CHECKLIST_DATA[run.id]['structural_creation'] = { state: 'complete' };
+        await upsertChecklistStage(run.id, 'structural_creation', 'complete');
+        addLogEntry(
+          'Checklist: <strong>Structural creation</strong> \u2192 Complete (' + slug + ')',
+          'ingest'
+        );
+        // Presentation data moves to in_progress (images/bios still need manual work)
+        CHECKLIST_DATA[run.id]['presentation_data'] = { state: 'in_progress' };
+        await upsertChecklistStage(run.id, 'presentation_data', 'in_progress');
+        // Score data: in_progress if synthetic signals were used, else not_started
+        if (synthetic) {
+          CHECKLIST_DATA[run.id]['score_data'] = { state: 'in_progress' };
+          await upsertChecklistStage(run.id, 'score_data', 'in_progress');
+          addLogEntry(
+            'Checklist: <strong>Score data</strong> \u2192 In progress (synthetic signals applied)',
+            'ingest'
+          );
+        }
+      } else if (unsupported.length > 0) {
+        // No template -- structural creation moves to in_progress to prompt manual work
+        if (!CHECKLIST_DATA[run.id]) CHECKLIST_DATA[run.id] = {};
+        CHECKLIST_DATA[run.id]['structural_creation'] = { state: 'in_progress' };
+        await upsertChecklistStage(run.id, 'structural_creation', 'in_progress');
+      }
+    }
+
+  } catch(structErr) {
+    structureError = structErr;
+    addLogEntry(
+      'Structure builder failed for <strong>' + slug + '</strong> \u2014 ' + structErr.message,
+      'error'
+    );
+    console.error('build_series_structure error:', structErr);
+  }
+
+  // ── STEP 4: Run the live audit ────────────────────────────────────
+  ingestBtn.textContent = 'Running audit\u2026';
+  addLogEntry('Audit started for <strong>' + slug + '</strong>\u2026', 'audit');
+
+  try {
+    const rows   = await callRPC('run_series_audit', { p_series_slug: slug });
+    const issues = mapAuditRowsToIssues(rows);
+
+    const persisted  = await loadPersistedStates(slug);
+    issueStates = {};
+    issues.forEach(function(issue) {
+      const key = issue.property_id + '|' + issue.flag;
+      if (persisted[key] && persisted[key].state !== 'open') {
+        issueStates[issue.id] = persisted[key].state;
+      }
+    });
+    CURRENT_ISSUES = issues;
+
+    // Determine final status:
+    // - pending   : zero entities (no template, no prior data)
+    // - needs-review : entities exist but issues remain
+    // - complete  : entities exist and zero open issues
+    const newStatus = rows.length === 0  ? 'pending'
+      : issues.length === 0             ? 'complete'
+      :                                   'needs-review';
+
+    updateStatusFromAudit(slug, season, rows, issues.length);
+    renderIssues();
+
+    // ── STEP 5: Update run record with audit results ──────────────
+    if (run && run.id) {
+      const runUpdate = {
+        status:       newStatus,
+        entity_count: rows.length,
+        issue_count:  issues.length
+      };
+      if (rows.length > 0) {
+        runUpdate.completed_at = new Date().toISOString();
+      }
+      await updateIngestionRun(run.id, runUpdate);
+      const si = SERIES_STATUS.findIndex(function(s) { return s.slug === slug; });
+      if (si >= 0) SERIES_STATUS[si].run_id = run.id;
+
+      // Advance UI verification checklist stage if no issues remain
+      if (rows.length > 0 && issues.length === 0) {
+        if (!CHECKLIST_DATA[run.id]) CHECKLIST_DATA[run.id] = {};
+        CHECKLIST_DATA[run.id]['ui_verification'] = { state: 'in_progress' };
+        await upsertChecklistStage(run.id, 'ui_verification', 'in_progress');
+      }
+    }
+
+    const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+    const persistedCount = Object.keys(issueStates).length;
+
+    if (rows.length === 0) {
+      addLogEntry(
+        'Audit complete for <strong>' + slug + '</strong> \u2014 '
+          + 'no entities found. '
+          + (structureError
+              ? 'Structure builder failed; build entities manually.'
+              : 'Series has no automated template. Build entities via the SQL editor.'),
+        'audit'
+      );
+    } else {
+      addLogEntry(
+        'Audit complete for <strong>' + slug + '</strong> \u2014 '
+          + rows.length + ' entities, '
+          + issues.length + ' issue' + (issues.length !== 1 ? 's' : '') + ' flagged'
+          + (persistedCount ? ', ' + persistedCount + ' with saved states' : '')
+          + ' (' + elapsed + 's)',
+        'audit'
+      );
+    }
+
+  } catch(auditErr) {
+    if (run && run.id) {
+      await updateIngestionRun(run.id, { status: 'needs-review' });
+    }
+    const si = SERIES_STATUS.findIndex(function(s) { return s.slug === slug; });
+    if (si >= 0) SERIES_STATUS[si].status = 'needs-review';
+    renderStatus();
+    addLogEntry('Audit failed for <strong>' + slug + '</strong> \u2014 ' + auditErr.message, 'error');
+    console.error('handleStartIngestion audit error:', auditErr);
+  } finally {
+    ingestBtn.disabled = false;
+    auditBtn.disabled  = false;
+    ingestBtn.textContent = 'Start ingestion';
+    // Clear the run ID so standalone actions after this don't carry it
+    currentRunId = null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// SUPABASE RPC
+// ──────────────────────────────────────────────
+
+function callRPC(funcName, params) {
+  return fetch(API_URL + '/rpc/' + funcName, {
+    method: 'POST',
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY,
+      'Content-Type':  'application/json'
+    },
+    body: JSON.stringify(params)
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.message || r.statusText); });
+    return r.json();
+  });
+}
+
+// ──────────────────────────────────────────────
+// ISSUE STATE PERSISTENCE
+// Reads and writes control_room_issue_states via
+// Supabase REST so states survive page reloads
+// and future audit runs.
+// ──────────────────────────────────────────────
+
+let currentAuditSlug = '';
+
+async function loadPersistedStates(slug) {
+  try {
+    const url = API_URL + '/control_room_issue_states'
+      + '?series_slug=eq.' + encodeURIComponent(slug)
+      + '&select=property_id,issue_key,state,note';
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    // Build lookup: property_id|issue_key → { state, note }
+    const map = {};
+    if (Array.isArray(rows)) {
+      rows.forEach(function(r) {
+        map[r.property_id + '|' + r.issue_key] = { state: r.state, note: r.note };
+      });
+    }
+    return map;
+  } catch(e) {
+    console.warn('loadPersistedStates failed:', e);
+    return {};
+  }
+}
+
+async function persistIssueState(issue, state, note) {
+  if (!issue || !issue.property_id || !currentAuditSlug) return;
+  try {
+    await fetch(API_URL + '/control_room_issue_states', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        series_slug: currentAuditSlug,
+        property_id: issue.property_id,
+        issue_type:  issue.issue_type,
+        issue_key:   issue.flag,
+        state:       state,
+        note:        note || null
+      })
+    });
+  } catch(e) {
+    console.warn('persistIssueState failed:', e);
+  }
+}
+
+async function deletePersistedState(issue) {
+  if (!issue || !issue.property_id || !currentAuditSlug) return;
+  try {
+    await fetch(
+      API_URL + '/control_room_issue_states'
+        + '?series_slug=eq.' + encodeURIComponent(currentAuditSlug)
+        + '&property_id=eq.' + issue.property_id
+        + '&issue_key=eq.'   + encodeURIComponent(issue.flag),
+      {
+        method: 'DELETE',
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      }
+    );
+  } catch(e) {
+    console.warn('deletePersistedState failed:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
+// AUDIT ROW MAPPING
+// Maps each returned audit row into one issue row
+// per TRUE flag. Non-flagged entities are skipped.
+// ──────────────────────────────────────────────
+
+const FLAG_MAP = [
+  {
+    flag:       'flag_missing_image',
+    issue:      'Missing image',
+    issue_type: 'image',
+    severity:   'low',
+    action:     'add-image',
+    fix:        'No image registered in images.js. Source a suitable URL and add it to PROPERTY_IMAGES.'
+  },
+  {
+    flag:       'flag_image_hotlink_risk',
+    issue:      'Hotlink risk',
+    issue_type: 'image',
+    severity:   'low',
+    action:     'retry-image',
+    fix:        'Image URL pattern suggests a third-party host that may block hotlinking. Verify or replace.'
+  },
+  {
+    flag:       'flag_missing_fanscore',
+    issue:      'Missing FanScore',
+    issue_type: 'fanscore',
+    severity:   'medium',
+    action:     'recompute-fs',
+    fix:        'Entity has social accounts but no 30-day FanScore window. Re-run the scoring pipeline.'
+  },
+  {
+    flag:       'flag_missing_posts',
+    issue:      'Missing posts',
+    issue_type: 'fanscore',
+    severity:   'medium',
+    action:     'recompute-fs',
+    fix:        'Entity has accounts but no raw posts. Check ingestion pipeline for this account.'
+  },
+  {
+    flag:       'flag_duplicate_slug',
+    issue:      'Duplicate slug',
+    issue_type: 'duplicate',
+    severity:   'high',
+    action:     'review-duplicate',
+    fix:        'Two or more distinct properties share this slug. One must be renamed or merged.'
+  },
+  {
+    flag:       'flag_duplicate_name',
+    issue:      'Duplicate name',
+    issue_type: 'duplicate',
+    severity:   'medium',
+    action:     'review-duplicate',
+    fix:        'Two or more properties of the same type share this display name. Confirm or disambiguate.'
+  },
+  {
+    flag:       'flag_duplicate_event',
+    issue:      'Duplicate event',
+    issue_type: 'duplicate',
+    severity:   'medium',
+    action:     'review-duplicate',
+    fix:        'Another event in this series shares the same venue and year. Confirm both are distinct rounds, or suppress if intentional.'
+  }
+];
+
+function mapAuditRowsToIssues(rows) {
+  const issues = [];
+  let counter = 0;
+  rows.forEach(function(row) {
+    FLAG_MAP.forEach(function(fm) {
+      if (row[fm.flag]) {
+        counter++;
+        issues.push({
+          id:          'live-' + counter,
+          entity:      row.slug || row.property_name,
+          property_id: row.property_id,
+          image_url:   row.image_url,
+          type:        row.property_type,
+          issue:      fm.issue,
+          issue_type: fm.issue_type,
+          flag:       fm.flag,
+          severity:   fm.severity,
+          fix:        fm.fix,
+          action:     fm.action
+        });
+      }
+    });
+  });
+  return issues;
+}
+
+function updateStatusFromAudit(slug, season, rows, issueCount) {
+  const totalEntities   = rows.length;
+  const withImage       = rows.filter(r => r.image_registered).length;
+  const withFanscore    = rows.filter(r => r.fanscore_30d != null).length;
+  const imagesPct       = totalEntities > 0 ? Math.round((withImage    / totalEntities) * 100) : 0;
+  const fsPct           = totalEntities > 0 ? Math.round((withFanscore / totalEntities) * 100) : 0;
+  const dupFlags        = [];
+  if (rows.some(r => r.flag_duplicate_slug))  dupFlags.push('dup-slug');
+  if (rows.some(r => r.flag_duplicate_name))  dupFlags.push('dup-name');
+  if (rows.some(r => r.flag_duplicate_event)) dupFlags.push('dup-event');
+
+  // A run with 0 entities has not been ingested yet — it must not show as Complete.
+  // Complete is only valid when entities exist and the audit found no issues.
+  const statusVal = totalEntities === 0  ? 'pending'
+    : issueCount  === 0                  ? 'complete'
+    :                                      'needs-review';
+
+  // Update or insert status row for this slug.
+  // Preserve any existing fields (name, sport, run_id) already set by the run record.
+  const idx = SERIES_STATUS.findIndex(function(s) { return s.slug === slug; });
+  const base = idx >= 0 ? SERIES_STATUS[idx] : {};
+  const entry = Object.assign({}, base, {
+    slug:       slug,
+    name:       base.name   || slug,
+    season:     season      || base.season || '--',
+    sport:      base.sport  || '--',
+    entities:   totalEntities,
+    images_pct: imagesPct,
+    fs_pct:     fsPct,
+    dup_flags:  dupFlags,
+    status:     statusVal,
+    last_run:   formatTimestamp(new Date())
+  });
+  if (idx >= 0) {
+    SERIES_STATUS[idx] = entry;
+  } else {
+    SERIES_STATUS.unshift(entry);
+  }
+  renderStatus();
+}
+
+async function handleRunAudit() {
+  const slug   = document.getElementById('f-slug').value.trim();
+  const season = document.getElementById('f-season').value.trim();
+
+  if (!slug) {
+    alert('Please enter a series slug before running an audit.');
+    return;
+  }
+
+  // Set slug early so the first log entry is correctly tagged
+  currentAuditSlug = slug;
+
+  const btn = document.getElementById('audit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Running\u2026';
+
+  const started = Date.now();
+  addLogEntry(`Audit started for <strong>${slug}${season ? ' ' + season : ''}</strong>\u2026`, 'audit');
+
+  try {
+    const rows   = await callRPC('run_series_audit', { p_series_slug: slug });
+    const issues = mapAuditRowsToIssues(rows);
+
+    // Load saved states from DB and merge: if the flag is still TRUE and the state is
+    // resolved or intentional, carry it forward so the issue stays suppressed.
+    const persisted = await loadPersistedStates(slug);
+    issueStates = {};
+    issues.forEach(function(issue) {
+      const key = issue.property_id + '|' + issue.flag;
+      if (persisted[key] && persisted[key].state !== 'open') {
+        issueStates[issue.id] = persisted[key].state;
+      }
+    });
+
+    CURRENT_ISSUES = issues;
+
+    updateStatusFromAudit(slug, season, rows, issues.length);
+    renderIssues();
+
+    const persistedCount = Object.keys(issueStates).length;
+    const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+    addLogEntry(
+      `Audit complete for <strong>${slug}</strong> \u2014 ${rows.length} entities, ${issues.length} issue${issues.length !== 1 ? 's' : ''} flagged${persistedCount ? ', ' + persistedCount + ' with saved states' : ''} (${elapsed}s)`,
+      'audit'
+    );
+  } catch (err) {
+    addLogEntry(`Audit failed for <strong>${slug}</strong> \u2014 ${err.message}`, 'error');
+    console.error('run_series_audit error:', err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run audit only';
+  }
+}
+
+// ──────────────────────────────────────────────
+// SERIES VISIBILITY (UI control layer)
+// Reads series_visibility table on init.
+// setSeriesLive / hideSeriesFromUI use the
+// set_series_ui_visibility() RPC which cascades
+// visibility to all ecosystem members.
+// setSeriesReady updates the ready_for_ui flag only.
+// ──────────────────────────────────────────────
+
+let SERIES_VISIBILITY = {};  // { [slug]: { ready_for_ui, visible_in_ui, note } }
+
+function visData(slug) {
+  return SERIES_VISIBILITY[slug] || { ready_for_ui: false, visible_in_ui: false };
+}
+
+function visBadge(s) {
+  const v = visData(s.slug);
+  if (v.visible_in_ui) return '<span class="cr-vis-badge" data-vis="live">Live</span>';
+  if (v.ready_for_ui)  return '<span class="cr-vis-badge" data-vis="ready">Ready</span>';
+  return '<span class="cr-vis-badge" data-vis="hidden">Hidden</span>';
+}
+
+function visActionBtns(s) {
+  const v    = visData(s.slug);
+  const slug = s.slug;
+  let html   = '';
+  if (v.visible_in_ui) {
+    html += '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
+      + ' onclick="hideSeriesFromUI(\'' + slug + '\')">'
+      + 'Hide from UI</button>';
+  } else {
+    html += '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
+      + ' onclick="setSeriesLive(\'' + slug + '\')">'
+      + 'Go live</button>';
+  }
+  if (!v.ready_for_ui) {
+    html += '<button class="cr-action-btn" style="font-size:11px; opacity:0.7; white-space:nowrap;"'
+      + ' onclick="setSeriesReady(\'' + slug + '\', true)">'
+      + 'Mark ready</button>';
+  } else if (!v.visible_in_ui) {
+    html += '<button class="cr-action-btn" style="font-size:11px; opacity:0.7; white-space:nowrap;"'
+      + ' onclick="setSeriesReady(\'' + slug + '\', false)">'
+      + 'Mark not ready</button>';
+  }
+  return html;
+}
+
+async function loadSeriesVisibility() {
+  try {
+    const url = API_URL + '/series_visibility'
+      + '?select=series_slug,ready_for_ui,visible_in_ui,note';
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    if (!Array.isArray(rows)) return;
+    rows.forEach(function(r) {
+      SERIES_VISIBILITY[r.series_slug] = {
+        ready_for_ui:  r.ready_for_ui,
+        visible_in_ui: r.visible_in_ui,
+        note:          r.note
+      };
+    });
+    renderStatus();
+  } catch(e) {
+    console.warn('loadSeriesVisibility failed:', e);
+  }
+}
+
+async function upsertSeriesVisibility(slug, fields) {
+  try {
+    await fetch(API_URL + '/series_visibility', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(Object.assign({ series_slug: slug }, fields))
+    });
+  } catch(e) {
+    console.warn('upsertSeriesVisibility failed:', e);
+  }
+}
+
+async function setSeriesLive(slug) {
+  // Optimistic local update
+  if (!SERIES_VISIBILITY[slug]) SERIES_VISIBILITY[slug] = { ready_for_ui: false, visible_in_ui: false };
+  SERIES_VISIBILITY[slug].visible_in_ui = true;
+  SERIES_VISIBILITY[slug].ready_for_ui  = true;
+  renderStatus();
+  addLogEntry('UI visibility: <strong>' + slug + '</strong> \u2192 <strong>Live</strong> (cascade applied)', 'ingest');
+  try {
+    await callRPC('set_series_ui_visibility', { p_series_slug: slug, p_visible: true });
+  } catch(e) {
+    addLogEntry('Visibility RPC failed for ' + slug + ': ' + e.message, 'error');
+    console.warn('set_series_ui_visibility failed:', e);
+  }
+}
+
+async function hideSeriesFromUI(slug) {
+  // Optimistic local update
+  if (!SERIES_VISIBILITY[slug]) SERIES_VISIBILITY[slug] = { ready_for_ui: true, visible_in_ui: true };
+  SERIES_VISIBILITY[slug].visible_in_ui = false;
+  renderStatus();
+  addLogEntry('UI visibility: <strong>' + slug + '</strong> \u2192 <strong>Hidden</strong> (cascade applied)', 'repair');
+  try {
+    await callRPC('set_series_ui_visibility', { p_series_slug: slug, p_visible: false });
+  } catch(e) {
+    addLogEntry('Visibility RPC failed for ' + slug + ': ' + e.message, 'error');
+    console.warn('set_series_ui_visibility failed:', e);
+  }
+}
+
+async function setSeriesReady(slug, ready) {
+  if (!SERIES_VISIBILITY[slug]) SERIES_VISIBILITY[slug] = { ready_for_ui: false, visible_in_ui: false };
+  SERIES_VISIBILITY[slug].ready_for_ui = ready;
+  renderStatus();
+  const label = ready ? 'Ready for UI' : 'Not ready';
+  addLogEntry('UI readiness: <strong>' + slug + '</strong> \u2192 <strong>' + label + '</strong>', 'ingest');
+  // Fire-and-forget persist
+  upsertSeriesVisibility(slug, { ready_for_ui: ready });
+}
+
+// ──────────────────────────────────────────────
+// RUN CHECKLIST
+// Lifecycle stages per ingestion run.
+// State persists in ingestion_run_checklist table.
+// Checklists load lazily when the user expands a row.
+// ──────────────────────────────────────────────
+
+const STAGE_DEFS = [
+  { key: 'structural_creation', label: 'Structural creation' },
+  { key: 'presentation_data',   label: 'Presentation data'   },
+  { key: 'score_data',          label: 'Score data'          },
+  { key: 'ui_verification',     label: 'UI verification'     },
+  { key: 'exceptions_review',   label: 'Exceptions review'   }
+];
+
+const STATE_LABELS = {
+  not_started: 'Not started',
+  in_progress: 'In progress',
+  complete:    'Complete',
+  blocked:     'Blocked'
+};
+
+// { [runId]: { [stageKey]: { state, note } } }
+let CHECKLIST_DATA = {};
+
+async function loadChecklistForRun(runId) {
+  if (!runId) return;
+  try {
+    const url = API_URL + '/ingestion_run_checklist'
+      + '?run_id=eq.' + runId
+      + '&select=id,stage_key,state,note';
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    if (!CHECKLIST_DATA[runId]) CHECKLIST_DATA[runId] = {};
+    if (Array.isArray(rows)) {
+      rows.forEach(function(r) {
+        CHECKLIST_DATA[runId][r.stage_key] = { state: r.state, note: r.note };
+      });
+    }
+  } catch(e) {
+    console.warn('loadChecklistForRun failed:', e);
+  }
+}
+
+async function upsertChecklistStage(runId, stageKey, state) {
+  if (!runId) return;
+  try {
+    await fetch(API_URL + '/ingestion_run_checklist', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ run_id: runId, stage_key: stageKey, state: state })
+    });
+  } catch(e) {
+    console.warn('upsertChecklistStage failed:', e);
+  }
+}
+
+function renderChecklist(runId, slug) {
+  const row = document.getElementById('cl-row-' + slug);
+  if (!row) return;
+  const list = row.querySelector('.cr-stage-list');
+  if (!list) return;
+  const stageData = (runId && CHECKLIST_DATA[runId]) || {};
+  list.innerHTML = STAGE_DEFS.map(function(s) {
+    const currentState = (stageData[s.key] && stageData[s.key].state) || 'not_started';
+    const stateLabel   = STATE_LABELS[currentState] || currentState;
+    const onclick = runId
+      ? 'cycleStageState(\'' + runId + '\', \'' + s.key + '\', \'' + slug + '\')'
+      : '';
+    return '<button class="cr-stage" data-state="' + currentState + '"'
+      + (onclick ? ' onclick="' + onclick + '"' : ' disabled style="cursor:default;opacity:0.5;"')
+      + ' title="' + stateLabel + ' \u2014 click to advance">'
+      + '<span class="cr-stage-dot"></span>'
+      + '<span class="cr-stage-label">' + s.label + '</span>'
+      + '</button>';
+  }).join('');
+}
+
+async function toggleChecklist(runId, slug) {
+  const row = document.getElementById('cl-row-' + slug);
+  if (!row) return;
+  const isVisible = row.style.display !== 'none';
+  if (isVisible) {
+    row.style.display = 'none';
+    return;
+  }
+  // Lazy-load: fetch only once per run_id
+  if (runId && !CHECKLIST_DATA[runId]) {
+    CHECKLIST_DATA[runId] = {};
+    await loadChecklistForRun(runId);
+  }
+  renderChecklist(runId, slug);
+  row.style.display = '';
+}
+
+function cycleStageState(runId, stageKey, slug) {
+  const CYCLE = ['not_started', 'in_progress', 'complete', 'blocked'];
+  const current = (CHECKLIST_DATA[runId] && CHECKLIST_DATA[runId][stageKey] && CHECKLIST_DATA[runId][stageKey].state) || 'not_started';
+  const nextState = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
+  if (!CHECKLIST_DATA[runId]) CHECKLIST_DATA[runId] = {};
+  CHECKLIST_DATA[runId][stageKey] = Object.assign({}, CHECKLIST_DATA[runId][stageKey] || {}, { state: nextState });
+  renderChecklist(runId, slug);
+  const stageDef   = STAGE_DEFS.find(function(s) { return s.key === stageKey; });
+  const stageLabel = stageDef ? stageDef.label : stageKey;
+  addLogEntry(
+    'Checklist: <strong>' + stageLabel + '</strong> \u2192 ' + STATE_LABELS[nextState] + ' (' + slug + ')',
+    'ingest'
+  );
+  // Fire-and-forget persist
+  upsertChecklistStage(runId, stageKey, nextState);
+}
+
+// ──────────────────────────────────────────────
+// THEME + NAV (shared with existing pages)
+// ──────────────────────────────────────────────
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('sa-theme', t);
+  document.getElementById('theme-light').classList.toggle('active', t === 'light');
+  document.getElementById('theme-dark').classList.toggle('active', t === 'dark');
+}
+
+function toggleNavMenu() {
+  const menu = document.getElementById('nav-menu');
+  const btn  = document.getElementById('menu-btn');
+  const open = menu.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open);
+}
+
+function closeNavMenu() {
+  document.getElementById('nav-menu').classList.remove('open');
+  document.getElementById('menu-btn').setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('nav-menu');
+  const btn  = document.getElementById('menu-btn');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    closeNavMenu();
+  }
+});
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+
+(function init() {
+  const saved = localStorage.getItem('sa-theme') || 'light';
+  setTheme(saved);
+
+  // Default season to current year if field is empty
+  const seasonEl = document.getElementById('f-season');
+  if (seasonEl && !seasonEl.value) {
+    seasonEl.value = new Date().getFullYear();
+  }
+
+  // Wire preview: a single delegated listener on the form card catches all
+  // input/change events from every field without touching individual handlers.
+  const formCard = document.querySelector('.cr-form-card');
+  if (formCard) {
+    formCard.addEventListener('input',  updatePreview);
+    formCard.addEventListener('change', updatePreview);
+  }
+  // Populate preview immediately so the season default is reflected on load.
+  updatePreview();
+
+  renderStatus();
+  renderIssues();
+  renderLog();
+  // Load persisted ingestion runs from Supabase and merge into the status table.
+  loadIngestionRuns();
+  // Load series visibility states from the series_visibility table.
+  loadSeriesVisibility();
+  // Load persisted log history. Replaces the empty LOG_DATA once the fetch resolves.
+  loadLog();
+})();
+
+</script>
+
+</body>
+</html>

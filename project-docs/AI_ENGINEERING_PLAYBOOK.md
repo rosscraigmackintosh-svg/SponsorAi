@@ -2,7 +2,7 @@
 
 SponsorAI — Safe Engineering Practices for AI Agents
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13 (added working modes, prompt templates, workflow sequences)
 
 ---
 
@@ -168,7 +168,56 @@ Key known divergences:
 
 ---
 
-## 9. Authoritative References
+## 9. Entity Expansion Definition of Done
+
+When inserting a new series, team, athlete, venue, or event, all five stages below must be completed before the expansion is described as done. Structural insertion alone is not sufficient — an entity that is in the database but missing presentation data is visually broken in the UI.
+
+**Stage 1 — Structural creation**
+
+- Property row with valid unique slug
+- property_type from the enum
+- All applicable property_relationships rows
+
+**Stage 2 — Presentation completion**
+
+- bio populated (factual, 1 to 3 sentences, calm analytical tone)
+- country and country_code populated (ISO 3166-1 alpha-2; null only for pan-regional entities)
+- sport = 'motorsport' for all current properties
+- region = 'Europe' for all current properties
+- city populated for teams and venues
+- Image entry in app/images.js using typed format { src, kind, fit, pos, pad?, bg? }
+- Image URL verified as reachable and rendering correctly in the UI (registry presence alone is not sufficient)
+- If no image URL is found, document the absence inline in images.js with a comment
+
+Note on venue image sources: official circuit websites frequently block external image embedding (hotlink protection). Use Wikimedia Commons (upload.wikimedia.org) for venue aerial photography. Compute the thumbnail URL with the MD5 formula: hash = md5(filename), path = thumb/{hash[0]}/{hash[:2]}/{filename}/1280px-{filename}.
+
+**Stage 3 — Score and demo data (scoreable properties only)**
+
+- Accounts in the accounts table, one per intended platform
+- Follower history in raw_account_followers covering 90 days minimum
+- Posts in raw_posts (at least 30 per account over 90 days)
+- Post daily metrics in raw_post_daily_metrics
+- Rollups run via compute_daily_rollups
+- FanScore windows run via compute_fanscore_windows
+
+Events and venues: FanScore suppression with reason 'Insufficient data' is acceptable if they have no dedicated social accounts. This must be noted as an intentional exception in the expansion notes.
+
+**Stage 4 — UI verification**
+
+- Cards render with correct image, type badge, and country flag
+- Panel opens with bio, image hero, and key facts populated
+- No unintended placeholder text or blank sections
+- Scoreable properties: FanScore renders in card and panel
+
+**Stage 5 — Exceptions reported**
+
+Any deviation from stages 1 through 4 must be documented in project-docs/DEVELOPMENT_LEDGER.md in the same session as the expansion. Acceptable exceptions: image URL not found (document inline in images.js), event without social accounts (document in migration notes).
+
+The authoritative version of this rule is in docs/SPONSORAI_SYSTEM_CONTRACT.md Section 8.
+
+---
+
+## 10. Authoritative References
 
 Before making any change to the prototype, consult:
 
@@ -181,3 +230,242 @@ Before making any change to the prototype, consult:
 | Scoring rules and guardrails | `_internal/04_Data_Models/SponsorAI_Scoring_Spec.md` |
 | Constitutional constraints | `_internal/00_Core_Truth/SponsorAI_Constitution.md` |
 | AI instruction rules for UI | `CLAUDE.md` |
+
+---
+
+## 11. Claude Working Modes
+
+Every task belongs to one of five modes. The mode tells Claude how to behave: what lens to use, how cautious to be, and what counts as done.
+
+**Always declare the mode if it is not obvious from the prompt.**
+
+---
+
+### Build Mode
+
+**Use when:** Implementing features, fixes, or new functionality.
+
+**Behaviour:**
+
+- Act as a senior engineer writing production-quality code.
+- Prefer simple, robust solutions over clever ones. If two approaches work, choose the more debuggable one.
+- Never break existing behaviour. When modifying a function, trace all callers before changing its signature or return value.
+- Automate every safe step. If something can be done by the pipeline rather than manually, wire it in.
+- If the task requires a DB change, include the migration explicitly. Never assume the DB matches the master schema file.
+- Read CLAUDE.md before touching any UI. Load the full Design System in order.
+- Flag ambiguity rather than resolving it silently.
+
+---
+
+### Review Mode
+
+**Use when:** Checking work after implementation is complete.
+
+**Behaviour:**
+
+- Act as a paranoid senior reviewer who has seen production incidents.
+- Look for: logic errors, broken assumptions, edge cases, regressions, inconsistent state, missing null checks, hardcoded values that should be tokens or constants, and anything that would fail silently.
+- When an issue is found, explain clearly: what breaks, in which scenario, and what the impact is.
+- Do not rewrite code unnecessarily. Identify the exact change needed, not a refactor.
+- Be particularly suspicious of: status strings that could arrive in unexpected case, async functions without error paths, UI state that is not reset in `finally` blocks, and DB writes that could succeed while the UI shows failure (or vice versa).
+
+---
+
+### Audit Mode
+
+**Use when:** Validating data completeness, running ingestion checks, detecting duplicates, verifying image coverage, or assessing FanScore scoreability.
+
+**Behaviour:**
+
+- Verify each entity type in sequence: properties exist, relationships exist, presentation data is populated, scoring is possible.
+- Distinguish intentional suppression from broken ingestion. A suppressed entity with `suppression_reason` is expected. An entity with no posts and no suppression reason is a bug.
+- Report exact failure points. "3 of 8 athletes are missing follower history" is useful. "Some entities have missing data" is not.
+- Prefer diagnosis before repair. Run the full audit and present findings before proposing or making any changes.
+- Use the `run_series_audit` RPC as the primary diagnostic tool. Supplement with direct DB queries for structural checks.
+- Document all intentional exceptions in DEVELOPMENT_LEDGER.md in the same session.
+
+---
+
+### Architecture Mode
+
+**Use when:** Designing new systems, evaluating structural decisions, or planning multi-sport expansion.
+
+**Behaviour:**
+
+- Focus on: scalability, automation, maintainability, and the eventual need to support dozens of sports and hundreds of properties.
+- Evaluate tradeoffs explicitly. State what each approach enables and what it makes harder.
+- Recommend structure before implementation. Architecture decisions should be captured in writing before any code is written.
+- Consider the operational load of each design. A schema that requires manual repair at scale is not a good schema.
+- Flag decisions that would be hard to reverse and give them more scrutiny.
+- Reference `docs/SPONSORAI_SYSTEM_CONTRACT.md` when any decision touches scoring, FitScore, or the property model.
+
+---
+
+### Documentation Mode
+
+**Use when:** Updating ledgers, roadmap, system state, contracts, or any setup doc.
+
+**Behaviour:**
+
+- Update documentation only. Do not change application code.
+- Keep WORKING_CONTEXT.md, DEVELOPMENT_LEDGER.md, PRODUCT_ROADMAP.md, and SERIES_INGESTION_PROCESS.md aligned with the current state of the codebase.
+- Capture future ideas in the roadmap or a separate ideas section -- not in active build scope.
+- Be precise about what is built vs. what is planned vs. what is stubbed. These three states are not the same and must not be conflated.
+- Date all new entries. State what changed, not just what the current state is.
+
+---
+
+## 12. Automation and Human-in-the-Loop
+
+**Default rule:**
+
+> If anything can be safely automated instead of manual, automate it.
+
+Safe automation means: idempotent, reversible, and diagnosable. An automated step that creates correct state on success and leaves the system unchanged on failure is always preferred over a manual SQL step.
+
+**Balancing rule:**
+
+> Where ambiguity or risk exists, keep a human in the loop rather than faking automation.
+
+Do not simulate success. Do not paper over gaps with optimistic defaults. If a template does not exist for a slug, return `unsupported_steps` and tell the operator. Do not invent data.
+
+**Practical test:** Before automating a step, ask: "If this runs against a production database and the input is wrong, what breaks?" If the answer is "nothing irreversible", automate it. If the answer is "corrupted entities", add a human gate.
+
+---
+
+## 13. Recommended Prompt Templates
+
+Short reusable patterns for each mode. Paste and adapt.
+
+---
+
+### Build Mode prompts
+
+```
+[Build Mode] Add [feature/fix] to [file or component].
+Context: [brief description of what exists today].
+Constraints: do not change [specific area]. Keep DB changes explicit.
+```
+
+Example:
+```
+[Build Mode] Add a "Copy slug" button to each row in the status table in control-room.html.
+Context: the status table renders in renderStatus(). Each row has a slug in the data.
+Constraints: do not change the table structure or column order.
+```
+
+---
+
+### Review Mode prompts
+
+```
+[Review Mode] Review the changes made to [file or function] in this session.
+Focus on: [error paths / state management / DB consistency / edge cases].
+Do not rewrite -- identify specific issues only.
+```
+
+Example:
+```
+[Review Mode] Review the updated handleStartIngestion() function.
+Focus on: async error paths, status values, checklist state correctness.
+Do not rewrite -- identify specific issues only.
+```
+
+---
+
+### Audit Mode prompts
+
+```
+[Audit Mode] Run a data audit for [series slug].
+Check: structural completeness, relationship coverage, presentation data, scoreability.
+Report exact failure points. Distinguish intentional suppression from missing data.
+```
+
+Example:
+```
+[Audit Mode] Run a data audit for premiership-rugby.
+Check all 35 expected entities. Verify relationships, bios, images, and FanScore coverage.
+Distinguish intentional suppression from missing data. List all gaps.
+```
+
+---
+
+### Architecture Mode prompts
+
+```
+[Architecture Mode] Design [system or feature].
+Constraints: [any hard constraints].
+Evaluate at least two approaches. Recommend structure before implementation.
+Consider: multi-sport scale, operational load, reversibility.
+```
+
+Example:
+```
+[Architecture Mode] Design the approach for supporting additional sports in the ingestion pipeline.
+Current state: build_series_structure supports two templates.
+Evaluate: template-per-file vs config-driven vs rule-based approaches.
+Consider: how many series we might have in 12 months, and what a new template should cost to add.
+```
+
+---
+
+### Documentation Mode prompts
+
+```
+[Documentation Mode] Update [document(s)] to reflect the changes made in this session.
+Session summary: [brief].
+Do not change any application code.
+```
+
+Example:
+```
+[Documentation Mode] Update WORKING_CONTEXT.md, DEVELOPMENT_LEDGER.md, and PRODUCT_ROADMAP.md
+to reflect Control Room v0.7.
+Session: added build_series_structure RPC, rewrote handleStartIngestion, created seed files.
+Do not change any application code.
+```
+
+---
+
+## 14. Recommended Workflow Sequences
+
+### Standard feature development
+
+```
+Plan (Architecture Mode if significant)
+  -> Build (Build Mode)
+  -> Review (Review Mode)
+  -> Audit (Audit Mode, if data or DB was affected)
+  -> Document (Documentation Mode)
+  -> Commit
+```
+
+Most sessions skip the Architecture step for small features. Review and Audit can be done in the same pass for small changes. Documentation always runs at the end of the session.
+
+---
+
+### Series ingestion workflow (Control Room)
+
+```
+Create run (Control Room: Start ingestion)
+  -> Build structure (automated via build_series_structure RPC)
+  -> Audit (automated: run_series_audit fires after structure builder)
+  -> Triage issues (manual: review flags in Issues table, mark intentional exceptions)
+  -> Repair presentation data (manual: image URLs, bio corrections, EVENT_VENUE_MAP)
+  -> Mark ready (Control Room: Mark ready button)
+  -> Make visible in UI (Control Room: Go live button)
+  -> Document exceptions (Documentation Mode: DEVELOPMENT_LEDGER.md)
+```
+
+Steps 1-3 are now fully automated for supported templates. Steps 4-7 require human judgment and are intentionally manual.
+
+---
+
+### Data quality repair
+
+```
+Audit Mode: run audit, identify exact failure points
+  -> Build Mode: fix the specific failure (repair seed, migration, or RPC update)
+  -> Audit Mode: re-run audit to confirm resolution
+  -> Document Mode: update DEVELOPMENT_LEDGER.md exceptions table
+```

@@ -86,6 +86,14 @@ Valid property types: `driver`, `athlete`, `team`, `series`, `event`, `venue`, `
 
 **Rule 4.5** Image URLs must point to stable, publicly accessible sources. CDN-hosted assets are preferred. URLs that require authentication or that may expire will cause card rendering failures.
 
+**Rule 4.7** Image completion requires all four of the following to be true, not just registry entry presence:
+1. A registry entry exists in `app/images.js` using the typed object format
+2. The image URL loads successfully without a 403, 404, or redirect to an error page
+3. The image renders correctly in the card hero with the correct `kind`, `fit`, and `pos` values
+4. No broken-image icon or placeholder SVG appears in the live UI
+
+Official circuit websites frequently block external image embedding (hotlink protection). For venue images, Wikimedia Commons (upload.wikimedia.org) is the preferred source. Do not substitute an official circuit URL without first verifying it loads from an external domain.
+
 **Rule 4.6** If no image is found for a property, the card hero renders the type placeholder SVG from `HERO_ICONS`. This is the correct fallback and must not be treated as an error.
 
 ---
@@ -142,3 +150,68 @@ Valid property types: `driver`, `athlete`, `team`, `series`, `event`, `venue`, `
 **Rule 7.5** FanScore must remain independent. It must not incorporate brand-specific logic, brand weighting, or alignment signals of any kind.
 
 **Rule 7.6** Brand Fit and FitScore may be introduced in a later phase once the attention intelligence layer is fully established and validated. Any future introduction requires an explicit update to this contract before implementation begins.
+
+---
+
+## Section 8 — Entity Expansion Definition of Done
+
+No entity expansion is considered complete until all five stages are finished. A series, team, athlete, venue, or event that has been structurally inserted but not completed through all five stages must not be described as deployed or live.
+
+### Stage 1 — Structural Creation
+
+**Rule 8.1** Every new property must have:
+
+- A row in the `properties` table with a valid unique `slug`
+- A `property_type` value from `property_type_enum`
+- All applicable `property_relationships` rows inserted (`series_contains_event`, `event_at_venue`, `series_has_team`, `team_has_athlete`)
+
+A null slug causes image resolution and URL routing to fail silently. A property without relationships will not surface in DB-backed panel sections.
+
+### Stage 2 — Presentation Completion
+
+**Rule 8.2** Every new property must have all of the following populated before it is considered presentation-complete:
+
+- `bio` — a factual, concise description (1 to 3 sentences, calm analytical tone, no hype language)
+- `country` — full country name, or null only for pan-regional entities such as a multi-country series
+- `country_code` — two-character ISO 3166-1 alpha-2 code, or null only for pan-regional entities
+- `sport` — `'motorsport'` for all current SponsorAI properties
+- `region` — `'Europe'` for all current SponsorAI properties
+- `city` — populated for teams and venues; optional for athletes and events
+- An image entry in `app/images.js` using the typed format `{ src, kind, fit, pos, pad?, bg? }`
+- The image URL must be verified as reachable and rendering correctly in the UI (see Rule 4.7)
+
+If a confirmed image URL cannot be found, the absence must be documented inline in `images.js` with a comment explaining why it falls through to the placeholder. Registry presence alone does not constitute image completion.
+
+### Stage 3 — Score and Demo Data
+
+**Rule 8.3** Every scoreable property (athlete, team, series) must have:
+
+- At least one linked account row in `accounts` per intended platform
+- Follower history rows in `raw_account_followers` covering a minimum of 90 days
+- Post rows in `raw_posts` for each account (at least 30 posts per account over the 90-day window)
+- Post daily metrics in `raw_post_daily_metrics` for each post
+- Rollups computed via `compute_daily_rollups`
+- FanScore windows computed via `compute_fanscore_windows`
+
+**Rule 8.4** Events and venues are not required to have accounts or FanScore data. Suppression with reason `'Insufficient data'` is acceptable for events without dedicated social accounts. This must be documented in the expansion notes as an intentional exception.
+
+**Rule 8.5** Accounts must include post data at creation time. Accounts without posts will produce completeness below 60% and trigger FanScore suppression. Inserting accounts without posts is incomplete work.
+
+### Stage 4 — UI Verification
+
+**Rule 8.6** Before an entity expansion is marked complete, the following must be verified in a running instance of the application:
+
+- Cards render with the correct image (not a placeholder icon), correct type badge, and correct country flag
+- Panel opens cleanly with bio, image hero, and key facts populated
+- No unintended placeholder text or blank sections appear in the panel
+- If the entity is scoreable, FanScore renders in the panel and the card score ring is populated
+
+### Stage 5 — Exceptions Reported
+
+**Rule 8.7** Any entity that intentionally deviates from stages 1 through 4 must have its exception documented. Accepted exceptions:
+
+- Placeholder image: document in `images.js` with a comment stating the image source was not found
+- Intentionally missing bio: document in the migration notes with a reason
+- Intentionally unscored property: document in the migration notes and confirm it is expected (e.g. a venue or event without dedicated social accounts)
+
+Exceptions must be noted in `project-docs/DEVELOPMENT_LEDGER.md` in the session where the expansion occurred.

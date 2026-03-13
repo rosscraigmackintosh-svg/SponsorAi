@@ -111,15 +111,56 @@ function loadPosts(propertyId) {
     + '&order=posted_at.desc&limit=5');
 }
 
+/* ── Relationship fetch ───────────────────────────────────────────────── */
+function loadRelationships(propertyId) {
+  var cols = 'from_id,to_id,relationship_type';
+  return Promise.all([
+    apiFetch('/property_relationships?from_id=eq.' + propertyId + '&select=' + cols),
+    apiFetch('/property_relationships?to_id=eq.'   + propertyId + '&select=' + cols)
+  ]).then(function(res) {
+    var fwd = (res[0] || []).map(function(r) {
+      return { relatedId: r.to_id,   type: r.relationship_type, dir: 'forward' };
+    });
+    var rev = (res[1] || []).map(function(r) {
+      return { relatedId: r.from_id, type: r.relationship_type, dir: 'reverse' };
+    });
+    return { forward: fwd, reverse: rev };
+  });
+}
+
+/* ── Momentum signal computation ─────────────────────────────────────── */
+function computeMomentumScore(c) {
+  if (!c || c.sup30) return [];
+  var badges = [];
+  var t30       = c.t30            != null ? c.t30            : null;
+  var eng       = c.engRate30d     != null ? c.engRate30d     : null;
+  var delta     = c.followersDelta != null ? c.followersDelta : null;
+  var followers = c.followers      != null ? c.followers      : null;
+  /* Trend signals — highest priority */
+  if (t30 !== null && t30 > 3.0)   { badges.push('Rising Fast'); }
+  else if (t30 !== null && t30 > 1.0)  { badges.push('Growing'); }
+  else if (t30 !== null && t30 < -1.5) { badges.push('Losing Momentum'); }
+  /* Engagement signals — secondary */
+  if (badges.length < 2 && eng !== null && eng > 5.0) {
+    badges.push('High Engagement');
+  }
+  if (badges.length < 2 && delta !== null && followers !== null && followers > 0 && (delta / followers) > 0.05) {
+    badges.push('Audience Surge');
+  }
+  return badges;
+}
+
 /* ── Data fetch ───────────────────────────────────────────────────────── */
 function loadGrid() {
   var cols='property_id,property_name,property_type,country,bio,as_of_day,model_version,'
     +'avg_score_30d,trend_value_30d,volatility_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,'
     +'avg_score_60d,avg_score_90d,trend_value_90d,'
     +'team_ids,team_names,driver_ids,driver_names,slug,'
-    +'total_followers_latest,followers_net_30d,posts_30d,total_interactions_30d,engagement_rate_30d_pct,platforms_active';
+    +'total_followers_latest,followers_net_30d,posts_30d,total_interactions_30d,engagement_rate_30d_pct,platforms_active,'
+    +'sport,region,city';
 
   return apiFetch('/v_property_summary_current?select='+cols
+    +'&visible_in_ui=eq.true'
     +'&order=property_name.asc&limit=200')
     .then(function(rows){
       var ids=rows.map(function(r){return r.property_id;});
@@ -163,7 +204,10 @@ function loadGrid() {
               posts30d:n(r.posts_30d),
               interactions30d:n(r.total_interactions_30d),
               engRate30d:n(r.engagement_rate_30d_pct),
-              platforms:r.platforms_active||null
+              platforms:r.platforms_active||null,
+              sport:r.sport||null,
+              region:r.region||null,
+              city:r.city||null
             };
           });
         });

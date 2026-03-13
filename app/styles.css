@@ -1688,6 +1688,24 @@ body.detail-open .content {
 .dp-related-reason { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 .dp-related-score { font-size: var(--text-sm); font-weight: 600; color: var(--text-2); flex-shrink: 0; }
 
+/* ── DB-backed relationship section (Feature 2) ──────────────────────── */
+.dp-rel-group { margin-bottom: var(--spacing-lg); }
+.dp-rel-group:last-child { margin-bottom: 0; }
+.dp-rel-group-label {
+  font-size: 10px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: var(--spacing-xs);
+}
+.dp-rel-item {
+  display: flex; align-items: center; gap: var(--spacing-md);
+  padding: var(--spacing-sm); margin-bottom: var(--spacing-xxs);
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  cursor: pointer;
+}
+.dp-rel-item:last-of-type { margin-bottom: 0; }
+.dp-rel-item:hover { border-color: var(--border-strong); }
+.dp-empty { font-size: var(--text-xs); color: var(--text-3); font-style: italic; }
+
 /* Data coverage bar */
 .dp-cov-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 4px; overflow: hidden; }
 .dp-cov-fill { height: 100%; background: var(--text-3); border-radius: 2px; }
@@ -1987,7 +2005,7 @@ body.detail-open .content {
   gap: var(--spacing-xxs);
 }
 .card-grid.list .score-aside { text-align: right; }
-.card-grid.list .card-actions { flex-shrink: 0; }
+.card-grid.list .card-actions { display: none; }
 
 @keyframes grid-in {
   from { opacity: 0; transform: translateY(10px); }
@@ -2072,6 +2090,45 @@ body.detail-open .content {
   width: 48%; height: 48%;
   opacity: 0.22;
 }
+
+/* ── Hero hover action overlay — 2026-03-13 ────────────────────────────────
+   Absolutely positioned over the image. Fades in on card hover.
+   Does not affect card layout height. Hidden in list view (hero too small).
+──────────────────────────────────────────────────────────────────────────── */
+.card-hero-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.fanscore-card:hover .card-hero-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hero-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.90);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  padding: 0; flex-shrink: 0;
+}
+.hero-btn svg { width: 18px; height: 18px; display: block; }
+.hero-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+.hero-btn.active { color: var(--accent); }
+/* List view: hero is 72px wide — overlay suppressed */
+.card-grid.list .card-hero-actions { display: none; }
+
 .card-header { margin-bottom: var(--spacing-xl); }  /* rhythm: was --spacing-lg (12px) */
 .card-body { padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl); display: flex; flex-direction: column; flex: 1; }
 .fanscore-card:hover { box-shadow: 0 32px 48px 0 rgba(0,0,0,0.18), 0 20px 12px 0 rgba(0,0,0,0.10); transform: translateY(-3px); }
@@ -2088,13 +2145,25 @@ body.detail-open .content {
 }
 .card-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .type-badge  {
-  display: none;
+  display: inline-flex;
   align-items: center;
   font-size: 11px; font-weight: 600;
   padding: 2px 8px;
   border-radius: 20px;
   border: 1px solid transparent;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.signal-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px; font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-2);
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 .card-name-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); margin-bottom: var(--spacing-xs); }
@@ -2123,13 +2192,15 @@ body.detail-open .content {
    All other selectors, properties, and values are unchanged.
 ──────────────────────────────────────────────────────────────────────────── */
 .score-row   { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--spacing-lg); }
-.score-val   { font-size: 30px; font-weight: 600; font-family: var(--font); color: var(--text-1); line-height: 1; letter-spacing: -1px; }
+.score-val   { font-size: 24px; font-weight: 700; font-family: var(--font); color: var(--text-1); line-height: 1; letter-spacing: -0.5px; }  /* hierarchy: was 30px/600 */
 .score-val.dim { color: var(--text-3); font-size: 22px; }
+.score-val-row { display: flex; align-items: baseline; gap: 5px; }
+.score-trend-inline { font-size: 13px; font-weight: 600; line-height: 1; }
 .score-lbl   { font-size: 12px; color: var(--text-3); margin-top: var(--spacing-xs); }  /* rhythm: was 3px raw */
 .score-aside { text-align: right; }
 .trend-line  { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
 .conf-line   { font-size: 12.5px; color: var(--text-3); margin-top: var(--spacing-xxs); }
-.follower-chip { font-size: 12px; color: var(--text-2); font-weight: 500; margin-top: var(--spacing-xxs); }
+.follower-chip { font-size: 11px; color: var(--text-3); font-weight: 400; margin-top: var(--spacing-xxs); }  /* de-emphasised: was 12px/text-2/500 */
 
 
 .sup-notice {

@@ -27,6 +27,12 @@ function renderCard(c, idx) {
   } else {
     heroHtml += '<div class="card-hero-placeholder" style="color:'+cfg.fgVar+'">'+(HERO_ICONS[c.type]||HERO_ICONS.series)+'</div>';
   }
+  /* Hover overlay — actions centred over image, fade in on card hover, no layout impact */
+  heroHtml += '<div class="card-hero-actions" onclick="event.stopPropagation()">'
+    +'<button class="hero-btn" data-action="watchlist" data-id="'+c.id+'" title="Add to watchlist"><i data-lucide="bookmark"></i></button>'
+    +'<button class="hero-btn'+(typeof compareList!=='undefined'&&compareList.indexOf(c.id)>=0?' active':'')+'" data-action="compare" data-id="'+c.id+'" title="Compare"><i data-lucide="check-check"></i></button>'
+    +'<button class="hero-btn" data-action="portfolio" data-id="'+c.id+'" title="Add to portfolio"><i data-lucide="briefcase"></i></button>'
+    +'</div>';
   heroHtml += '</div>';
 
   return '<div class="fanscore-card"' + delay + ' data-type="'+c.type+'" data-id="'+c.id
@@ -43,36 +49,29 @@ function renderCard(c, idx) {
     +'</div>'
     +'<div class="card-badges">'
     +'<span class="type-badge" style="background:'+cfg.bgVar+';color:'+cfg.fgVar+';border-color:'+cfg.fgVar+'33">'+cfg.label+'</span>'
+    +(!sup ? computeMomentumScore(c).map(function(b){ return '<span class="signal-badge">'+b+'</span>'; }).join('') : '')
     +'</div>'
     +((c.type==='driver'||c.type==='athlete')&&c.teamNames&&c.teamNames.length
       ?'<div class="team-plain">'+c.teamNames[0]+'</div>'
-      :c.type==='team'&&c.driverNames&&c.driverNames.length
-        ?'<div class="team-plain">'+c.driverNames.join(' | ')+'</div>'
-        :'<div class="team-plain empty">&nbsp;</div>'
+      :'<div class="team-plain empty">&nbsp;</div>'
     )
     +'</div>'
 
     +'<div class="score-row">'
     +'<div class="score-main">'
+    +'<div class="score-val-row">'
     +'<div class="score-val'+(sup?' dim':'')+'"'+(sup?'':' style="color:'+cfg.scoreVar+'"')+'>'+( sup?'--':fmt(c.s30,1))+'</div>'
+    +(!sup&&c.t30!=null?'<span class="score-trend-inline" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+Math.abs(c.t30).toFixed(1)+'</span>':'')
+    +'</div>'
     +'<div class="score-lbl">FanScore &middot; 30d avg</div>'
     +(c.followers!=null&&c.followers>0?'<div class="follower-chip">'+fmtFollowers(c.followers)+' followers</div>':'')
     +'</div>'
     +'<div class="score-aside">'
-    +(!sup&&c.t30!=null?'<div class="trend-line" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+' '+Math.abs(c.t30).toFixed(2)+'/d</div>':'')
     +(c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
     +(c.cov30!=null?'<div class="conf-line">'+(c.cov30*100).toFixed(0)+'% coverage</div>':'')
     +'</div></div>'
 
-    +(c.bio ? '<div class="card-bio">'+c.bio.slice(0,240)+'</div>' : '')
-
     +(sup?'<div class="sup-notice">'+c.sup30+'</div>':'')
-
-    +'<div class="card-actions">'
-    +'<button class="card-btn" data-action="watchlist" data-id="'+c.id+'" title="Add to watchlist"><i data-lucide="bookmark"></i></button>'
-    +'<button class="card-btn'+(typeof compareList!=='undefined'&&compareList.indexOf(c.id)>=0?' active':'')+'" data-action="compare" data-id="'+c.id+'" title="Compare"><i data-lucide="check-check"></i></button>'
-    +'<button class="card-btn" data-action="portfolio" data-id="'+c.id+'" title="Add to portfolio"><i data-lucide="briefcase"></i></button>'
-    +'</div>'
 
     +'</div>'  // .card-body
     +'</div>';

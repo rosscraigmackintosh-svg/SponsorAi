@@ -148,6 +148,24 @@ function populateDetail(c) {
   h += '<div class="dp-divider"></div>';
 
   /* ───────────────────────────────────────────────────────────────
+     4b. MOMENTUM SIGNALS
+  ─────────────────────────────────────────────────────────────── */
+  var _signals = computeMomentumScore(c);
+  if (_signals.length > 0) {
+    h += '<div class="dp-section">';
+    h += '<div class="dp-section-label">Momentum signals</div>';
+    h += '<div style="display:flex;gap:var(--spacing-xs);flex-wrap:wrap;padding:var(--spacing-xs) 0;margin-bottom:var(--spacing-md)">'
+      + _signals.map(function(b){ return '<span class="signal-badge">'+b+'</span>'; }).join('')
+      + '</div>';
+    h += dpSignalGroup('Context', [
+      { label: '30-day trend score', val: c.t30 != null ? (arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '/day') : null, color: c.t30 != null ? arrC(c.t30) : null },
+      { label: 'Engagement rate',    val: c.engRate30d != null ? c.engRate30d.toFixed(2) + '%' : null }
+    ]);
+    h += '</div>';
+    h += '<div class="dp-divider"></div>';
+  }
+
+  /* ───────────────────────────────────────────────────────────────
      5. PROPERTY DESCRIPTION
   ─────────────────────────────────────────────────────────────── */
   h += '<div class="dp-section">';
@@ -166,9 +184,9 @@ function populateDetail(c) {
   h += dpFact('Country',             c.country ? countryFlag(c.country) + '\u2009' + c.country : null);
   h += dpFact('Property type',       cfg.label || null);
   h += dpFact('Competition / league', null);
-  h += dpFact('Sport category',       null);
+  h += dpFact('Sport category',       c.sport  || null);
   h += dpFact('Season timing',        null);
-  h += dpFact('Primary region',       null);
+  h += dpFact('Primary region',       c.region || c.city || null);
   h += '</div>';
   h += '</div>';
 
@@ -198,26 +216,11 @@ function populateDetail(c) {
   h += '<div class="dp-divider"></div>';
 
   /* ───────────────────────────────────────────────────────────────
-     8. RELATED PROPERTIES
+     8. RELATED PROPERTIES (async — DB-backed)
   ─────────────────────────────────────────────────────────────── */
   h += '<div class="dp-section">';
   h += '<div class="dp-section-label">Related properties</div>';
-  var related = dpRelated(c);
-  if (related.length) {
-    h += '<div class="dp-related-list">';
-    related.forEach(function(r) {
-      var rCfg = TYPE[r.card.type] || { bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)', scoreVar: 'var(--text-1)' };
-      h += '<div class="dp-related-item" onclick="selectCard(\'' + r.card.id + '\')" tabindex="0" role="button">';
-      h += '<div class="dp-related-icon" style="background:' + rCfg.bgVar + ';color:' + rCfg.fgVar + '">' + (HERO_ICONS[r.card.type] || HERO_ICONS.series) + '</div>';
-      h += '<div class="dp-related-info"><div class="dp-related-name">' + escHtml(r.card.name) + '</div>';
-      h += '<div class="dp-related-reason">' + r.reason + '</div></div>';
-      h += '<div class="dp-related-score" style="color:' + (rCfg.scoreVar || rCfg.fgVar) + '">' + (r.card.s30 != null ? fmt(r.card.s30, 1) : '--') + '</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  } else {
-    h += '<div style="font-size:var(--text-xs);color:var(--text-3);font-style:italic">No related properties found.</div>';
-  }
+  h += '<div id="dp-rel-body"><span style="font-size:var(--text-xs);color:var(--text-3)">Loading\u2026</span></div>';
   h += '</div>';
 
   h += '<div class="dp-divider"></div>';
@@ -255,8 +258,10 @@ function populateDetail(c) {
 
   document.getElementById('dp-content').innerHTML = h;
 
-  /* Async post fetch — guard against panel changing during load */
+  /* Async fetches — guard against panel changing during load */
   var _loadingForId = c.id;
+
+  /* Posts */
   loadPosts(c.id).then(function(posts) {
     if (detailCardId !== _loadingForId) return;
     renderPostsInPanel(posts);
@@ -265,6 +270,95 @@ function populateDetail(c) {
     var el = document.getElementById('dp-posts-container');
     if (el) el.innerHTML = '<span class="dp-posts-empty">Post data unavailable.</span>';
   });
+
+  /* Relationships */
+  loadRelationships(c.id).then(function(rels) {
+    if (detailCardId !== _loadingForId) return;
+    renderRelationshipsInPanel(rels);
+  }).catch(function() {
+    if (detailCardId !== _loadingForId) return;
+    var el = document.getElementById('dp-rel-body');
+    if (el) el.innerHTML = '<div class="dp-empty">Relationship data unavailable.</div>';
+  });
+}
+
+var REL_LABELS = {
+  'athlete_belongs_to_team:forward':          'Drives for',
+  'athlete_belongs_to_team:reverse':          'Drivers / Athletes',
+  'athlete_competes_in_event:forward':        'Competing in',
+  'athlete_competes_in_event:reverse':        'Participating athletes',
+  'athlete_competes_in_series:forward':       'Competing in series',
+  'athlete_competes_in_series:reverse':       'Athletes',
+  'event_at_venue:forward':                   'Venue',
+  'event_at_venue:reverse':                   'Events hosted',
+  'governing_body_oversees_series:forward':   'Oversees series',
+  'governing_body_oversees_series:reverse':   'Governed by',
+  'occurrence_of_event_brand:forward':        'Parent event brand',
+  'occurrence_of_event_brand:reverse':        'Occurrences',
+  'series_contains_event:forward':            'Events',
+  'series_contains_event:reverse':            'Part of series',
+  'series_has_team:forward':                  'Participating teams',
+  'series_has_team:reverse':                  'Competing in',
+  'team_competes_in_series:forward':          'Competing in series',
+  'team_competes_in_series:reverse':          'Competing teams',
+  'team_has_athlete:forward':                 'Drivers / Athletes',
+  'team_has_athlete:reverse':                 'Drives for'
+};
+
+/* Max items rendered per relationship group (prevents wall-of-text for high-cardinality types) */
+var REL_MAX_PER_GROUP = 8;
+
+function renderRelationshipsInPanel(rels) {
+  var el = document.getElementById('dp-rel-body');
+  if (!el) return;
+
+  var groups = {};
+  var groupOrder = [];
+  var allRels = (rels.forward || []).concat(rels.reverse || []);
+
+  allRels.forEach(function(r) {
+    var key = r.type + ':' + r.dir;
+    var label = REL_LABELS[key] || r.type;
+    var card = allCards.filter(function(c) { return c.id === r.relatedId; })[0];
+    if (!card) return;
+    if (!groups[label]) { groups[label] = []; groupOrder.push(label); }
+    /* Deduplicate within group */
+    if (groups[label].some(function(g) { return g.id === card.id; })) return;
+    groups[label].push(card);
+  });
+
+  if (!groupOrder.length) {
+    el.innerHTML = '<div class="dp-empty">No linked properties.</div>';
+    return;
+  }
+
+  var h = '';
+  groupOrder.forEach(function(label) {
+    var cards = groups[label];
+    var shown = cards.slice(0, REL_MAX_PER_GROUP);
+    h += '<div class="dp-rel-group">';
+    h += '<div class="dp-rel-group-label">' + escHtml(label) + '</div>';
+    shown.forEach(function(card) {
+      var rCfg = TYPE[card.type] || { bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)', scoreVar: 'var(--text-1)' };
+      h += '<div class="dp-rel-item" onclick="selectCard(\'' + card.id + '\')" tabindex="0" role="button"'
+        + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')selectCard(\'' + card.id + '\')">';
+      h += '<div class="dp-related-icon" style="background:' + rCfg.bgVar + ';color:' + rCfg.fgVar + '">'
+        + (HERO_ICONS[card.type] || HERO_ICONS.series) + '</div>';
+      h += '<div class="dp-related-info">';
+      h += '<div class="dp-related-name">' + escHtml(card.name) + '</div>';
+      h += '<div class="dp-related-reason">' + escHtml(TYPE[card.type] ? TYPE[card.type].label : card.type) + '</div>';
+      h += '</div>';
+      h += '<div class="dp-related-score" style="color:' + (rCfg.scoreVar || rCfg.fgVar) + '">'
+        + (card.s30 != null ? fmt(card.s30, 1) : '--') + '</div>';
+      h += '</div>';
+    });
+    if (cards.length > REL_MAX_PER_GROUP) {
+      h += '<div class="dp-empty" style="padding-top:var(--spacing-xs)">'
+        + (cards.length - REL_MAX_PER_GROUP) + ' more not shown.</div>';
+    }
+    h += '</div>';
+  });
+  el.innerHTML = h;
 }
 
 function renderPostsInPanel(posts) {

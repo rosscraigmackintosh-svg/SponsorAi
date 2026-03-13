@@ -49,12 +49,71 @@ function fmtFollowers(v) {
   if(x>=1000)    return (x/1000).toFixed(1)+'k';
   return String(Math.round(x));
 }
+/* ── DB-registered images (entity_images, verified=true) ──────────────── */
+/* Populated by loadEntityImages() at grid-load time.
+   Keys are property slugs; values are { src } objects.
+   Takes priority over images.js in resolveImageMeta. */
+var ENTITY_IMAGES_DB = {};
+
+/* Fetch verified entity_images from Supabase and populate ENTITY_IMAGES_DB.
+   Uses a PostgREST nested select to join properties(slug) without a view. */
+function loadEntityImages() {
+  return apiFetch(
+    '/entity_images?select=image_url,properties(slug,property_type)&verified=eq.true&limit=500'
+  ).then(function(rows) {
+    var map = {};
+    (rows || []).forEach(function(r) {
+      var p = r.properties;
+      if (p && p.slug) {
+        map[p.slug] = { src: r.image_url, property_type: p.property_type };
+      }
+    });
+    return map;
+  }).catch(function() {
+    /* Non-fatal: fall through to images.js on any fetch error */
+    return {};
+  });
+}
+
 /* ── Image metadata resolver ──────────────────────────────────────────── */
-/* Returns a structured image config object, or null if no image is found.
+/* Resolution order:
+   1. entity_images (DB, verified=true) — populated by Scan images workflow
+   2. PROPERTY_IMAGES (images.js)       — static hand-curated registry
+   3. EVENT_VENUE_MAP fallback for events
+   4. null                              — card renders hero placeholder icon
+
    Entry format in PROPERTY_IMAGES (images.js):
      { src, kind, fit, pos, pad?, bg? }
-   Plain-string entries are treated as cover photos (backward compat). */
+   Plain-string entries are treated as cover photos (backward compat).
+   entity_images entries infer kind from property_type. */
 function resolveImageMeta(slug, propertyType) {
+  /* ── 1. DB-registered image (entity_images, verified=true) ── */
+  var dbEntry = ENTITY_IMAGES_DB[slug];
+  if (dbEntry) {
+    /* Infer display kind from property_type */
+    var kindMap = {
+      athlete:        'portrait',
+      team:           'logo',
+      venue:          'venue',
+      series:         'series',
+      governing_body: 'logo',
+      event:          'venue'
+    };
+    var pType = propertyType || dbEntry.property_type || '';
+    var kind  = kindMap[pType] || 'photo';
+    var isCover     = kind === 'portrait' || kind === 'venue' || kind === 'photo';
+    var isContained = kind === 'logo'     || kind === 'series';
+    return {
+      url:  dbEntry.src,
+      kind: kind,
+      fit:  isCover ? 'cover' : 'contain',
+      pos:  kind === 'portrait' ? 'center top' : 'center center',
+      pad:  isContained ? '14%' : null,
+      bg:   isContained ? 'var(--surface-muted)' : null
+    };
+  }
+
+  /* ── 2 & 3. Static images.js registry (with event fallback) ── */
   var entry = PROPERTY_IMAGES[slug];
   if (!entry && propertyType === 'event' && EVENT_VENUE_MAP[slug]) {
     entry = PROPERTY_IMAGES[EVENT_VENUE_MAP[slug]];
@@ -152,6 +211,14 @@ function computeMomentumScore(c) {
 
 /* ── Data fetch ───────────────────────────────────────────────────────── */
 function loadGrid() {
+  /* Pre-load DB-registered images so resolveImageMeta can use them.
+     Failure is non-fatal: ENTITY_IMAGES_DB stays empty, images.js takes over. */
+  var imgPromise = loadEntityImages().then(function(map) {
+    ENTITY_IMAGES_DB = map;
+  }).catch(function() {
+    ENTITY_IMAGES_DB = {};
+  });
+
   var cols='property_id,property_name,property_type,country,bio,as_of_day,model_version,'
     +'avg_score_30d,trend_value_30d,volatility_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,'
     +'avg_score_60d,avg_score_90d,trend_value_90d,'
@@ -159,6 +226,7 @@ function loadGrid() {
     +'total_followers_latest,followers_net_30d,posts_30d,total_interactions_30d,engagement_rate_30d_pct,platforms_active,'
     +'sport,region,city';
 
+  return imgPromise.then(function() {
   return apiFetch('/v_property_summary_current?select='+cols
     +'&visible_in_ui=eq.true'
     +'&order=property_name.asc&limit=200')
@@ -212,4 +280,5 @@ function loadGrid() {
           });
         });
     });
+  }); /* closes imgPromise.then */
 }

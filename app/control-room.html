@@ -1048,6 +1048,12 @@
           <textarea class="cr-textarea" id="f-notes" placeholder="Optional — ingestion context, source, caveats" rows="3"></textarea>
         </div>
 
+        <div class="cr-field" style="grid-column: 1 / -1;">
+          <label class="cr-label" for="f-img-source">Image source URL <span style="font-weight:400; color:var(--text-3); font-size:10px; letter-spacing:0; text-transform:none; margin-left:4px;">Optional</span></label>
+          <input class="cr-input" id="f-img-source" type="url" placeholder="e.g. https://www.premrugby.com/teams — page containing team/athlete images" autocomplete="off">
+          <span class="cr-field-hint">Used by the Scan images action to extract and match image candidates against entities in this series.</span>
+        </div>
+
       </div>
 
       <!-- ── INGESTION PREVIEW ── -->
@@ -1156,6 +1162,7 @@
     <div style="display:flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); flex-wrap: wrap;">
       <button class="cr-action-btn" style="font-size:11px;" onclick="filterIssues('all')" id="f-all">All</button>
       <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('image')" id="f-image">Image</button>
+      <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('image-scan')" id="f-image-scan">Scan suggestions</button>
       <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('fanscore')" id="f-fanscore">FanScore</button>
       <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('duplicate')" id="f-duplicate">Duplicates</button>
       <button class="cr-action-btn" style="font-size:11px; opacity:0.6;" onclick="filterIssues('relationship')" id="f-relationship">Relationships</button>
@@ -1515,6 +1522,9 @@ function renderStatus() {
         + '<div style="display:flex; gap: var(--spacing-xs); flex-wrap:wrap;">'
           + '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
             + ' onclick="runAuditForSeries(\'' + s.slug + '\')">Run audit</button>'
+          + '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
+            + ' onclick="handleScanImages(\'' + s.slug + '\', ' + JSON.stringify(s.image_source_url || '') + ')"'
+            + ' title="Fetch the image source URL and match candidate images to series entities">Scan images</button>'
           + clBtn
         + '</div>'
       + '</td>'
@@ -1547,9 +1557,9 @@ let issueStates  = {}; // { id: 'resolved' | 'intentional' }
 
 function filterIssues(type) {
   activeFilter = type;
-  ['all','image','fanscore','duplicate','relationship'].forEach(t => {
-    const btn = document.getElementById('f-'+t);
-    if (btn) btn.style.opacity = t === type ? '1' : '0.6';
+  ['all','image','image-scan','fanscore','duplicate','relationship'].forEach(t => {
+    const el = document.getElementById('f-' + t);
+    if (el) el.style.opacity = t === type ? '1' : '0.6';
   });
   renderIssues();
 }
@@ -1615,6 +1625,7 @@ function actionBtn(i) {
     'retry-image':      { label: 'Validate image',   stub: false },
     'review-duplicate': { label: 'Review duplicate', stub: false },
     'recompute-fs':     { label: 'Check FanScore',   stub: false },
+    'confirm-image':    { label: 'Review match',     stub: false },
   };
   const cfg = map[i.action] || { label: 'Action', stub: true };
   return `<button class="cr-action-btn" ${cfg.stub ? 'data-stub' : ''} onclick="openModal('${i.action}', '${i.id}', '${i.entity}')">${cfg.label}</button>`;
@@ -1688,6 +1699,13 @@ function setIssueState(id, state, entity, reason) {
 
 async function reopenIssue(id) {
   const issue = CURRENT_ISSUES.find(function(i) { return i.id === id; });
+  // Image-scan suggestions: "Reopen" = Dismiss (delete entity_images row entirely)
+  if (issue && issue.issue_type === 'image-scan') {
+    CURRENT_ISSUES = CURRENT_ISSUES.filter(function(i) { return i.id !== id; });
+    renderIssues();
+    await dismissImageSuggestion(issue);
+    return;
+  }
   delete issueStates[id];
   renderIssues();
   if (issue) {
@@ -1765,11 +1783,93 @@ function handleModalConfirm() {
         setIssueState(id, 'intentional', entity, 'No FanScore expected \u2014 marked as intentional');
       }
       break;
+    case 'confirm-image':
+      confirmImageSuggestion(currentModal.issue);
+      break;
     case 'review-duplicate':
     case 'suppress':
     default:
       setIssueState(id, 'intentional', entity, 'Confirmed intentional');
       break;
+  }
+}
+
+// Confirms or overrides an image scan suggestion.
+// Sets verified=true in entity_images (with optional URL override),
+// removes the suggestion from CURRENT_ISSUES, and logs the action.
+async function confirmImageSuggestion(issue) {
+  if (!issue || !issue.entity_image_id) { closeModal(); return; }
+
+  const overrideEl = document.getElementById('m-img-override');
+  const overrideUrl = overrideEl ? overrideEl.value.trim() : '';
+  const finalUrl    = overrideUrl || issue.image_url;
+
+  const confirmBtn = document.getElementById('modal-confirm');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Saving\u2026'; }
+
+  try {
+    if (overrideUrl && overrideUrl !== issue.image_url) {
+      // Override: delete the old suggestion row, insert a new verified one
+      await fetch(API_URL + '/entity_images?id=eq.' + issue.entity_image_id, {
+        method: 'DELETE',
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      });
+      await fetch(API_URL + '/entity_images', {
+        method: 'POST',
+        headers: {
+          'apikey':        API_KEY,
+          'Authorization': 'Bearer ' + API_KEY,
+          'Content-Type':  'application/json',
+          'Prefer':        'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          property_id: issue.property_id,
+          image_url:   finalUrl,
+          source_url:  issue.source_url || null,
+          verified:    true
+        })
+      });
+    } else {
+      // Confirm: set verified=true on the existing row
+      await fetch(API_URL + '/entity_images?id=eq.' + issue.entity_image_id, {
+        method: 'PATCH',
+        headers: {
+          'apikey':        API_KEY,
+          'Authorization': 'Bearer ' + API_KEY,
+          'Content-Type':  'application/json'
+        },
+        body: JSON.stringify({ verified: true, image_url: finalUrl })
+      });
+    }
+
+    addLogEntry(
+      'Image confirmed for <strong>' + issue.entity + '</strong>: ' + finalUrl,
+      'repair'
+    );
+
+    // Remove from CURRENT_ISSUES and re-render
+    CURRENT_ISSUES = CURRENT_ISSUES.filter(function(i) { return i.id !== issue.id; });
+    renderIssues();
+    closeModal();
+
+  } catch (e) {
+    console.warn('confirmImageSuggestion failed:', e);
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm image'; }
+  }
+}
+
+// Dismiss an image scan suggestion (delete from entity_images, remove from Issues).
+// Called from reopenIssue path when the issue type is image-scan.
+async function dismissImageSuggestion(issue) {
+  if (!issue || !issue.entity_image_id) return;
+  try {
+    await fetch(API_URL + '/entity_images?id=eq.' + issue.entity_image_id, {
+      method: 'DELETE',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    });
+    addLogEntry('Image suggestion dismissed for <strong>' + issue.entity + '</strong>', 'audit');
+  } catch (e) {
+    console.warn('dismissImageSuggestion failed:', e);
   }
 }
 
@@ -1789,7 +1889,7 @@ function openModal(action, id, entity) {
   currentModal = { action: action, id: id, entity: entity, issue: issue, checkResult: null };
 
   // Hide the stub notice for fully live actions
-  const liveActions = ['retry-image', 'recompute-fs'];
+  const liveActions = ['retry-image', 'recompute-fs', 'confirm-image'];
   if (stub) stub.style.display = liveActions.indexOf(action) >= 0 ? 'none' : '';
 
   // Image URL display block (reused in retry-image and add-image)
@@ -1832,6 +1932,25 @@ function openModal(action, id, entity) {
       confirm:         'Mark as intentional',
       confirmDisabled: false,
       body: '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;">This entity shares a name, slug, or venue+year with at least one other property in the ecosystem. This may be intentional (e.g. sprint and endurance rounds at the same circuit) or a data entry error.<br><br>If intentional, mark as such to remove it from the open issues list. If a data error, correct the slug or name directly in the properties table.</div>'
+    },
+    'confirm-image': {
+      title:           'Review image match',
+      confirm:         'Confirm image',
+      confirmDisabled: false,
+      body: (function() {
+        const imgUrl  = issue.image_url || '';
+        const srcUrl  = issue.source_url || '';
+        const preview = imgUrl
+          ? '<img src="' + imgUrl + '" alt="candidate image" style="max-width:100%;max-height:140px;object-fit:contain;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-muted);margin-bottom:var(--spacing-md);" onerror="this.style.display=\'none\';document.getElementById(\'img-load-err\').style.display=\'\';">'
+            + '<div id="img-load-err" style="display:none;font-size:var(--text-xs);color:var(--color-warning-700);margin-bottom:var(--spacing-md);">Image failed to load \u2014 the URL may be broken or hotlink-blocked.</div>'
+          : '<div style="font-size:var(--text-xs);color:var(--color-warning-700);margin-bottom:var(--spacing-md);">No image URL available.</div>';
+        return preview
+          + '<div class="cr-label" style="margin-bottom:4px;">Image URL</div>'
+          + '<div class="cr-mono" style="font-size:11px;color:var(--text-2);word-break:break-all;padding:6px 8px;background:var(--surface-muted);border-radius:var(--radius-sm);margin-bottom:var(--spacing-md);">' + (imgUrl || '\u2014') + '</div>'
+          + (srcUrl ? '<div style="font-size:10px;color:var(--text-3);margin-bottom:var(--spacing-md);">Source: ' + srcUrl + '</div>' : '')
+          + '<div class="cr-label" style="margin-bottom:4px;">Override URL <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--text-3);">Optional \u2014 leave blank to confirm the match above</span></div>'
+          + '<input class="cr-input" id="m-img-override" type="url" placeholder="https://\u2026 (paste a different URL to override)" style="width:100%;box-sizing:border-box;">';
+      })()
     },
     'suppress': {
       title:           'Mark as intentional',
@@ -1946,7 +2065,7 @@ function formatTimestamp(d) {
 async function loadIngestionRuns() {
   try {
     const url = API_URL + '/ingestion_runs'
-      + '?select=id,series_slug,series_name,season,sport,status,entity_count,issue_count,created_at'
+      + '?select=id,series_slug,series_name,season,sport,status,entity_count,issue_count,image_source_url,created_at'
       + '&order=created_at.desc&limit=100';
     const rows = await fetch(url, {
       headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
@@ -1973,9 +2092,10 @@ async function loadIngestionRuns() {
         entities:   r.entity_count  || 0,
         images_pct: 0,   // coverage detail requires a live audit; not stored in runs
         fs_pct:     0,
-        dup_flags:  [],
-        status:     r.status,
-        last_run:   ts
+        dup_flags:        [],
+        status:           r.status,
+        image_source_url: r.image_source_url || null,
+        last_run:         ts
       };
       const idx = SERIES_STATUS.findIndex(function(s) { return s.slug === r.series_slug; });
       if (idx >= 0) {
@@ -2037,6 +2157,162 @@ async function runAuditForSeries(slug) {
 }
 
 // ──────────────────────────────────────────────
+// SCAN IMAGES
+// Calls the scan-images edge function to extract
+// image candidates from a source URL and match
+// them to series entities. Unverified matches are
+// stored in entity_images and shown in Issues.
+// ──────────────────────────────────────────────
+
+// Derive edge function base URL from API_URL
+// API_URL is https://<ref>.supabase.co/rest/v1
+// Edge fn URL is https://<ref>.supabase.co/functions/v1
+function edgeFnUrl(name) {
+  return API_URL.replace('/rest/v1', '/functions/v1') + '/' + name;
+}
+
+async function handleScanImages(slug, storedSourceUrl) {
+  // Resolve source URL — use stored, fall back to prompt
+  let sourceUrl = storedSourceUrl || '';
+  if (!sourceUrl) {
+    sourceUrl = prompt('Enter image source URL for ' + slug + ':\n(e.g. https://www.premrugby.com/teams)');
+    if (!sourceUrl || !sourceUrl.trim()) return;
+    sourceUrl = sourceUrl.trim();
+  }
+
+  addLogEntry('Scanning images for <strong>' + slug + '</strong> from: ' + sourceUrl, 'audit');
+
+  // Disable buttons during scan
+  const scanBtns = document.querySelectorAll('[onclick*="handleScanImages"]');
+  scanBtns.forEach(function(b) { b.disabled = true; b.textContent = 'Scanning\u2026'; });
+
+  let result;
+  try {
+    const resp = await fetch(edgeFnUrl('scan-images'), {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({ source_url: sourceUrl, series_slug: slug })
+    });
+    result = await resp.json();
+  } catch (err) {
+    addLogEntry('Image scan failed for <strong>' + slug + '</strong>: ' + err.message, 'error');
+    scanBtns.forEach(function(b) { b.disabled = false; b.textContent = 'Scan images'; });
+    return;
+  }
+
+  if (result.error && !result.candidates) {
+    addLogEntry('Image scan error for <strong>' + slug + '</strong>: ' + result.error, 'error');
+    scanBtns.forEach(function(b) { b.disabled = false; b.textContent = 'Scan images'; });
+    return;
+  }
+
+  const candidates = result.candidates || [];
+  const imagesFound = result.images_found || 0;
+  const entitiesChecked = result.entities_checked || 0;
+
+  addLogEntry(
+    'Image scan complete for <strong>' + slug + '</strong> \u2014 '
+    + imagesFound + ' images found, '
+    + entitiesChecked + ' entities checked, '
+    + candidates.length + ' candidates matched'
+    + (result.error ? ' (warning: ' + result.error + ')' : ''),
+    'audit'
+  );
+
+  if (candidates.length === 0) {
+    addLogEntry('No image candidates matched entity slugs/names. Supply a more specific source URL or add images manually.', 'audit');
+    scanBtns.forEach(function(b) { b.disabled = false; b.textContent = 'Scan images'; });
+    return;
+  }
+
+  // Insert candidates into entity_images with verified=false
+  // ON CONFLICT (property_id, image_url) DO NOTHING — idempotent
+  let inserted = 0;
+  for (const c of candidates) {
+    try {
+      const r = await fetch(API_URL + '/entity_images', {
+        method: 'POST',
+        headers: {
+          'apikey':        API_KEY,
+          'Authorization': 'Bearer ' + API_KEY,
+          'Content-Type':  'application/json',
+          'Prefer':        'resolution=ignore-duplicates'
+        },
+        body: JSON.stringify({
+          property_id: c.property_id,
+          image_url:   c.image_url,
+          source_url:  sourceUrl,
+          verified:    false
+        })
+      });
+      if (r.ok) inserted++;
+    } catch (e) {
+      console.warn('entity_images insert failed for', c.slug, e);
+    }
+  }
+
+  addLogEntry(inserted + ' image suggestions stored. Review in Issues panel \u2192 Image filter.', 'audit');
+
+  // Reload scan suggestions into Issues panel and scroll to it
+  await loadImageScanSuggestions();
+  filterIssues('image');
+  const issuesSection = document.getElementById('section-issues');
+  if (issuesSection) issuesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  scanBtns.forEach(function(b) { b.disabled = false; b.textContent = 'Scan images'; });
+}
+
+// Load unverified entity_images into CURRENT_ISSUES as image-scan suggestions.
+// Called on init and after each scan.
+async function loadImageScanSuggestions() {
+  try {
+    const url = API_URL + '/entity_images'
+      + '?select=id,property_id,image_url,source_url,properties(slug,name,property_type)'
+      + '&verified=eq.false'
+      + '&order=created_at.desc&limit=200';
+    const rows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+
+    if (!Array.isArray(rows)) return;
+
+    // Remove stale scan suggestions from CURRENT_ISSUES before re-adding
+    CURRENT_ISSUES = CURRENT_ISSUES.filter(function(i) { return i.issue_type !== 'image-scan'; });
+
+    rows.forEach(function(row) {
+      const prop = row.properties || {};
+      const entitySlug = prop.slug || row.property_id;
+      const entityName = prop.name || entitySlug;
+      const entityType = prop.property_type || '';
+
+      CURRENT_ISSUES.push({
+        id:            'scan-' + row.id,
+        entity:        entitySlug,
+        type:          entityType,
+        issue:         'Image scan suggestion',
+        issue_type:    'image-scan',
+        flag:          'scan:' + row.id,
+        severity:      'low',
+        fix:           'Confirm to register this image URL for ' + entityName + '. Override to use a different URL. Dismiss to remove.',
+        action:        'confirm-image',
+        property_id:   row.property_id,
+        image_url:     row.image_url,
+        source_url:    row.source_url,
+        entity_image_id: row.id
+      });
+    });
+
+    renderIssues();
+  } catch (e) {
+    console.warn('loadImageScanSuggestions failed:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
 // START INGESTION
 // Creates a run record, runs the live audit,
 // updates the run record with results.
@@ -2053,6 +2329,7 @@ async function handleStartIngestion() {
     : (sportRaw || null);
   const govBody     = document.getElementById('f-govbody').value.trim();
   const notes       = document.getElementById('f-notes').value.trim();
+  const imgSource   = document.getElementById('f-img-source').value.trim();
   const incTeams    = document.getElementById('f-teams').checked;
   const incAthletes = document.getElementById('f-athletes').checked;
   const incEvents   = document.getElementById('f-events').checked;
@@ -2084,6 +2361,7 @@ async function handleStartIngestion() {
     sport:             sport       || null,
     gov_body_slug:     govBody     || null,
     notes:             notes       || null,
+    image_source_url:  imgSource   || null,
     include_teams:     incTeams,
     include_athletes:  incAthletes,
     include_events:    incEvents,
@@ -2898,6 +3176,8 @@ document.addEventListener('click', function(e) {
   loadSeriesVisibility();
   // Load persisted log history. Replaces the empty LOG_DATA once the fetch resolves.
   loadLog();
+  // Load unverified image scan suggestions into the Issues panel.
+  loadImageScanSuggestions();
 })();
 
 </script>

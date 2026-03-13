@@ -13,6 +13,7 @@ npm-debug.log*
 .idea/
 *.swp
 *.swo
+*.bak
 
 # Environment
 .env
@@ -21,5 +22,10 @@ npm-debug.log*
 # OS
 Thumbs.db
 
-# API keys — keep explore.html local only
+# API keys — keep explore.html and config.js local only
 app/explore.html
+app/config.js
+
+# Supabase CLI — local state and temp files (not project config)
+supabase/.branches
+supabase/.temp

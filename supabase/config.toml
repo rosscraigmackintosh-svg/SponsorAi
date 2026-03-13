@@ -1,0 +1,19 @@
+# SponsorAI — Supabase project config
+# Used by the Supabase CLI for local development and deployment.
+#
+# Link this config to the live project:
+#   supabase link --project-ref kyjpxxyaebxvpprugmof
+#
+# Deploy the chat function:
+#   supabase functions deploy chat
+#
+# Set the Anthropic secret (one-time, not stored in any file):
+#   supabase secrets set ANTHROPIC_KEY=sk-ant-...
+
+project_id = "sponsorai"
+
+[functions.chat]
+# JWT verification enabled (Phase B).
+# Browser must send: Authorization: Bearer <API_KEY>
+# API_KEY is the Supabase anon key, already in browser scope via config.js.
+verify_jwt = true

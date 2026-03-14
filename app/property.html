@@ -1,400 +1,1451 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Property Detail - SponsorAI</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --ink:#1a1a2e;--blue:#2c6fad;--blue-light:#deeaf6;--blue-mid:#b8d4ee;--green:#2a7a50;--green-light:#ddf0e6;--purple:#6b4fa0;--purple-light:#ede8f7;--amber:#b87c20;--amber-light:#fdf3e0;--red:#c0392b;--red-light:#fdecea;--mid:#3a3a3a;--subtle:#6b6b6b;--rule:#d4d4d4;--pale:#f6f6f6;--panel:#f1f6fb;--white:#ffffff; }
-    html { font-size: 14px; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--pale); color: var(--mid); line-height: 1.55; min-height: 100vh; }
-    .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--rule); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 10; display: flex; flex-direction: column; }
-    .content { margin-left: 220px; flex: 1; min-width: 0; padding: 28px 32px 60px; }
-    .sidebar-logo-area { padding: 18px 16px 14px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
-    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 12px; }
-    .logo-mark { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; }
-    .logo-mark span { color: var(--blue); }
-    .brand-chip { display: flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--blue-mid); border-radius: 6px; padding: 7px 10px; cursor: pointer; font-size: 12px; color: var(--blue); font-weight: 500; width: 100%; }
-    .brand-chip:hover { background: var(--blue-light); }
-    .brand-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
-    .brand-chip-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
-    .sidebar-section { padding: 0 14px 8px; margin-bottom: 4px; }
-    .sidebar-label { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: 0.7px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; margin-top: 12px; }
-    .sidebar-link { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 5px; font-size: 13px; color: var(--mid); text-decoration: none; cursor: pointer; transition: all 0.12s; user-select: none; }
-    .sidebar-link:hover { background: var(--pale); color: var(--ink); }
-    .sidebar-link.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
-    .sidebar-link svg { opacity: 0.65; flex-shrink: 0; }
-    .sidebar-link.active svg { opacity: 1; }
-    .sidebar-divider { height: 1px; background: var(--rule); margin: 10px 14px; }
-    .sidebar-count { margin-left: auto; font-size: 11px; background: var(--rule); color: var(--subtle); border-radius: 10px; padding: 1px 7px; }
-    .page-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-    .page-subtitle { font-size: 13px; color: var(--subtle); margin-bottom: 24px; }
-    .btn { font-size: 12px; padding: 7px 14px; border-radius: 5px; cursor: pointer; border: 1px solid var(--rule); background: var(--white); color: var(--mid); transition: all 0.12s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
-    .btn:hover { background: var(--pale); border-color: var(--blue-mid); color: var(--ink); }
-    .btn-primary { background: var(--blue); color: var(--white); border-color: var(--blue); }
-    .btn-primary:hover { background: #235a8e; border-color: #235a8e; color: var(--white); }
-    .btn-sm { font-size: 11px; padding: 5px 10px; }
-    .signal-pill { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
-    .signal-fan { background: var(--blue-light); color: var(--blue); }
-    .signal-fit { background: var(--green-light); color: var(--green); }
-    .signal-bud { background: var(--purple-light); color: var(--purple); }
-    .signal-label { font-weight: 400; opacity: 0.75; font-size: 10px; }
-    .conf-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-    .conf-high { background: #2a7a50; }
-    .conf-mod { background: #b87c20; }
-    .conf-lim { background: #c0392b; }
-    
-    .breadcrumb { font-size: 12px; color: var(--subtle); margin-bottom: 24px; display: flex; gap: 16px; }
-    .breadcrumb a { color: var(--blue); text-decoration: none; cursor: pointer; }
-    .breadcrumb a:hover { text-decoration: underline; }
-    
-    .property-header { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 32px; }
-    .property-avatar { width: 60px; height: 60px; border-radius: 8px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
-    .property-header-text { flex: 1; }
-    .property-name { font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-    .property-meta { font-size: 13px; color: var(--subtle); margin-bottom: 12px; }
-    .property-series { font-size: 12px; color: var(--subtle); margin-bottom: 12px; }
-    .property-actions { display: flex; gap: 10px; }
-    
-    .signal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
-    .signal-card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
-    .signal-card-label { font-size: 11px; font-weight: 600; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .signal-card-value { font-size: 32px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-    .signal-card-tier { font-size: 12px; color: var(--blue); }
-    .signal-card-note { font-size: 12px; color: var(--subtle); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
-    
-    .section-title { font-size: 13px; font-weight: 600; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; margin-top: 32px; }
-    .section-subtitle { font-size: 13px; color: var(--ink); font-weight: 500; margin-bottom: 16px; }
-    
-    .dimensions-rows { display: flex; flex-direction: column; gap: 14px; }
-    .dimension-row { display: flex; align-items: center; gap: 12px; }
-    .dimension-label { font-size: 12px; color: var(--subtle); width: 120px; flex-shrink: 0; }
-    .dimension-bar-container { flex: 1; height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
-    .dimension-bar { height: 100%; background: var(--green); border-radius: 3px; }
-    .dimension-value { font-size: 12px; font-weight: 500; color: var(--ink); width: 30px; text-align: right; flex-shrink: 0; }
-    
-    .confidence-section { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 32px; }
-    .confidence-dot-wrap { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
-    .confidence-text { flex: 1; }
-    .confidence-label { font-size: 12px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
-    .confidence-desc { font-size: 12px; color: var(--subtle); }
-    
-    .about-section { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; margin-bottom: 32px; }
-    .about-section-title { font-size: 13px; font-weight: 600; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-    .about-section-content { display: flex; flex-direction: column; gap: 12px; }
-    .about-line { display: flex; gap: 20px; }
-    .about-label { font-size: 12px; color: var(--subtle); width: 80px; flex-shrink: 0; }
-    .about-value { font-size: 13px; color: var(--ink); }
-    .about-description { font-size: 13px; color: var(--mid); line-height: 1.6; margin-top: 4px; }
-    
-    .social-signals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-    .social-stat { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; text-align: center; }
-    .social-stat-value { font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-    .social-stat-label { font-size: 11px; color: var(--subtle); }
-    
-    .opportunity-section { background: var(--amber-light); border: 1px solid var(--amber); border-radius: 8px; padding: 20px; margin-bottom: 32px; }
-    .opportunity-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-    .opportunity-meta { font-size: 12px; color: var(--subtle); margin-bottom: 12px; }
-    .opportunity-btn { background: var(--amber); color: var(--white); border-color: var(--amber); }
-    .opportunity-btn:hover { background: #a36c1a; border-color: #a36c1a; }
-    
-    .related-section { margin-bottom: 32px; }
-    .related-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .related-card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
-    .related-card-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
-    .related-card-avatar { width: 40px; height: 40px; border-radius: 6px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-    .related-card-text { flex: 1; }
-    .related-card-name { font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; }
-    .related-card-name:hover { text-decoration: underline; color: var(--blue); }
-    .related-card-type { font-size: 11px; color: var(--subtle); }
-    .related-card-signals { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-    .related-card-action { font-size: 11px; color: var(--blue); text-decoration: none; cursor: pointer; margin-top: 8px; display: inline-block; }
-    .related-card-action:hover { text-decoration: underline; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Property</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="sidebar-logo-area">
-        <a class="logo" href="explore.html"><span class="logo-mark">Sponsor<span>AI</span></span></a>
-        <div class="brand-chip"><span class="brand-chip-dot"></span><span class="brand-chip-name">Apex Performance Gear</span></div>
-      </div>
-      <div class="sidebar-nav-scroll">
-        <div class="sidebar-section">
-          <div class="sidebar-label">Discover</div>
-          <a class="sidebar-link" href="explore.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
-            Explore
-          </a>
-          <a class="sidebar-link active" href="explore.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="10" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
-            Browse All
-          </a>
-          <a class="sidebar-link" href="watchlist.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.1l-3.8 2.2.7-4.3-3.1-3 4.3-.6L8 1.5z" fill="currentColor" opacity=".5"/></svg>
-            Watchlist <span class="sidebar-count">4</span>
-          </a>
-          <a class="sidebar-link" href="compare.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="6" height="9" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="1" width="6" height="12" rx="1.5" fill="currentColor"/></svg>
-            Compare
-          </a>
-        </div>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section">
-          <div class="sidebar-label">My Work</div>
-          <a class="sidebar-link" href="portfolio.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-            Portfolio <span class="sidebar-count">2</span>
-          </a>
-          <a class="sidebar-link" href="opportunities.html">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5"/></svg>
-            Opportunities
-          </a>
-        </div>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section">
-          <div class="sidebar-label">Intelligence</div>
-          <a class="sidebar-link" href="#"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 12 L5 7 L8 9 L11 4 L14 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>Methodology</a>
-          <a class="sidebar-link" href="#"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>Signal History</a>
-        </div>
-      </div>
-    </aside>
 
-    <div class="content">
-      <div class="breadcrumb">
-        <a href="explore.html">← Back to Explore</a>
-        <a onclick="history.back(); return false;">← Back</a>
-      </div>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
-      <div class="property-header">
-        <div class="property-avatar" id="avatar">PR</div>
-        <div class="property-header-text">
-          <div class="property-name" id="name">Prema Racing</div>
-          <div class="property-meta" id="type">F2 & F3 Constructor</div>
-          <div class="property-series" id="series">FIA F2 · FIA F3 · FR Italian</div>
-          <div class="property-actions">
-            <button class="btn" id="watchlist-btn">+ Watchlist</button>
-            <a href="compare.html" class="btn">Compare</a>
-            <a href="opportunities.html" class="btn">View opportunities</a>
-          </div>
-        </div>
-      </div>
+<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
+<div class="float-bar bar-left" role="banner">
+  <button class="bar-btn" id="menu-btn"
+    onclick="toggleNavMenu()"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="nav-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <g filter="url(#filter0_i_18_100)">
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+        <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="1"/>
+          <feGaussianBlur stdDeviation="0.5"/>
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+          <feBlend mode="normal" in2="shape" result="effect1_innerShadow_18_100"/>
+        </filter>
+      </defs>
+    </svg>
+  </button>
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+      <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+      <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+      <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+      <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+      <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+      <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+      <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_linear_21_11)"/>
+      <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_linear_21_11)"/>
+      <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="paint0_linear_21_11" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_21_11" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  <div class="bar-divider"></div>
+  <span class="bar-page-title" id="page-view-title">Property</span>
+</div>
 
-      <div class="signal-cards">
-        <div class="signal-card">
-          <div class="signal-card-label">FanScore</div>
-          <div class="signal-card-value" id="fanscore">74</div>
-          <div class="signal-card-tier" id="fantier">Tier B</div>
-          <div class="signal-card-note" id="fannote">Strong engagement momentum over 90 days. Audience growth 18% YoY.</div>
-        </div>
-        <div class="signal-card">
-          <div class="signal-card-label">FitScore</div>
-          <div class="signal-card-value" id="fitscore">68</div>
-          <div class="signal-card-tier" id="fitsub">Good alignment</div>
-          <div class="signal-card-note" id="fitnote">Geographic and category match. Audience age skew aligned.</div>
-        </div>
-        <div class="signal-card">
-          <div class="signal-card-label">Budget</div>
-          <div class="signal-card-value" id="budget">£95k</div>
-          <div class="signal-card-tier" id="budgettier">Entry point</div>
-          <div class="signal-card-note" id="budgetnote">Minimum declared value. Actual terms negotiable.</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">FitScore dimensions — Apex Performance Gear</div>
-        <div class="dimensions-rows">
-          <div class="dimension-row">
-            <div class="dimension-label">Geographic fit</div>
-            <div class="dimension-bar-container"><div class="dimension-bar" style="width: 80%"></div></div>
-            <div class="dimension-value">80</div>
-          </div>
-          <div class="dimension-row">
-            <div class="dimension-label">Category alignment</div>
-            <div class="dimension-bar-container"><div class="dimension-bar" style="width: 72%"></div></div>
-            <div class="dimension-value">72</div>
-          </div>
-          <div class="dimension-row">
-            <div class="dimension-label">Audience age match</div>
-            <div class="dimension-bar-container"><div class="dimension-bar" style="width: 65%"></div></div>
-            <div class="dimension-value">65</div>
-          </div>
-          <div class="dimension-row">
-            <div class="dimension-label">Budget compatibility</div>
-            <div class="dimension-bar-container"><div class="dimension-bar" style="width: 88%"></div></div>
-            <div class="dimension-value">88</div>
-          </div>
-          <div class="dimension-row">
-            <div class="dimension-label">Series reach alignment</div>
-            <div class="dimension-bar-container"><div class="dimension-bar" style="width: 54%"></div></div>
-            <div class="dimension-value">54</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="confidence-section">
-        <div class="confidence-dot-wrap conf-high"></div>
-        <div class="confidence-text">
-          <div class="confidence-label">Data confidence</div>
-          <div class="confidence-desc" id="confdesc">4/4 sources active. Data currency: 3 days.</div>
-        </div>
-      </div>
-
-      <div class="about-section">
-        <div class="about-section-title">About</div>
-        <div class="about-section-content">
-          <div class="about-line">
-            <div class="about-label">Series</div>
-            <div class="about-value" id="about-series">FIA F2 · FIA F3 · FR Italian</div>
-          </div>
-          <div class="about-line">
-            <div class="about-label">Type</div>
-            <div class="about-value" id="about-type">F2 & F3 Constructor</div>
-          </div>
-          <div class="about-description">Prema Racing is an Italian motorsport team competing in FIA Formula 2, FIA Formula 3, and Formula Regional championships. Established in 1983, the team has built a reputation for driver development and competitive performance. Known for strong audience engagement across social platforms and a passionate fanbase in Europe and globally.</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">Social signals</div>
-        <div class="social-signals">
-          <div class="social-stat">
-            <div class="social-stat-value" id="instagram">148k</div>
-            <div class="social-stat-label">Instagram followers</div>
-          </div>
-          <div class="social-stat">
-            <div class="social-stat-value" id="twitter">92k</div>
-            <div class="social-stat-label">Twitter/X followers</div>
-          </div>
-          <div class="social-stat">
-            <div class="social-stat-value" id="youtube">156k</div>
-            <div class="social-stat-label">YouTube subscribers</div>
-          </div>
-          <div class="social-stat">
-            <div class="social-stat-value" id="engagement">4.2%</div>
-            <div class="social-stat-label">Engagement rate</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="opportunity-container" style="display: none;">
-        <div class="section-title">Active opportunity</div>
-        <div class="opportunity-section">
-          <div class="opportunity-title" id="opp-title"></div>
-          <div class="opportunity-meta" id="opp-meta"></div>
-          <button class="btn opportunity-btn">View full opportunity</button>
-        </div>
-      </div>
-
-      <div class="related-section">
-        <div class="section-title">Related properties</div>
-        <div class="related-cards" id="related-cards"></div>
-      </div>
+<!-- Nav dropdown -->
+<nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
+  <div class="menu-cols">
+    <div class="menu-col">
+      <button class="menu-item" data-nav="Explore" onclick="navigateTo('explore.html'); closeNavMenu()">Explore</button>
+      <button class="menu-item" data-nav="Portfolio" onclick="navigateTo('portfolio.html'); closeNavMenu()">Portfolio</button>
+      <button class="menu-item" data-nav="Compare" onclick="navigateTo('compare.html'); closeNavMenu()">Compare</button>
+    </div>
+    <div class="menu-col">
+      <div class="menu-col-divider"></div>
+      <button class="menu-item" data-nav="Watchlist" onclick="navigateTo('watchlist.html'); closeNavMenu()">Watchlist</button>
     </div>
   </div>
+  <div class="menu-divider"></div>
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">Appearance</span>
+    <div class="theme-toggle-pill" role="group" aria-label="Theme">
+      <button class="theme-opt" id="theme-light" onclick="setTheme('light')" aria-label="Light mode" title="Light">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="2.2"/>
+          <line x1="6.5" y1="1"    x2="6.5" y2="2.2"/>
+          <line x1="6.5" y1="10.8" x2="6.5" y2="12"/>
+          <line x1="1"   y1="6.5"  x2="2.2" y2="6.5"/>
+          <line x1="10.8" y1="6.5" x2="12"  y2="6.5"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="theme-dark" onclick="setTheme('dark')" aria-label="Dark mode" title="Dark">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M10.5 7.5A4.5 4.5 0 0 1 4.5 1.5c0-.27.03-.54.07-.8A4.5 4.5 0 1 0 10.8 8.43 4.5 4.5 0 0 1 10.5 7.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-model-label" id="nav-model-label">model v1.0</div>
+</nav>
 
-  <script>
-    const properties = [
-      { id:1, initials:"PR", name:"Prema Racing", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3 · FR Italian", fanScore:74, fanTier:"Tier B", fitScore:68, fitSub:"Good alignment", budget:"£95k", budgetNum:95, conf:"high", confDesc:"4/4 sources active. Data currency: 3 days.", fanNote:"Strong engagement momentum over 90 days. Audience growth 18% YoY.", fitNote:"Geographic and category match. Audience age skew aligned.", oppTitle:"Race suit & apparel partner — FIA F2 2025", oppMeta:"Minimum £95,000 · Declared 18 days ago · Expires in 43 days", dims:[80,72,65,88,54], watchlist:true, portfolio:true },
-      { id:2, initials:"ART", name:"ART Grand Prix", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3", fanScore:71, fanTier:"Tier B", fitScore:64, fitSub:"Good alignment", budget:"£110k", budgetNum:110, conf:"high", confDesc:"4/4 sources active. Data currency: 5 days.", fanNote:"Consistent engagement across platforms. Large international fanbase.", fitNote:"Category match strong. Geographic fit moderate — French team, European series.", oppTitle:"Technical partner — livery placement", oppMeta:"Minimum £110,000 · Declared 7 days ago", dims:[68,74,70,77,62], watchlist:false, portfolio:false },
-      { id:3, initials:"HI", name:"Hitech Grand Prix", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3", fanScore:62, fanTier:"Tier B", fitScore:71, fitSub:"Strong alignment", budget:"£75k", budgetNum:75, conf:"mod", confDesc:"3/4 sources active. Instagram data partial. Data currency: 9 days.", fanNote:"UK-based team with strong domestic audience. Growing international presence.", fitNote:"Excellent UK geographic fit. Category alignment high. Budget well within range.", oppTitle:"Apparel & accessories partner", oppMeta:"Minimum £75,000 · Declared 12 days ago · Expires in 18 days", dims:[91,78,68,95,49], watchlist:true, portfolio:false },
-      { id:4, initials:"TP", name:"Theo Pourchaire", type:"Formula 2 Driver", series:"FIA F2 Championship", fanScore:81, fanTier:"Tier B", fitScore:52, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"high", confDesc:"4/4 sources active. Data currency: 1 day.", fanNote:"Highest FanScore momentum in F2 grid. 90-day growth of +12 points.", fitNote:"Strong FanScore match. Geographic fit lower — French driver, limited UK activation.", oppTitle:null, oppMeta:null, dims:[55,60,72,40,48], watchlist:true, portfolio:false },
-      { id:5, initials:"CA", name:"Carlin Motorsport", type:"Multi-Series Constructor", series:"FIA F2 · FIA F3 · British F4", fanScore:69, fanTier:"Tier B", fitScore:66, fitSub:"Good alignment", budget:"£85k", budgetNum:85, conf:"high", confDesc:"4/4 sources active. Data currency: 4 days.", fanNote:"Steady engagement. Multi-series presence amplifies total reach.", fitNote:"UK-based. Strong automotive affinity in existing partner base.", oppTitle:"Multi-series branding package", oppMeta:"Minimum £85,000 · Declared 22 days ago", dims:[84,70,66,90,58], watchlist:true, portfolio:true },
-      { id:6, initials:"VR", name:"Virtuosi Racing", type:"F2 Constructor", series:"FIA F2 Championship", fanScore:58, fanTier:"Tier B", fitScore:73, fitSub:"Strong alignment", budget:"£70k", budgetNum:70, conf:"mod", confDesc:"3/4 sources active. TikTok data limited. Data currency: 7 days.", fanNote:"Moderate FanScore. Strong within-tier positioning.", fitNote:"UK team. Category alignment very strong — existing performance automotive adjacency.", oppTitle:"Technical apparel partner", oppMeta:"Minimum £70,000 · Declared 31 days ago · Expires in 9 days", dims:[88,82,62,93,52], watchlist:false, portfolio:false },
-      { id:7, initials:"WR", name:"WRT", type:"GT & LMP Constructor", series:"FIA WEC · GTWC Europe", fanScore:67, fanTier:"Tier B", fitScore:59, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"mod", confDesc:"3/4 sources active. YouTube data limited. Data currency: 6 days.", fanNote:"Strong FanScore growth in endurance. +9 points over 90 days.", fitNote:"Belgian team. Geographic fit weaker for UK-focused brand.", oppTitle:null, oppMeta:null, dims:[52,65,58,45,72], watchlist:false, portfolio:false },
-      { id:8, initials:"MP", name:"MP Motorsport", type:"F2 & F3 Constructor", series:"FIA F2 · FIA F3 · Euroformula", fanScore:55, fanTier:"Tier C", fitScore:60, fitSub:"Moderate alignment", budget:"£55k", budgetNum:55, conf:"lim", confDesc:"2/4 sources active. Instagram and YouTube data limited.", fanNote:"Limited data coverage. FanScore computed from partial signal set.", fitNote:"Dutch-based team. Geographic fit moderate. Budget entry point accessible.", oppTitle:"Driver kit & apparel partner", oppMeta:"Minimum £55,000 · Declared 44 days ago · Expires in 16 days", dims:[58,62,55,88,40], watchlist:false, portfolio:false },
-      { id:9, initials:"DS", name:"DAMS", type:"F2 Constructor", series:"FIA F2 Championship", fanScore:63, fanTier:"Tier B", fitScore:57, fitSub:"Moderate alignment", budget:"—", budgetNum:0, conf:"high", confDesc:"4/4 sources active. Data currency: 2 days.", fanNote:"Steady signals. FanScore stable over 90 days.", fitNote:"French team. Category alignment moderate.", oppTitle:null, oppMeta:null, dims:[50,60,58,42,61], watchlist:false, portfolio:false },
-      { id:10, initials:"FO", name:"Fortec Motorsports", type:"F3 & British GT Constructor", series:"FIA F3 · British GT · British F4", fanScore:51, fanTier:"Tier C", fitScore:67, fitSub:"Good alignment", budget:"£45k", budgetNum:45, conf:"mod", confDesc:"3/4 sources active. TikTok not tracked. Data currency: 11 days.", fanNote:"Smaller-scale property. FanScore appropriate to tier. Domestic UK presence strong.", fitNote:"UK team. Excellent geographic fit. Category alignment strong.", oppTitle:"Season livery & apparel partner", oppMeta:"Minimum £45,000 · Declared 8 days ago", dims:[92,75,60,99,43], watchlist:false, portfolio:false },
-    ];
+<!-- ────────────────── RIGHT FLOATING BAR — back + watchlist + profile ───────────────── -->
+<div class="float-bar bar-right">
+  <button class="bar-btn" id="back-btn"
+    onclick="navigateTo('explore.html')"
+    aria-label="Back to Explore"
+    title="Back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10 13L3 8L10 3"/>
+    </svg>
+  </button>
 
-    const params = new URLSearchParams(window.location.search);
-    const id = parseInt(params.get('id')) || 1;
-    const p = properties.find(x => x.id === id) || properties[0];
+  <button class="bar-btn" id="watchlist-btn"
+    onclick="toggleWatchlist()"
+    aria-label="Save to watchlist"
+    title="Add to watchlist">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none" aria-hidden="true">
+      <path d="M8 1L10 6H15L11 10L12.5 15L8 11.5L3.5 15L5 10L1 6H6L8 1Z"/>
+    </svg>
+  </button>
 
-    document.getElementById('avatar').textContent = p.initials;
-    document.getElementById('name').textContent = p.name;
-    document.getElementById('type').textContent = p.type;
-    document.getElementById('series').textContent = p.series;
-    document.getElementById('fanscore').textContent = p.fanScore;
-    document.getElementById('fantier').textContent = p.fanTier;
-    document.getElementById('fannote').textContent = p.fanNote;
-    document.getElementById('fitscore').textContent = p.fitScore;
-    document.getElementById('fitsub').textContent = p.fitSub;
-    document.getElementById('fitnote').textContent = p.fitNote;
-    document.getElementById('budget').textContent = p.budget;
-    document.getElementById('budgetnote').textContent = p.budgetNum > 0 ? 'Minimum declared value. Actual terms negotiable.' : 'Budget not declared. Contact property directly.';
-    document.getElementById('confdesc').textContent = p.confDesc;
-    document.getElementById('about-series').textContent = p.series;
-    document.getElementById('about-type').textContent = p.type;
+  <div class="bar-divider-v" aria-hidden="true"></div>
 
-    const instagram = Math.round(p.fanScore * 2000);
-    const twitter = Math.round(p.fanScore * 1250);
-    const youtube = Math.round(p.fanScore * 2100);
-    const engagement = (Math.random() * 5 + 2).toFixed(1);
-    document.getElementById('instagram').textContent = instagram + 'k';
-    document.getElementById('twitter').textContent = twitter + 'k';
-    document.getElementById('youtube').textContent = youtube + 'k';
-    document.getElementById('engagement').textContent = engagement + '%';
+  <button class="bar-btn-profile" id="profile-btn"
+    onclick="toggleProfileMenu()"
+    aria-label="Account menu"
+    aria-expanded="false"
+    aria-controls="profile-menu">
+    RS
+  </button>
+</div>
 
-    if (p.oppTitle) {
-      document.getElementById('opportunity-container').style.display = 'block';
-      document.getElementById('opp-title').textContent = p.oppTitle;
-      document.getElementById('opp-meta').textContent = p.oppMeta;
-    }
+<!-- Profile dropdown -->
+<div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
+  <div class="profile-header">
+    <div class="profile-name">Ross Mackintosh</div>
+    <div class="profile-email">rosscraigmackintosh@gmail.com</div>
+  </div>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="4.5" r="2.5"/>
+      <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+    </svg>
+    Profile settings
+  </button>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="2"/>
+      <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12M2.8 2.8l.85.85M9.35 9.35l.85.85M9.35 3.65l.85-.85M3.65 9.35l-.85.85"/>
+    </svg>
+    Workspace settings
+  </button>
+  <div class="menu-divider"></div>
+  <button class="profile-item" role="menuitem" style="color:var(--negative)">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <path d="M8.5 4.5L12 6.5l-3.5 2"/>
+      <line x1="12" y1="6.5" x2="5" y2="6.5"/>
+      <path d="M5 1.5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3"/>
+    </svg>
+    Sign out
+  </button>
+</div>
 
-    const watchlistBtn = document.getElementById('watchlist-btn');
-    if (p.watchlist) {
-      watchlistBtn.textContent = '✓ On watchlist';
-      watchlistBtn.style.background = 'var(--green-light)';
-      watchlistBtn.style.color = 'var(--green)';
-      watchlistBtn.style.borderColor = 'var(--green)';
-    }
-    watchlistBtn.addEventListener('click', () => {
-      if (watchlistBtn.textContent.includes('✓')) {
-        watchlistBtn.textContent = '+ Watchlist';
-        watchlistBtn.style.background = '';
-        watchlistBtn.style.color = '';
-        watchlistBtn.style.borderColor = '';
-      } else {
-        watchlistBtn.textContent = '✓ On watchlist';
-        watchlistBtn.style.background = 'var(--green-light)';
-        watchlistBtn.style.color = 'var(--green)';
-        watchlistBtn.style.borderColor = 'var(--green)';
-      }
-    });
+<!-- ─────────────────────────────── MAIN ─────────────────────────────── -->
+<main class="main" id="main-content" tabindex="-1">
+  <div class="content">
 
-    const dimLabels = ["Geographic fit", "Category alignment", "Audience age match", "Budget compatibility", "Series reach alignment"];
-    const dimRows = document.querySelectorAll('.dimension-row');
-    p.dims.forEach((dim, i) => {
-      const row = dimRows[i];
-      row.querySelector('.dimension-bar').style.width = dim + '%';
-      row.querySelector('.dimension-value').textContent = dim;
-    });
+    <!-- Property not found / no slug state -->
+    <div id="state-error" style="display:none;">
+      <div class="state-msg" style="color:var(--negative)">
+        <strong id="error-title">Property not found</strong>
+        <br>
+        <a href="explore.html" style="color:var(--accent);text-decoration:underline">Return to Explore</a>
+      </div>
+    </div>
 
-    const relatedProps = properties.filter(x => x.id !== p.id && x.fanTier === p.fanTier).slice(0, 3);
-    const relatedContainer = document.getElementById('related-cards');
-    relatedProps.forEach(prop => {
-      const card = document.createElement('div');
-      card.className = 'related-card';
-      card.innerHTML = `
-        <div class="related-card-header">
-          <div class="related-card-avatar">${prop.initials}</div>
-          <div class="related-card-text">
-            <a href="property.html?id=${prop.id}" class="related-card-name">${prop.name}</a>
-            <div class="related-card-type">${prop.type}</div>
+    <!-- Loading state -->
+    <div id="state-loading">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        Loading property...
+      </div>
+    </div>
+
+    <!-- Main content (hidden until loaded) -->
+    <div id="state-content" style="display:none;">
+
+      <!-- Property Header -->
+      <div class="prop-header">
+        <div class="prop-hero">
+          <div class="prop-image" id="prop-image"></div>
+        </div>
+        <div class="prop-header-body">
+          <div class="prop-name-row">
+            <h1 class="prop-name" id="prop-name"></h1>
+            <span class="prop-flag" id="prop-flag"></span>
+          </div>
+          <div class="prop-type-badge-row">
+            <span class="prop-type-badge" id="prop-type-badge"></span>
+            <span class="prop-meta-text" id="prop-meta-text"></span>
+          </div>
+          <div id="prop-bio-section" style="margin-top:var(--spacing-md)">
+            <p class="prop-bio" id="prop-bio"></p>
+          </div>
+          <div class="prop-actions" style="margin-top:var(--spacing-lg)">
+            <button class="prop-action-btn" id="compare-btn" onclick="compareClick()">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right:4px" aria-hidden="true">
+                <rect x="1" y="3" width="4" height="8" rx="0.5"/>
+                <rect x="7" y="1" width="4" height="10" rx="0.5"/>
+              </svg>
+              Compare
+            </button>
           </div>
         </div>
-        <div class="related-card-signals">
-          <span class="signal-pill signal-fan">${prop.fanScore} <span class="signal-label">FanScore</span></span>
-          <span class="signal-pill signal-fit">${prop.fitScore} <span class="signal-label">FitScore</span></span>
+      </div>
+
+      <!-- FanScore Section -->
+      <section class="prop-section">
+        <h2 class="prop-section-title">FanScore</h2>
+        <div id="fanscore-suppressed" style="display:none">
+          <div class="prop-notice" style="color:var(--text-3)">Score suppressed: insufficient data</div>
         </div>
-        <a href="property.html?id=${prop.id}" class="related-card-action">View profile →</a>
-      `;
-      relatedContainer.appendChild(card);
+        <div id="fanscore-content">
+          <div class="prop-score-block">
+            <div class="prop-score-primary">
+              <span class="prop-score-val" id="prop-score-val"></span>
+              <span class="prop-score-label">FanScore</span>
+            </div>
+            <div class="prop-score-context">Based on the last 30 days of audience engagement.</div>
+            <div id="prop-trend-row" style="margin-top:var(--spacing-sm);font-size:var(--text-sm)">
+              <span class="prop-trend-arrow" id="prop-trend-arrow"></span>
+              <span class="prop-trend-val" id="prop-trend-val"></span>
+            </div>
+            <div class="prop-confidence" id="prop-confidence"></div>
+            <div class="prop-spark" id="prop-spark"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Audience Signals Section -->
+      <section class="prop-section">
+        <h2 class="prop-section-title">Audience Signals</h2>
+        <div class="prop-signal-grid" id="prop-signal-grid"></div>
+      </section>
+
+      <!-- Momentum Section -->
+      <section class="prop-section">
+        <h2 class="prop-section-title">Momentum</h2>
+        <div id="momentum-badges" class="prop-momentum-badges"></div>
+        <!-- Metric tiles (rendered synchronously from s30/s60/s90/t30) -->
+        <div id="momentum-metrics" style="display:none"></div>
+        <!-- Chart + date labels (rendered async after sparks load) -->
+        <div id="momentum-chart-wrap" style="display:none">
+          <div id="momentum-chart"></div>
+          <div class="momentum-chart-unavail" id="momentum-chart-unavail" style="display:none"></div>
+        </div>
+      </section>
+
+      <!-- Ecosystem Section -->
+      <section class="prop-section" id="ecosystem-section" style="display:none">
+        <h2 class="prop-section-title">Ecosystem</h2>
+        <div class="eco-summary" id="ecosystem-summary"></div>
+        <div class="eco-body" id="ecosystem-body"></div>
+      </section>
+
+      <!-- Recent Posts Section -->
+      <section class="prop-section" id="posts-section" style="display:none">
+        <h2 class="prop-section-title">Recent Posts</h2>
+        <div id="posts-container"></div>
+      </section>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- ─────────────────────────────── SCRIPT ───────────────────────────────── -->
+<script src="config.js"></script>
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="images.js"></script>
+<script src="ui.js"></script>
+<script src="ui-helpers.js"></script>
+<script>
+
+/* ── Theme ────────────────────────────────────────────────────────── */
+SAI_UIH.initTheme();
+
+/* ── Global state ──────────────────────────────────────────────────── */
+var currentProperty = null;
+
+function compareClick() {
+  if (currentProperty && currentProperty.slug) {
+    window.location.href = 'compare.html?a=' + encodeURIComponent(currentProperty.slug);
+  }
+}
+
+/* ── Watchlist toggle ──────────────────────────────────────────────── */
+function toggleWatchlist() {
+  if (!currentProperty) return;
+  SAI_STORAGE.watchlist.toggle(currentProperty.slug);
+  updateWatchlistButton();
+}
+
+function updateWatchlistButton() {
+  var btn = document.getElementById('watchlist-btn');
+  if (!btn || !currentProperty) return;
+  var inWatchlist = SAI_STORAGE.watchlist.has(currentProperty.slug);
+  btn.classList.toggle('active', inWatchlist);
+  btn.setAttribute('aria-label', inWatchlist ? 'Remove from watchlist' : 'Add to watchlist');
+  btn.setAttribute('title', inWatchlist ? 'Remove from watchlist' : 'Add to watchlist');
+}
+
+/* ── Menu listeners ────────────────────────────────────────────────── */
+SAI_UIH.initMenuListeners();
+
+/* ── Image rendering ───────────────────────────────────────────────── */
+function renderPropertyImage(imageMeta, propertyType) {
+  var heroEl = document.getElementById('prop-image');
+  if (!heroEl) return;
+
+  if (!imageMeta) {
+    /* Placeholder avatar using type color */
+    var cfg = TYPE[propertyType] || { bgVar: 'var(--surface-muted)', fgVar: 'var(--text-3)' };
+    var bgColor = cfg.bgVar;
+    var fgColor = cfg.fgVar;
+    heroEl.innerHTML = '<div style="width:100%;height:100%;background:' + bgColor + ';display:flex;align-items:center;justify-content:center;color:' + fgColor + ';font-size:48px">' +
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>' +
+      '<circle cx="12" cy="7" r="4"/>' +
+      '</svg>' +
+      '</div>';
+    return;
+  }
+
+  /* Render actual image */
+  var isCover = imageMeta.fit === 'cover';
+  var html = '<img src="' + escHtml(imageMeta.url) + '" ' +
+    'style="width:100%;height:100%;object-fit:' + imageMeta.fit + ';object-position:' + imageMeta.pos + ';' +
+    (imageMeta.bg ? 'background:' + imageMeta.bg + ';' : '') +
+    (imageMeta.pad ? 'padding:' + imageMeta.pad + ';box-sizing:border-box;' : '') +
+    '" alt="Property image">';
+  heroEl.innerHTML = html;
+}
+
+/* ── Format functions ──────────────────────────────────────────────── */
+function renderSignalCard(label, value, delta, isFollowers) {
+  var html = '<div class="prop-signal-card">';
+  html += '<div class="prop-signal-label">' + escHtml(label) + '</div>';
+  html += '<div class="prop-signal-val">' + escHtml(value) + '</div>';
+  if (delta !== null && delta !== undefined) {
+    var sign = delta > 0 ? '+' : '';
+    var color = delta > 0 ? 'var(--positive)' : (delta < 0 ? 'var(--negative)' : 'var(--text-3)');
+    html += '<div class="prop-signal-delta" style="color:' + color + '">' + escHtml(sign + delta) + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ── Load property ────────────────────────────────────────────────── */
+function loadProperty() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var slug = urlParams.get('slug');
+
+  if (!slug) {
+    showError('No property selected. Return to Explore.');
+    return;
+  }
+
+  /* Load entity images first */
+  loadEntityImages().then(function(map) {
+    ENTITY_IMAGES_DB = map;
+  }).catch(function() {
+    ENTITY_IMAGES_DB = {};
+  }).then(function() {
+    /* Fetch property data */
+    var cols = 'property_id,property_name,property_type,country,bio,as_of_day,model_version,' +
+      'avg_score_30d,trend_value_30d,volatility_value_30d,completeness_pct_30d,confidence_band_30d,suppression_reason_30d,' +
+      'avg_score_60d,avg_score_90d,trend_value_90d,' +
+      'team_ids,team_names,driver_ids,driver_names,slug,' +
+      'total_followers_latest,followers_net_30d,posts_30d,total_interactions_30d,engagement_rate_30d_pct,platforms_active,' +
+      'sport,region,city';
+
+    return apiFetch('/v_property_summary_current?slug=eq.' + encodeURIComponent(slug) + '&select=' + cols)
+      .then(function(rows) {
+        if (!rows || rows.length === 0) {
+          showError('Property not found');
+          return;
+        }
+
+        var row = rows[0];
+        var imgMeta = resolveImageMeta(slug, row.property_type);
+        currentProperty = {
+          id: row.property_id,
+          name: row.property_name,
+          type: row.property_type,
+          country: row.country,
+          bio: row.bio || null,
+          slug: slug,
+          asOf: row.as_of_day,
+          model: row.model_version,
+          s30: n(row.avg_score_30d),
+          s60: n(row.avg_score_60d),
+          s90: n(row.avg_score_90d),
+          t30: n(row.trend_value_30d),
+          t90: n(row.trend_value_90d),
+          vol30: n(row.volatility_value_30d),
+          cov30: n(row.completeness_pct_30d),
+          conf30: row.confidence_band_30d,
+          sup30: row.suppression_reason_30d,
+          imageMeta: imgMeta,
+          followers: n(row.total_followers_latest),
+          followersDelta: n(row.followers_net_30d),
+          posts30d: n(row.posts_30d),
+          interactions30d: n(row.total_interactions_30d),
+          engRate30d: n(row.engagement_rate_30d_pct),
+          platforms: row.platforms_active || null,
+          sport: row.sport || null,
+          region: row.region || null,
+          city: row.city || null
+        };
+
+        renderProperty();
+
+        /* Load sparkline in parallel */
+        return apiFetch('/fanscore_daily?select=metric_date,fanscore_value,suppression_reason' +
+          '&property_id=eq.' + currentProperty.id +
+          '&model_version=eq.' + MODEL +
+          '&metric_date=gte.' + new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10) +
+          '&order=metric_date.asc&limit=200')
+          .then(function(sparkData) {
+            if (sparkData && sparkData.length >= 2) {
+              currentProperty.sparks = sparkData.map(function(r) {
+                return { d: r.metric_date, v: r.suppression_reason ? null : n(r.fanscore_value) };
+              });
+              renderSparkline();
+              renderMomentumChart();
+            } else {
+              /* Not enough data — show unavailable state in momentum chart */
+              renderMomentumChart();
+            }
+          })
+          .catch(function() {});
+      });
+  }).then(function() {
+    /* Load relationships and posts in parallel */
+    Promise.all([
+      loadRelationships(currentProperty.id).then(function(rels) {
+        renderEcosystem(rels);
+      }).catch(function() {}),
+      loadPosts(currentProperty.id).then(function(posts) {
+        renderPosts(posts);
+      }).catch(function() {})
+    ]);
+  }).catch(function(err) {
+    showError('Error loading property: ' + (err.message || 'Unknown error'));
+  });
+}
+
+function showError(msg) {
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-content').style.display = 'none';
+  var errorDiv = document.getElementById('state-error');
+  if (msg.indexOf('not found') >= 0 || msg.indexOf('No property') >= 0) {
+    document.getElementById('error-title').textContent = msg;
+  } else {
+    document.getElementById('error-title').textContent = 'Error';
+  }
+  errorDiv.style.display = 'block';
+}
+
+function renderProperty() {
+  if (!currentProperty) return;
+
+  document.title = 'SponsorAI — ' + currentProperty.name;
+  document.getElementById('page-view-title').textContent = currentProperty.name;
+
+  /* Hide loading, show content */
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-content').style.display = 'block';
+
+  /* Render header */
+  renderPropertyImage(currentProperty.imageMeta, currentProperty.type);
+
+  document.getElementById('prop-name').textContent = currentProperty.name;
+  document.getElementById('prop-flag').textContent = countryFlag(currentProperty.country);
+
+  /* Type badge */
+  var cfg = TYPE[currentProperty.type] || { label: currentProperty.type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
+  var badgeHtml = '<span class="prop-type-label" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' +
+    escHtml(cfg.label || currentProperty.type) + '</span>';
+  document.getElementById('prop-type-badge').innerHTML = badgeHtml;
+
+  /* Metadata line */
+  var metaParts = [];
+  if (currentProperty.sport) metaParts.push(escHtml(currentProperty.sport));
+  if (currentProperty.region) metaParts.push(escHtml(currentProperty.region));
+  if (currentProperty.city) metaParts.push(escHtml(currentProperty.city));
+  if (metaParts.length > 0) {
+    document.getElementById('prop-meta-text').textContent = metaParts.join(' · ');
+  } else {
+    document.getElementById('prop-meta-text').textContent = '';
+  }
+
+  /* Bio */
+  var bioCont = document.getElementById('prop-bio-section');
+  if (currentProperty.bio) {
+    document.getElementById('prop-bio').textContent = currentProperty.bio;
+    bioCont.style.display = 'block';
+  } else {
+    bioCont.style.display = 'none';
+  }
+
+  /* FanScore */
+  var fsContent = document.getElementById('fanscore-content');
+  var fsSuppressed = document.getElementById('fanscore-suppressed');
+  if (currentProperty.sup30) {
+    fsContent.style.display = 'none';
+    fsSuppressed.style.display = 'block';
+  } else {
+    fsContent.style.display = 'block';
+    fsSuppressed.style.display = 'none';
+    document.getElementById('prop-score-val').textContent = fmt(currentProperty.s30, 1);
+
+    /* Trend */
+    var trendRow = document.getElementById('prop-trend-row');
+    if (currentProperty.t30 != null) {
+      var trendArrow = arr(currentProperty.t30);
+      var trendColor = arrC(currentProperty.t30);
+      trendRow.style.display = 'flex';
+      trendRow.style.alignItems = 'center';
+      trendRow.style.gap = 'var(--spacing-xs)';
+      trendRow.style.color = trendColor;
+      document.getElementById('prop-trend-arrow').textContent = trendArrow;
+      document.getElementById('prop-trend-val').textContent = Math.abs(currentProperty.t30).toFixed(2) + '/d';
+    } else {
+      trendRow.style.display = 'none';
+    }
+
+    /* Confidence */
+    var confEl = document.getElementById('prop-confidence');
+    if (currentProperty.conf30) {
+      confEl.textContent = currentProperty.conf30 + ' confidence';
+      confEl.style.fontSize = 'var(--text-xs)';
+      confEl.style.color = 'var(--text-3)';
+      confEl.style.marginTop = 'var(--spacing-xs)';
+    } else {
+      confEl.textContent = '';
+    }
+  }
+
+  /* Audience Signals */
+  var sigGrid = '';
+  if (currentProperty.followers != null) {
+    sigGrid += renderSignalCard('Followers', fmtFollowers(currentProperty.followers) || '0', currentProperty.followersDelta, true);
+  }
+  if (currentProperty.engRate30d != null) {
+    sigGrid += renderSignalCard('Engagement (30d)', currentProperty.engRate30d.toFixed(2) + '%', null, false);
+  }
+  if (currentProperty.posts30d != null) {
+    sigGrid += renderSignalCard('Posts (30d)', String(currentProperty.posts30d), null, false);
+  }
+  if (currentProperty.platforms && currentProperty.platforms.length > 0) {
+    sigGrid += renderSignalCard('Platforms', currentProperty.platforms.length + ' active', null, false);
+  }
+  document.getElementById('prop-signal-grid').innerHTML = sigGrid || '<div class="prop-notice">No audience data</div>';
+
+  /* Momentum */
+  var badges = computeMomentumScore(currentProperty);
+  var badgesHtml = '';
+  if (badges.length > 0) {
+    badges.forEach(function(badge) {
+      badgesHtml += '<span class="prop-momentum-badge">' + escHtml(badge) + '</span>';
     });
-  </script>
+  } else {
+    badgesHtml = '<div class="prop-notice">No momentum signals in current window</div>';
+  }
+  document.getElementById('momentum-badges').innerHTML = badgesHtml;
+
+  /* Momentum metrics tiles (sync — uses s30/s60/s90/t30) */
+  renderMomentumMetrics();
+
+  /* Update watchlist button */
+  updateWatchlistButton();
+}
+
+function renderSparkline() {
+  if (!currentProperty || !currentProperty.sparks || currentProperty.sparks.length < 2) return;
+  var cfg = TYPE[currentProperty.type] || { scoreVar: 'var(--text-3)' };
+  var sparkSvg = renderSpark(currentProperty.sparks, cfg.scoreVar || 'var(--accent)', 120, 48);
+  if (sparkSvg) {
+    var container = document.getElementById('prop-spark');
+    container.innerHTML = '<div style="margin-top:var(--spacing-lg);background:var(--surface-muted);border-radius:var(--radius-sm);padding:var(--spacing-md);height:64px">' + sparkSvg + '</div>';
+  }
+}
+
+/* ── Momentum metrics tiles (synchronous — uses s30 / s60 / s90 / t30) ── */
+function renderMomentumMetrics() {
+  var c = currentProperty;
+  var metricsEl = document.getElementById('momentum-metrics');
+  if (!c || !metricsEl) return;
+
+  /* If score is suppressed there is nothing meaningful to show */
+  if (c.sup30) {
+    metricsEl.style.display = 'none';
+    return;
+  }
+
+  var tiles = [];
+
+  /* 30d change: most recent 30d avg vs prior 30d avg (s30 - s60) */
+  if (c.s30 != null && c.s60 != null) {
+    var d30 = c.s30 - c.s60;
+    var sign30 = d30 >= 0 ? '+' : '';
+    tiles.push(
+      '<div class="momentum-metric">' +
+        '<div class="momentum-metric-lbl">30d change</div>' +
+        '<div class="momentum-metric-val" style="color:' + arrC(d30) + '">' + sign30 + d30.toFixed(1) + '</div>' +
+        '<div class="momentum-metric-sub">vs prior 30d avg</div>' +
+      '</div>'
+    );
+  } else if (c.s30 != null) {
+    tiles.push(
+      '<div class="momentum-metric">' +
+        '<div class="momentum-metric-lbl">30d change</div>' +
+        '<div class="momentum-metric-val momentum-metric-na">--</div>' +
+        '<div class="momentum-metric-sub">vs prior 30d avg</div>' +
+      '</div>'
+    );
+  }
+
+  /* 90d change: most recent 30d avg vs 90d avg (s30 - s90) */
+  if (c.s30 != null && c.s90 != null) {
+    var d90 = c.s30 - c.s90;
+    var sign90 = d90 >= 0 ? '+' : '';
+    tiles.push(
+      '<div class="momentum-metric">' +
+        '<div class="momentum-metric-lbl">90d change</div>' +
+        '<div class="momentum-metric-val" style="color:' + arrC(d90) + '">' + sign90 + d90.toFixed(1) + '</div>' +
+        '<div class="momentum-metric-sub">vs 90d avg</div>' +
+      '</div>'
+    );
+  } else if (c.s30 != null) {
+    tiles.push(
+      '<div class="momentum-metric">' +
+        '<div class="momentum-metric-lbl">90d change</div>' +
+        '<div class="momentum-metric-val momentum-metric-na">--</div>' +
+        '<div class="momentum-metric-sub">vs 90d avg</div>' +
+      '</div>'
+    );
+  }
+
+  /* Daily trend (30d slope) */
+  if (c.t30 != null) {
+    var tSign = c.t30 >= 0 ? '+' : '';
+    tiles.push(
+      '<div class="momentum-metric">' +
+        '<div class="momentum-metric-lbl">Daily trend</div>' +
+        '<div class="momentum-metric-val" style="color:' + arrC(c.t30) + '">' + arr(c.t30) + '\u2009' + tSign + c.t30.toFixed(2) + '</div>' +
+        '<div class="momentum-metric-sub">30d slope / day</div>' +
+      '</div>'
+    );
+  }
+
+  if (tiles.length === 0) {
+    metricsEl.style.display = 'none';
+    return;
+  }
+
+  metricsEl.innerHTML = '<div class="momentum-metrics-row">' + tiles.join('') + '</div>';
+  metricsEl.style.display = 'block';
+}
+
+/* ── Momentum chart (async — runs after sparks data loads) ────────────── */
+function renderMomentumChart() {
+  var c = currentProperty;
+  var wrap      = document.getElementById('momentum-chart-wrap');
+  var chartEl   = document.getElementById('momentum-chart');
+  var unavailEl = document.getElementById('momentum-chart-unavail');
+  if (!c || !wrap || !chartEl || !unavailEl) return;
+
+  /* Suppressed: no chart */
+  if (c.sup30) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  /* No usable sparks: show unavailable notice */
+  var sparks = c.sparks || [];
+  var validPts = sparks.filter(function(p){ return p.v != null; });
+  if (validPts.length < 2) {
+    chartEl.style.display = 'none';
+    unavailEl.textContent = 'Insufficient data for chart';
+    unavailEl.style.display = 'block';
+    wrap.style.display = 'block';
+    return;
+  }
+
+  var cfg = TYPE[c.type] || { scoreVar: 'var(--text-3)' };
+  var strokeColor = cfg.scoreVar || 'var(--accent)';
+
+  /* Render at a wider viewport — SVG scales with its container */
+  var sparkSvg = renderSpark(sparks, strokeColor, 600, 72);
+  if (!sparkSvg) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  /* Date labels: first and last date in the sparks array */
+  var firstLabel = '', lastLabel = '';
+  if (sparks.length >= 1 && sparks[0].d) {
+    firstLabel = new Date(sparks[0].d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  if (sparks.length >= 1 && sparks[sparks.length - 1].d) {
+    lastLabel = new Date(sparks[sparks.length - 1].d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  var dateRow = (firstLabel || lastLabel)
+    ? '<div class="momentum-chart-dates">' +
+        '<span>' + escHtml(firstLabel) + '</span>' +
+        '<span>' + escHtml(lastLabel)  + '</span>' +
+      '</div>'
+    : '';
+
+  chartEl.innerHTML =
+    '<div class="momentum-chart-svg-wrap">' + sparkSvg + '</div>' +
+    dateRow;
+
+  chartEl.style.display = 'block';
+  unavailEl.style.display = 'none';
+  wrap.style.display = 'block';
+}
+
+/* ── Ecosystem relationship labels (mirrors panel.js REL_LABELS) ────────── */
+var REL_LABELS_PROP = {
+  'athlete_belongs_to_team:forward':        'Drives for',
+  'athlete_belongs_to_team:reverse':        'Drivers / Athletes',
+  'athlete_competes_in_event:forward':      'Competing in',
+  'athlete_competes_in_event:reverse':      'Participating athletes',
+  'athlete_competes_in_series:forward':     'Competing in series',
+  'athlete_competes_in_series:reverse':     'Athletes',
+  'event_at_venue:forward':                 'Venue',
+  'event_at_venue:reverse':                 'Events hosted',
+  'governing_body_oversees_series:forward': 'Oversees series',
+  'governing_body_oversees_series:reverse': 'Governed by',
+  'occurrence_of_event_brand:forward':      'Parent event brand',
+  'occurrence_of_event_brand:reverse':      'Occurrences',
+  'series_contains_event:forward':          'Events',
+  'series_contains_event:reverse':          'Part of series',
+  'series_has_team:forward':                'Participating teams',
+  'series_has_team:reverse':                'Competing in',
+  'team_competes_in_series:forward':        'Competing in series',
+  'team_competes_in_series:reverse':        'Competing teams',
+  'team_has_athlete:forward':               'Drivers / Athletes',
+  'team_has_athlete:reverse':               'Drives for'
+};
+
+/* ── Contextual explanation per relationship group ──────────────────────── */
+var REL_CONTEXT_PROP = {
+  'Drives for':             'This athlete competes for the following team.',
+  'Drivers / Athletes':     'Athletes currently associated with this team.',
+  'Competing in':           'This team competes in the following series.',
+  'Competing in series':    'This entity competes in the following series.',
+  'Competing teams':        'Teams that compete in this series.',
+  'Participating teams':    'Teams that participate in this series.',
+  'Athletes':               'Athletes who compete in this series.',
+  'Participating athletes': 'Athletes who compete in this event.',
+  'Events':                 'Events that take place within this series.',
+  'Events hosted':          'Events that have been held at this venue.',
+  'Venue':                  'The venue where this event takes place.',
+  'Part of series':         'The series this event belongs to.',
+  'Parent event brand':     'The recurring event brand this is an occurrence of.',
+  'Occurrences':            'Individual event instances that run under this brand.',
+  'Oversees series':        'Series under this governing body\'s jurisdiction.',
+  'Governed by':            'The governing body that oversees this series.'
+};
+
+var ECO_MAX_PER_GROUP = 12;
+
+function renderEcosystem(rels) {
+  if (!rels || (!rels.forward && !rels.reverse)) return;
+  var allRels = (rels.forward || []).concat(rels.reverse || []);
+  if (allRels.length === 0) return;
+
+  /* Collect unique IDs while preserving relationship metadata */
+  var relIds = [];
+  var seenId = {};
+  allRels.forEach(function(r) {
+    if (!seenId[r.relatedId]) { seenId[r.relatedId] = true; relIds.push(r.relatedId); }
+  });
+  if (relIds.length === 0) return;
+
+  /* Fetch related properties including influence signals */
+  var idList = relIds.join(',');
+  apiFetch('/v_property_summary_current'
+    + '?property_id=in.(' + idList + ')'
+    + '&select=property_id,property_name,property_type,avg_score_30d,slug,'
+    + 'suppression_reason_30d,total_followers_latest,trend_value_30d')
+    .then(function(rows) {
+      if (!rows || rows.length === 0) return;
+
+      /* Build id -> row lookup */
+      var rowMap = {};
+      rows.forEach(function(r) { rowMap[r.property_id] = r; });
+
+      /* Group rows by relationship label, preserving order of first appearance */
+      var groups = {};
+      var groupOrder = [];
+      allRels.forEach(function(r) {
+        var key   = r.type + ':' + r.dir;
+        var label = REL_LABELS_PROP[key] || r.type;
+        var row   = rowMap[r.relatedId];
+        if (!row) return;
+        if (!groups[label]) { groups[label] = []; groupOrder.push(label); }
+        /* Deduplicate within group */
+        if (groups[label].some(function(x) { return x.property_id === row.property_id; })) return;
+        groups[label].push(row);
+      });
+
+      if (!groupOrder.length) return;
+
+      /* === Influence summary === */
+      var totalCount       = rows.length;
+      var combinedFollowers = 0;
+      var hasFollowers      = false;
+      var topScore          = null;
+      var topName           = null;
+      var risingCount       = 0;
+
+      rows.forEach(function(r) {
+        var fol = n(r.total_followers_latest);
+        if (fol && fol > 0) { combinedFollowers += fol; hasFollowers = true; }
+        if (!r.suppression_reason_30d && r.avg_score_30d != null) {
+          var sc = n(r.avg_score_30d);
+          if (sc != null && (topScore == null || sc > topScore)) { topScore = sc; topName = r.property_name; }
+        }
+        var t = n(r.trend_value_30d);
+        if (t != null && t > 0.1) risingCount++;
+      });
+
+      var summaryParts = [];
+      summaryParts.push(
+        totalCount + ' connected ' + (totalCount === 1 ? 'entity' : 'entities')
+      );
+      if (hasFollowers) {
+        summaryParts.push('Combined reach: ' + fmtFollowers(combinedFollowers));
+      }
+      if (topScore != null && topName) {
+        summaryParts.push('Strongest: ' + escHtml(topName) + ' (' + fmt(topScore, 1) + ')');
+      }
+      if (risingCount > 0) {
+        summaryParts.push(risingCount + ' rising');
+      }
+
+      var summaryEl = document.getElementById('ecosystem-summary');
+      if (summaryEl) {
+        summaryEl.innerHTML = summaryParts.map(function(p) {
+          return '<span class="eco-stat">' + p + '</span>';
+        }).join('<span class="eco-sep"> \xB7 </span>');
+      }
+
+      /* === Grouped cards === */
+      var html = '';
+      groupOrder.forEach(function(label) {
+        var groupRows = groups[label];
+        var shown     = groupRows.slice(0, ECO_MAX_PER_GROUP);
+        var overflow  = groupRows.length - shown.length;
+        var desc      = REL_CONTEXT_PROP[label] || '';
+
+        html += '<div class="eco-group">';
+        html += '<div class="eco-group-header">';
+        html += '<span class="eco-group-label">' + escHtml(label) + '</span>';
+        if (desc) html += '<span class="eco-group-desc">' + escHtml(desc) + '</span>';
+        html += '</div>';
+        html += '<div class="eco-group-grid">';
+
+        shown.forEach(function(r) {
+          var cfg   = TYPE[r.property_type] || { label: r.property_type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
+          var score = (!r.suppression_reason_30d && r.avg_score_30d != null) ? n(r.avg_score_30d) : null;
+          var trend = n(r.trend_value_30d);
+          var trendHtml = '';
+          if (!r.suppression_reason_30d && trend != null && Math.abs(trend) > 0.1) {
+            var arrow = trend > 0 ? '\u2191' : '\u2193';
+            var tColor = trend > 0 ? 'var(--positive)' : 'var(--negative)';
+            trendHtml = '<span class="eco-trend" style="color:' + tColor + '">' + arrow + '</span>';
+          }
+          var slug = encodeURIComponent(r.slug || '');
+          html += '<div class="prop-eco-card"'
+            + ' onclick="navigateTo(\'property.html?slug=' + slug + '\')"'
+            + ' tabindex="0" role="button"'
+            + ' onkeydown="if(event.key===\'Enter\')navigateTo(\'property.html?slug=' + slug + '\')">';
+          html += '<div>';
+          html += '<div class="prop-eco-name">' + escHtml(r.property_name) + '</div>';
+          html += '<span class="prop-eco-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">'
+            + escHtml(cfg.label || r.property_type) + '</span>';
+          html += '</div>';
+          if (score != null || trendHtml) {
+            html += '<div class="prop-eco-score">';
+            if (score != null) html += fmt(score, 1);
+            html += trendHtml;
+            html += '</div>';
+          }
+          html += '</div>';
+        });
+
+        if (overflow > 0) {
+          html += '<div class="eco-overflow">' + overflow + ' more not shown.</div>';
+        }
+
+        html += '</div>'; /* eco-group-grid */
+        html += '</div>'; /* eco-group */
+      });
+
+      var section = document.getElementById('ecosystem-section');
+      section.style.display = 'block';
+      document.getElementById('ecosystem-body').innerHTML = html;
+    })
+    .catch(function() {});
+}
+
+function renderPosts(posts) {
+  if (!posts || posts.length === 0) return;
+
+  var html = '';
+  posts.forEach(function(p) {
+    var dateObj = new Date(p.posted_at);
+    var dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+    html += '<div class="prop-post-item">';
+    html += '<div class="prop-post-header">';
+    html += '<span class="prop-post-platform">' + escHtml(p.platform) + '</span>';
+    html += '<span class="prop-post-date">' + dateStr + '</span>';
+    if (p.content_type) {
+      html += '<span class="prop-post-type">' + escHtml(p.content_type) + '</span>';
+    }
+    html += '</div>';
+    if (p.caption) {
+      html += '<div class="prop-post-caption">' + escHtml(p.caption.substring(0, 200)) + (p.caption.length > 200 ? '...' : '') + '</div>';
+    }
+    var metrics = [];
+    if (p.total_likes) metrics.push(p.total_likes + ' likes');
+    if (p.total_comments) metrics.push(p.total_comments + ' comments');
+    if (metrics.length > 0) {
+      html += '<div class="prop-post-metrics">' + metrics.join(' · ') + '</div>';
+    }
+    html += '</div>';
+  });
+
+  document.getElementById('posts-section').style.display = 'block';
+  document.getElementById('posts-container').innerHTML = html;
+}
+
+/* ── Init ──────────────────────────────────────────────────────────── */
+(function init() {
+  loadProperty();
+})();
+
+</script>
+
+<style>
+
+/* Property-specific styles */
+
+.prop-header {
+  display: flex;
+  gap: var(--spacing-3xl);
+  margin-bottom: var(--spacing-4xl);
+  align-items: flex-start;
+}
+
+.prop-hero {
+  flex: 0 0 240px;
+  height: 240px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.prop-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prop-header-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.prop-name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.prop-name {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.prop-flag {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.prop-type-badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.prop-type-label {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.prop-meta-text {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.prop-bio {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.65;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.prop-actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.prop-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 7px var(--spacing-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: var(--font);
+}
+
+.prop-action-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+
+/* Sections */
+.prop-section {
+  margin-bottom: var(--spacing-4xl);
+  padding-bottom: var(--spacing-3xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.prop-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.prop-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.prop-score-block {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+}
+
+.prop-score-primary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+}
+
+.prop-score-val {
+  font-size: 42px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.prop-score-label {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.prop-score-context {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-top: var(--spacing-xs);
+}
+
+.prop-confidence {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.prop-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.prop-signal-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.prop-signal-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+}
+
+.prop-signal-val {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.prop-signal-delta {
+  font-size: var(--text-xs);
+  margin-top: 2px;
+}
+
+.prop-momentum-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.prop-momentum-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.prop-notice {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.prop-ecosystem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.prop-eco-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  min-height: 100px;
+}
+
+.prop-eco-card:hover {
+  border-color: var(--border-strong);
+}
+
+.prop-eco-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-1);
+  margin-bottom: var(--spacing-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prop-eco-type {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.prop-eco-score {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-top: auto;
+  padding-top: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* ── Ecosystem grouped layout ────────────────────────────────────────── */
+
+.eco-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.eco-stat {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.eco-sep {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  user-select: none;
+}
+
+.eco-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3xl);
+}
+
+.eco-group-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.eco-group-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.eco-group-desc {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.eco-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.eco-overflow {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  padding-top: var(--spacing-xs);
+  grid-column: 1 / -1;
+}
+
+.eco-trend {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.prop-post-item {
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.prop-post-item:last-child {
+  border-bottom: none;
+}
+
+.prop-post-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xs);
+}
+
+.prop-post-platform,
+.prop-post-type {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.prop-post-date {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.prop-post-caption {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.55;
+  margin-bottom: var(--spacing-xs);
+}
+
+.prop-post-metrics {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* ── Momentum metrics row ──────────────────────────────────────────── */
+
+.momentum-metrics-row {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.momentum-metric {
+  flex: 1 1 120px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.momentum-metric-lbl {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+}
+
+.momentum-metric-val {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  font-family: var(--font-mono, 'DM Mono', monospace);
+  letter-spacing: -0.01em;
+}
+
+.momentum-metric-na {
+  color: var(--text-3) !important;
+}
+
+.momentum-metric-sub {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+/* ── Momentum chart ────────────────────────────────────────────────── */
+
+.momentum-chart-svg-wrap {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-md) 0;
+  height: 88px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.momentum-chart-svg-wrap .spark-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.momentum-chart-dates {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-3);
+  padding: var(--spacing-xs) 0 0;
+}
+
+.momentum-chart-unavail {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  font-style: italic;
+  margin-top: var(--spacing-sm);
+}
+
+.state-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-3);
+  font-size: var(--text-md);
+  text-align: center;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: var(--spacing-lg);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+</style>
+
 </body>
 </html>

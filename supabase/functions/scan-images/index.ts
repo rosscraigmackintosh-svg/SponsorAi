@@ -17,6 +17,11 @@ interface Entity {
   property_type: string;
 }
 
+interface ImageEntry {
+  url: string;
+  alt: string;
+}
+
 interface Candidate {
   property_id:   string;
   slug:          string;
@@ -28,9 +33,11 @@ interface Candidate {
 }
 
 /* ── Image extraction ─────────────────────────────────────────────────────── */
-function extractImageUrls(html: string, baseUrl: string): string[] {
+/* Returns { url, alt } pairs — alt is used as fallback matching signal when
+   CDNs serve images with opaque UUID filenames. */
+function extractImageEntries(html: string, baseUrl: string): ImageEntry[] {
   const seen  = new Set<string>();
-  const urls: string[] = [];
+  const entries: ImageEntry[] = [];
 
   function resolve(raw: string): string | null {
     if (!raw || raw.startsWith("data:")) return null;
@@ -39,28 +46,47 @@ function extractImageUrls(html: string, baseUrl: string): string[] {
     } catch { return null; }
   }
 
-  function push(raw: string) {
-    const abs = resolve(raw.trim());
+  /* Decode common HTML entities in URL strings before parsing */
+  function decodeEntities(s: string): string {
+    return s.replace(/&amp;/gi, "&")
+            .replace(/&lt;/gi,  "<")
+            .replace(/&gt;/gi,  ">")
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;/gi, "'");
+  }
+
+  function push(raw: string, alt = "") {
+    const abs = resolve(decodeEntities(raw.trim()));
     if (abs && !seen.has(abs) && /\.(jpe?g|png|svg|webp|gif|avif)(\?|$)/i.test(abs)) {
       seen.add(abs);
-      urls.push(abs);
+      entries.push({ url: abs, alt: alt.trim() });
     }
   }
 
-  /* <img src="…"> and <img data-src="…"> */
-  for (const m of html.matchAll(/<img[^>]+?(?:data-)?src=["']([^"']+)["']/gi)) push(m[1]);
+  /* <img src="…" alt="…"> and <img data-src="…" alt="…"> */
+  for (const m of html.matchAll(/<img([^>]+?)>/gi)) {
+    const attrs  = m[1];
+    const srcM   = attrs.match(/(?:data-)?src=["']([^"']+)["']/i);
+    const altM   = attrs.match(/alt=["']([^"']*)["']/i);
+    if (srcM) push(srcM[1], altM?.[1] ?? "");
+  }
 
   /* <source srcset="…"> — take first URL of each srcset */
-  for (const m of html.matchAll(/<source[^>]+?srcset=["']([^"']+)["']/gi)) {
-    const first = m[1].split(",")[0].trim().split(/\s+/)[0];
-    if (first) push(first);
+  for (const m of html.matchAll(/<source([^>]+?)>/gi)) {
+    const attrs  = m[1];
+    const srcset = attrs.match(/srcset=["']([^"']+)["']/i);
+    const altM   = attrs.match(/alt=["']([^"']*)["']/i);
+    if (srcset) {
+      const first = srcset[1].split(",")[0].trim().split(/\s+/)[0];
+      if (first) push(first, altM?.[1] ?? "");
+    }
   }
 
   /* og:image / twitter:image meta tags */
   for (const m of html.matchAll(/<meta[^>]+?(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+?content=["']([^"']+)["']/gi)) push(m[1]);
   for (const m of html.matchAll(/<meta[^>]+?content=["']([^"']+)["'][^>]+?(?:property|name)=["'](?:og:image|twitter:image)["']/gi)) push(m[1]);
 
-  return urls;
+  return entries;
 }
 
 /* ── Matching ─────────────────────────────────────────────────────────────── */
@@ -74,13 +100,14 @@ function normPath(url: string): string {
   } catch { return ""; }
 }
 
-function scoreMatch(imagePath: string, entity: Entity): { score: number; reason: string } {
+/* Score image URL path against entity slug/name. */
+function scorePathMatch(imagePath: string, entity: Entity): { score: number; reason: string } {
   const slug      = entity.slug.toLowerCase();
   const slugParts = slug.split("-").filter(Boolean);
   const nameParts = entity.name.toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
     .split(/\s+/)
-    .filter(s => s.length > 2);     // skip very short words
+    .filter(s => s.length > 2);
 
   /* 1. Exact slug in path segment */
   const segments = imagePath.split("/").filter(Boolean);
@@ -105,16 +132,61 @@ function scoreMatch(imagePath: string, entity: Entity): { score: number; reason:
   return { score: 0, reason: "" };
 }
 
-function matchImagesToEntities(imageUrls: string[], entities: Entity[]): Candidate[] {
+/* Score image alt text against entity slug/name.
+   Used when CDNs serve UUID-named files with no readable path information.
+   Alt text like "Bath Rugby logo" or "Harlequins crest" carries the entity name. */
+function scoreAltMatch(alt: string, entity: Entity): { score: number; reason: string } {
+  if (!alt) return { score: 0, reason: "" };
+
+  const normAlt  = alt.toLowerCase().replace(/[^a-z0-9\s-]/g, "");
+  const altWords = normAlt.split(/\s+/).filter(Boolean);
+  const slug     = entity.slug.toLowerCase();
+
+  /* Build a hyphen-joined version of the alt tokens for slug comparison */
+  const altAsSlug = normAlt.replace(/\s+/g, "-");
+
+  /* 1. Exact slug in alt (e.g. alt="bath-rugby") */
+  if (altAsSlug === slug || altAsSlug.includes(slug)) {
+    return { score: 0.95, reason: `slug match in alt text ("${alt}")` };
+  }
+
+  /* 2. All slug parts present as alt words (e.g. alt="Bath Rugby" → ["bath","rugby"] ✓) */
+  const slugParts = slug.split("-").filter(p => p.length > 2);
+  if (slugParts.length >= 1 && slugParts.every(p => altWords.includes(p))) {
+    return { score: 0.85, reason: `all slug parts found in alt text ("${alt}")` };
+  }
+
+  /* 3. Entity name words in alt — majority match */
+  const nameParts = entity.name.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter(s => s.length > 2);
+  const nameHits = nameParts.filter(p => altWords.includes(p)).length;
+  if (nameParts.length >= 2 && nameHits >= 2) {
+    return { score: 0.80, reason: `name words in alt text ("${alt}")` };
+  }
+  if (nameParts.length >= 1 && nameHits >= Math.ceil(nameParts.length * 0.6)) {
+    return { score: 0.65, reason: `partial name match in alt text ("${alt}")` };
+  }
+
+  return { score: 0, reason: "" };
+}
+
+function matchImagesToEntities(entries: ImageEntry[], entities: Entity[]): Candidate[] {
   const candidates: Candidate[] = [];
   const THRESHOLD = 0.55;
 
   for (const entity of entities) {
     let best: { url: string; score: number; reason: string } | null = null;
 
-    for (const url of imageUrls) {
-      const path  = normPath(url);
-      const match = scoreMatch(path, entity);
+    for (const { url, alt } of entries) {
+      const path      = normPath(url);
+      const pathScore = scorePathMatch(path, entity);
+      const altScore  = scoreAltMatch(alt, entity);
+
+      /* Take whichever signal is stronger */
+      const match = pathScore.score >= altScore.score ? pathScore : altScore;
+
       if (match.score >= THRESHOLD && (!best || match.score > best.score)) {
         best = { url, score: match.score, reason: match.reason };
       }
@@ -233,10 +305,10 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  /* Extract image URLs from the page */
-  const imageUrls = extractImageUrls(html, source_url);
+  /* Extract image entries (url + alt) from the page */
+  const imageEntries = extractImageEntries(html, source_url);
 
-  if (imageUrls.length === 0) {
+  if (imageEntries.length === 0) {
     return new Response(
       JSON.stringify({ candidates: [], images_found: 0, message: "No image URLs found on source page." }),
       { status: 200, headers: JSON_HEADERS }
@@ -246,13 +318,13 @@ Deno.serve(async (req: Request) => {
   /* Load series entity roster */
   const entities = await getSeriesEntities(supabase, series_slug);
 
-  /* Match */
-  const candidates = matchImagesToEntities(imageUrls, entities);
+  /* Match — uses both URL path and alt text as signals */
+  const candidates = matchImagesToEntities(imageEntries, entities);
 
   return new Response(
     JSON.stringify({
       candidates,
-      images_found:    imageUrls.length,
+      images_found:     imageEntries.length,
       entities_checked: entities.length,
     }),
     { status: 200, headers: JSON_HEADERS }

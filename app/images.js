@@ -638,6 +638,142 @@ var PROPERTY_IMAGES = {
   /* timur-boguslavskiy, marco-varrone — no confirmed portrait IDs found;
      fall through to placeholder hero icon */
 
+  /* ── Premiership Rugby ecosystem ──────────────────────────────────────
+     Team badge URLs from premiershiprugby.com CDN (incrowdsports.com / cortextech.io).
+     Sourced from live premiershiprugby.com/clubs/ 2026-03-14.
+     Venue: Wikimedia Commons aerial — hotlink-safe; MD5 path computed 2026-03-14.
+     Athletes: all 11 fall through to placeholder hero icon (portrait URLs require
+     club portal access — add via Control Room > Images or per-player sourcing).   */
+
+  /* Series / governing body */
+  'premiership-rugby': {
+    /* Gallagher Premiership Rugby wordmark from premiershiprugby.com CDN */
+    src:  'https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png',
+    kind: 'series',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '18%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'premiership-rugby-ltd': {
+    /* Governing body — reuse Gallagher Premiership wordmark */
+    src:  'https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png',
+    kind: 'series',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '18%',
+    bg:   'var(--surface-muted)'
+  },
+
+  /* Venue */
+  'allianz-stadium-twickenham': {
+    /* Wikimedia Commons aerial — Twickenham_Stadium_Aerial.JPG (MD5 prefix: 1/1c) */
+    src:  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Twickenham_Stadium_Aerial.JPG/1280px-Twickenham_Stadium_Aerial.JPG',
+    kind: 'venue',
+    fit:  'cover',
+    pos:  'center center'
+  },
+
+  /* Teams — badge PNGs from premiershiprugby.com CDN */
+  'bath-rugby': {
+    src:  'https://media-cdn.incrowdsports.com/f4d9a293-9086-41bf-aa1b-c98d1c62fe3b.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'bristol-bears': {
+    src:  'https://media-cdn.incrowdsports.com/7952282c-a8b0-4e70-af53-906f215035c2.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'exeter-chiefs': {
+    src:  'https://media-cdn.incrowdsports.com/434b059d-21e6-49ba-8d26-9af27fb98f19.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'gloucester-rugby': {
+    src:  'https://media-cdn.incrowdsports.com/57109498-ebce-4d81-949a-c0bd84420813.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'harlequins': {
+    src:  'https://media-cdn.incrowdsports.com/af0358f8-9fb4-415b-a13e-03f955d1bcc8.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'leicester-tigers': {
+    src:  'https://media-cdn.cortextech.io/438e7cd5-fe7c-4002-897c-e702a579fbf1.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'newcastle-falcons': {
+    /* Club rebranded as Newcastle Red Bulls 2024-25; DB slug remains newcastle-falcons */
+    src:  'https://media-cdn.cortextech.io/16fafbdc-a308-43b3-80bd-c4b1e8077290.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'northampton-saints': {
+    src:  'https://media-cdn.incrowdsports.com/f8cf95ed-e223-43ab-bae1-1b708d811c58.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'sale-sharks': {
+    src:  'https://media-cdn.incrowdsports.com/ebb6895c-51ae-4403-9a82-470bb8eed534.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  'saracens': {
+    src:  'https://media-cdn.cortextech.io/00ac0c8c-7562-4d0c-9d4e-dba7b72612b0.png',
+    kind: 'logo',
+    fit:  'contain',
+    pos:  'center center',
+    pad:  '12%',
+    bg:   'var(--surface-muted)'
+  },
+
+  /* alex-mitchell, ben-spencer, ellis-genge, finn-russell, freddie-steward, henry-slade,
+     jack-nowell, kyle-sinckler, marcus-smith-rugby, maro-itoje, tom-curry —
+     Portrait URLs require premiershiprugby.com player portal or club photography access.
+     All 11 fall through to placeholder hero icon.
+     Add via Control Room > Images (scan from premiershiprugby.com/players/<slug>) or
+     direct club site sourcing once confirmed URLs are available.                      */
+
 };
 
 /* ── Event → Venue image reuse map ──────────────────────────────────────
@@ -667,5 +803,7 @@ var EVENT_VENUE_MAP = {
   'gtwce-paul-ricard-2024':                 'circuit-paul-ricard',
   'gtwce-misano-2024':                      'misano-world-circuit',
   'gtwce-magny-cours-2024':                 'circuit-de-nevers-magny-cours',
-  'gtwce-nurburgring-2024':                 'nurburgring'
+  'gtwce-nurburgring-2024':                 'nurburgring',
+  /* Premiership Rugby */
+  'premiership-rugby-final-2026':           'allianz-stadium-twickenham'
 };

@@ -1424,33 +1424,54 @@ body.chat-open .content {
 /* ─────────────────────────────────────────────────────────────────
    DETAIL PANEL — slides in from the right on card select
 ───────────────────────────────────────────────────────────────── */
+/* ── Property detail — full-page overlay ──────────────────────────────── */
 .detail-panel {
   position: fixed;
-  top: 88px;
-  bottom: 0;
-  right: calc(-1 * var(--cp-w) - 48px);
-  width: var(--cp-w);
-  z-index: 98;
-  background: var(--bg);
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  inset: 0;
+  z-index: 200;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
   opacity: 0;
   pointer-events: none;
-  transition: right 0.22s ease, opacity 0.18s ease;
+  transition: opacity 0.2s ease;
 }
 .detail-panel.open {
-  right: 0;
   opacity: 1;
   pointer-events: all;
 }
-/* Left-edge separator — removed */
-/* Push content right when detail is open */
-body.detail-open .content {
-  padding-right: calc(var(--cp-w) + var(--spacing-6xl));
+/* Backdrop — semi-transparent so grid is visible behind */
+.dp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.40);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 0;
+  cursor: pointer;
+}
+[data-theme="dark"] .dp-backdrop {
+  background: rgba(0,0,0,0.60);
+}
+/* Inner card — the actual content surface */
+.dp-overlay-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 680px;
+  max-height: calc(100vh - 96px);
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.16), 0 4px 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+/* Body scroll locked while overlay is open */
+body.detail-open {
+  overflow: hidden;
 }
 
 /* Scrollable inner */
@@ -1598,6 +1619,8 @@ body.detail-open .content {
   text-align: center; transition: border-color 0.15s, color 0.15s;
 }
 .dp-action-btn:hover { border-color: var(--border-strong); color: var(--text-1); }
+.dp-action-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dp-action-btn.active:hover { opacity: 0.88; }
 .dp-action-btn.disabled { opacity: 0.36; cursor: not-allowed; pointer-events: none; }
 
 /* FanScore explanation toggle */
@@ -2126,6 +2149,7 @@ body.detail-open .content {
 .hero-btn svg { width: 18px; height: 18px; display: block; }
 .hero-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
 .hero-btn.active { color: var(--accent); }
+.hero-btn.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 /* List view: hero is 72px wide — overlay suppressed */
 .card-grid.list .card-hero-actions { display: none; }
 
@@ -2442,5 +2466,94 @@ body.compare-open .content { padding-bottom: 80px; }
 @media (min-width: 641px) and (max-width: 1024px) {
   .card-grid { grid-template-columns: repeat(2, 1fr); }
   .content   { padding: 92px var(--spacing-4xl) var(--spacing-5xl); }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   EXPLORE FOOTER — result count + load more
+───────────────────────────────────────────────────────────────── */
+.explore-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-4xl) var(--spacing-xl) var(--spacing-5xl);
+  text-align: center;
+}
+.ef-count {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+.ef-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 var(--spacing-2xl);
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+.ef-load-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.ef-load-more:active { opacity: 0.8; }
+
+/* ─────────────────────────────────────────────────────────────────
+   SCROLL-TO-TOP BUTTON
+───────────────────────────────────────────────────────────────── */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 90;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, color 0.14s ease, border-color 0.14s ease;
+}
+.scroll-top-btn.visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+.scroll-top-btn:hover {
+  color: var(--text-2);
+  border-color: var(--text-3);
+}
+/* Shift up when compare tray is open */
+body.compare-open .scroll-top-btn {
+  bottom: 86px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DETAIL OVERLAY — responsive adjustments
+───────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .detail-panel {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .dp-overlay-inner {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
 }
 

@@ -1,7 +1,6 @@
 /* ── UI / Grid layer ─────────────────────────────────────────────────────
    Depends on globals from data.js:         allCards, MODEL, activeFilter
    Depends on globals from components/card.js:    renderCard
-   Depends on globals from components/layout.js:  activeLayout, layoutMasonry
    Depends on globals in inline script (runtime only, not parse time):
      chatState, addMsg()
    Must load after components/panel.js and before the inline script block.
@@ -100,7 +99,6 @@ function openChat() {
   document.getElementById('chat-panel').classList.add('open');
   updateChatToggle(true);
   setTimeout(function() { document.getElementById('cp-input').focus(); }, 300);
-  _masonryReflow();
   /* Fire greeting on first open */
   if (!chatState.greeted) {
     chatState.greeted = true;
@@ -114,7 +112,6 @@ function closeChat() {
   document.body.classList.remove('chat-open');
   document.getElementById('chat-panel').classList.remove('open');
   updateChatToggle(false);
-  _masonryReflow();
 }
 
 /* ── Nav active state ────────────────────────────────────────────────── */
@@ -130,11 +127,7 @@ function setNavActive(name) {
 }
 
 /* ── Filter & render ──────────────────────────────────────────────────── */
-/* Cached parts so ghost can be repopulated after layoutMasonry() runs */
-var _metaNumber     = '';   /* e.g. "120" or "50 of 120" */
-var _metaFiltered   = false;
-var _metaDetail     = '';        /* "sorted A-Z · model v1.0 · as of 2026-02-28" */
-var _metaSort       = 'alpha-asc'; /* current sort key — never defaults to score */
+var _metaSort = 'alpha-asc'; /* current sort key — never defaults to score */
 
 function sortLabel(sort) {
   var labels = {
@@ -181,28 +174,10 @@ function sortCards(cards) {
   return s;
 }
 
-function updateGhostMeta() {
-  var wrap = document.getElementById('ghost-meta-wrap');
-  if (!wrap) return;
-  var html = '';
-  if (_metaFiltered) {
-    html += '<span class="ghost-meta-label">Showing</span>';
-    html += '<span class="ghost-meta-count">' + _metaNumber + '</span>';
-  } else {
-    html += '<span class="ghost-meta-count">' + _metaNumber + '</span>';
-  }
-  html += '<span class="ghost-meta-label ghost-meta-properties">Properties</span>';
-  html += '<span class="ghost-meta-detail">' + _metaDetail + '</span>';
-  wrap.innerHTML = html;
-}
-
 function updateMeta(shown, total) {
-  var asOf        = allCards[0] && allCards[0].asOf ? allCards[0].asOf : '--';
-  _metaFiltered   = shown !== total;
-  _metaNumber     = _metaFiltered ? shown + ' of ' + total : String(total);
-  _metaDetail     = sortLabel(_metaSort) + ' \u00B7 model ' + MODEL + ' \u00B7 as of ' + asOf;
-
-  var countText   = _metaFiltered
+  var asOf      = allCards[0] && allCards[0].asOf ? allCards[0].asOf : '--';
+  var filtered  = shown !== total;
+  var countText = filtered
     ? 'Showing ' + shown + ' of ' + total + ' properties'
     : total + ' properties';
 
@@ -222,8 +197,6 @@ function updateMeta(shown, total) {
   /* Keep nav menu model label in sync */
   var navLabel = document.getElementById('nav-model-label');
   if (navLabel) navLabel.textContent = 'model ' + MODEL + ' \u00B7 as of ' + asOf;
-
-  updateGhostMeta();
 }
 
 /* Animate existing cards out, then swap grid content */
@@ -231,19 +204,9 @@ function setGridContent(html) {
   var grid = document.getElementById('card-grid');
   var existing = grid.querySelectorAll('.fanscore-card');
   if (!existing.length) {
-    if (activeLayout === 'masonry') grid.style.visibility = 'hidden'; /* bulletproof hide — opacity can still compositor-flash */
     grid.innerHTML = html;
     if (window.lucide) lucide.createIcons();
-    if (activeLayout === 'masonry') {
-      setTimeout(function() {
-        layoutMasonry();
-        grid.style.visibility = '';
-        grid.classList.remove('anim-in'); void grid.offsetHeight; grid.classList.add('anim-in');
-        setTimeout(layoutMasonry, 400);
-      }, 50);
-    } else {
-      grid.classList.remove('anim-in'); grid.offsetHeight; grid.classList.add('anim-in');
-    }
+    grid.classList.remove('anim-in'); grid.offsetHeight; grid.classList.add('anim-in');
     return;
   }
   var stagger = 18; /* ms between each card */
@@ -255,19 +218,9 @@ function setGridContent(html) {
   });
   var total = Math.min(baseDuration + (existing.length * stagger), maxTotal);
   setTimeout(function() {
-    if (activeLayout === 'masonry') grid.style.visibility = 'hidden';
     grid.innerHTML = html;
     if (window.lucide) lucide.createIcons();
-    if (activeLayout === 'masonry') {
-      setTimeout(function() {
-        layoutMasonry();
-        grid.style.visibility = '';
-        grid.classList.remove('anim-in'); void grid.offsetHeight; grid.classList.add('anim-in');
-        setTimeout(layoutMasonry, 400);
-      }, 50);
-    } else {
-      grid.classList.remove('anim-in'); grid.offsetHeight; grid.classList.add('anim-in');
-    }
+    grid.classList.remove('anim-in'); grid.offsetHeight; grid.classList.add('anim-in');
   }, total);
 }
 
@@ -281,6 +234,11 @@ var FILTER_TYPES = {
   venue:  ['venue']
 };
 
+/* ── Pagination ──────────────────────────────────────────────────────── */
+var PAGE_SIZE      = 24;
+var _displayedCount = PAGE_SIZE;
+var _currentVis    = []; /* filtered + sorted set, full, updated on each renderGrid call */
+
 function renderGrid(filter) {
   var vis;
   if (filter === 'all') {
@@ -289,24 +247,53 @@ function renderGrid(filter) {
     var matchTypes = FILTER_TYPES[filter] || [filter];
     vis = allCards.filter(function(c){ return matchTypes.indexOf(c.type) >= 0; });
   }
-  if (!vis.length){setGridContent('<div class="state-msg">No properties found.</div>');return;}
+  if (!vis.length) {
+    setGridContent('<div class="state-msg">No properties found.</div>');
+    updateFooter(0, 0);
+    return;
+  }
   vis = sortCards(vis);
-  setGridContent(vis.map(renderCard).join(''));
+  _currentVis     = vis;
+  _displayedCount = PAGE_SIZE; /* reset to first page on every new filter/sort */
+  var page = vis.slice(0, _displayedCount);
+  setGridContent(page.map(renderCard).join(''));
   updateMeta(vis.length, allCards.length);
+  updateFooter(page.length, vis.length);
+}
+
+function loadMore() {
+  _displayedCount += PAGE_SIZE;
+  var page = _currentVis.slice(0, _displayedCount);
+  /* Append new cards rather than replacing the whole grid */
+  var grid = document.getElementById('card-grid');
+  var frag = document.createElement('div');
+  frag.innerHTML = _currentVis.slice(_displayedCount - PAGE_SIZE, _displayedCount).map(renderCard).join('');
+  /* Animate new cards in */
+  Array.prototype.forEach.call(frag.querySelectorAll('.fanscore-card'), function(el, i) {
+    el.style.animationDelay = (i * 0.022) + 's';
+  });
+  while (frag.firstChild) grid.appendChild(frag.firstChild);
+  if (window.lucide) lucide.createIcons();
+  updateFooter(page.length, _currentVis.length);
+}
+
+function updateFooter(shown, total) {
+  var footer = document.getElementById('explore-footer');
+  if (!footer) return;
+  if (!total) { footer.innerHTML = ''; footer.style.display = 'none'; return; }
+  footer.style.display = '';
+  var hasMore = shown < total;
+  var html = '<span class="ef-count">' + shown + ' of ' + total + ' properties</span>';
+  if (hasMore) {
+    html += '<button class="ef-load-more" onclick="loadMore()">Load more</button>';
+  }
+  footer.innerHTML = html;
 }
 
 function setFilter(el) {
   document.querySelectorAll('.chip[data-filter]').forEach(function(c){c.classList.remove('active');});
   el.classList.add('active');
-  activeFilter=el.dataset.filter;
+  activeFilter = el.dataset.filter;
   window.scrollTo({ top: 0 });
   renderGrid(activeFilter);
-}
-
-/* ── Masonry transition reflow helper ────────────────────────────────── */
-/* Spreads layoutMasonry calls evenly across the panel slide duration (220ms)
-   so absolute positions track the smooth padding-right/left transition. */
-function _masonryReflow() {
-  if (activeLayout !== 'masonry') return;
-  [0, 55, 110, 165, 230].forEach(function(t) { setTimeout(layoutMasonry, t); });
 }

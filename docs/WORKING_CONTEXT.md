@@ -2,7 +2,7 @@
 
 SponsorAI — Working Context
 
-Last updated: 2026-03-13 (Control Room v0.7 — Ingestion pipeline automation)
+Last updated: 2026-03-14 (Property page — ecosystem relationship explanation layer)
 
 ---
 
@@ -31,7 +31,772 @@ Full mode definitions, prompt templates, and workflow sequences: `project-docs/A
 
 ---
 
-## Last Session — 2026-03-13 (Control Room v0.7 — Ingestion pipeline automation)
+## Last Session — 2026-03-14 (Property page — ecosystem relationship explanation layer)
+
+### Task — Ecosystem relationship explanation (Parts 1-7)
+
+**Mode: Build + Architecture**
+
+Replaced the flat Ecosystem card grid on the property page with a grouped, contextually annotated layout. The section now explains what each relationship means and adds a lightweight influence summary bar.
+
+**Files changed:**
+- `app/property.html` — all changes inline
+
+**What changed:**
+
+| Area | Before | After |
+|---|---|---|
+| HTML | Single `#ecosystem-grid` flat grid | `#ecosystem-summary` bar + `#ecosystem-body` grouped layout |
+| Relationship grouping | None — all cards in one grid | Grouped by relationship type using `REL_LABELS_PROP` |
+| Contextual explanation | None | `.eco-group-desc` sentence per group (e.g. "Teams that participate in this series.") |
+| Influence summary bar | None | Count + combined reach + strongest entity by FanScore + rising count |
+| Card trend indicator | None | Subtle `arr()` arrow if `\|t30\| > 0.1` (colored, tiny) |
+| API fetch fields | `property_id, property_name, property_type, avg_score_30d, slug, suppression_reason_30d` | Added: `total_followers_latest, trend_value_30d` |
+
+**New constants:**
+- `REL_LABELS_PROP` — maps `rel_type:dir` to a human label (20 entries, mirrors `panel.js` `REL_LABELS`)
+- `REL_CONTEXT_PROP` — maps group label to a one-sentence contextual description (16 entries)
+- `ECO_MAX_PER_GROUP = 12` — max cards shown per group before overflow notice
+
+**Influence summary bar logic:**
+- Always shows: total connected entity count
+- Shows combined reach (sum of `total_followers_latest`) if any entity has follower data
+- Shows "Strongest: [Name] (score)" using the highest non-suppressed `avg_score_30d`
+- Shows rising count (entities where `trend_value_30d > 0.1`)
+- All computed client-side from already-fetched data
+
+**Sparse/empty handling:**
+- If API returns no rows: renderEcosystem returns silently, section stays hidden
+- If groupOrder is empty after matching: returns silently, section stays hidden
+- If combined followers = 0 and no follower data: reach line omitted from summary
+- If all entities suppressed: no "Strongest" shown in summary
+- If no rising entities: rising count line omitted
+- Overflow beyond ECO_MAX_PER_GROUP shows "N more not shown" note in grid
+
+**What was NOT changed:**
+- Individual card design (`.prop-eco-card`) preserved
+- Navigation on click (navigateTo) unchanged
+- `loadRelationships()` in data.js unchanged
+- No new network calls introduced (just additional fields in existing apiFetch)
+- FitScore, brand-match, and scoring not touched
+
+**Limitations remaining:**
+- `REL_LABELS_PROP` duplicates `REL_LABELS` in panel.js; both should eventually be moved to data.js
+- Combined reach is a raw sum; does not de-duplicate shared audiences
+- Trend indicator uses `t30` slope which can be noisy for short-window entities
+
+---
+
+## Previous Session — 2026-03-14 (Control Room — archive/delete run feature)
+
+### Task — Control Room series removal (Parts 1-7)
+
+**Mode: Build**
+
+Added safe archive and permanent delete to the Control Room ingestion run row menu. Operators can now remove a run from the active list without losing data (archive), or permanently destroy the run and its history (delete).
+
+**Schema migration applied:**
+```sql
+ALTER TABLE ingestion_runs ADD COLUMN archived boolean NOT NULL DEFAULT false;
+ALTER TABLE ingestion_runs ADD COLUMN archived_at timestamptz;
+```
+Migration name: `add_archived_flag_to_ingestion_runs` on project `kyjpxxyaebxvpprugmof`.
+
+**Files changed:**
+- `app/control-room.html` — all changes inline
+
+**What was added:**
+
+| Change | Detail |
+|---|---|
+| `.cr-menu-danger` CSS | Red text/hover for destructive row menu items. Light + dark theme variants. |
+| `.cr-btn-danger` CSS | Solid red confirm button. Used by both archive and delete modals. |
+| Row menu: Archive run | Opens confirmation modal. Soft-delete only. Data preserved. |
+| Row menu: Delete permanently | Opens confirmation modal with entity count warning if `entities > 0`. |
+| `confirmArchiveRun(slug)` | Builds archive confirmation modal using `#action-modal`. Hides stub notice. Sets `.cr-btn-danger` on confirm. |
+| `archiveRun(slug)` | PATCH `ingestion_runs` (`archived=true, archived_at=now()`). PATCH `properties` (`visible_in_ui=false`). Removes from `SERIES_STATUS`, re-renders. |
+| `confirmDeleteRun(slug)` | Builds delete confirmation modal. Shows entity-count warning block if `entities > 0`. Suggests archive alternative. |
+| `deleteRun(slug)` | Cascade: DELETE `ingestion_run_checklist`, DELETE `control_room_log`, DELETE `ingestion_runs`. Removes from `SERIES_STATUS`, re-renders. |
+| `loadIngestionRuns()` | Added `&archived=eq.false` filter so archived runs do not reappear on page load. |
+| `closeModal()` | Resets `.cr-btn-danger` back to `.cr-btn-primary` and restores stub notice visibility after modal closes. |
+
+**What is NOT deleted by `deleteRun`:**
+- `control_room_issue_states` — slug-keyed; preserves intentional/resolved decisions
+- `series_visibility` — slug-keyed; preserves operator readiness decisions
+- `properties` and all entity data — never touched by delete
+
+**Behaviour summary:**
+- Archive: reversible. Run hidden from UI. Series hidden from public app. Data intact in DB.
+- Delete: permanent. Only allowed after explicit confirmation. Entity-count warning shown if `entities > 0`. Cascade removes run + checklist + logs only.
+- Neither action is available if `run_id` is null (series has no persisted run record). Archive run button still renders (for user guidance); Delete button is suppressed when `run_id` is null.
+
+**Next steps:**
+- Consider adding an "Archived" tab or "Show archived" toggle to the Control Room to allow recovery of archived runs
+- Athletes remain hidden until portrait images are sourced
+- Venues remain hidden (no images, no explicit scope)
+
+---
+
+## Previous Session — 2026-03-14 (Premiership Rugby go-live + ingestion run cleanup)
+
+### Task 1 — Premiership Rugby controlled go-live
+
+**Mode: Audit + Build**
+
+Full image health audit confirmed. Entity-level visibility enabled for the safe subset of the rugby ecosystem. Athletes intentionally kept hidden pending portrait sourcing.
+
+**Image health at go-live:**
+
+| Type | Count | Image status |
+|---|---|---|
+| Teams | 10 | All confirmed (9 scan, 1 manual — Newcastle Falcons) |
+| Series | 1 | Confirmed (manual — cortextech CDN logo) |
+| Governing body | 1 | Confirmed (manual — same logo as series) |
+| Event | 1 | No entity_image; EVENT_VENUE_MAP fallback via allianz-stadium-twickenham |
+| Athletes | 11 | None — intentionally hidden, portraits not yet sourced |
+| Venues | 11 | None — not in go-live scope |
+
+**FanScore status at go-live:**
+- 10 teams: live scores, confidence High (9) or Medium (1 — Bath). Range 80.97–85.76. Note: scores are synthetic signals generated 2025-12-14 to 2026-03-13.
+- Series: live score 82.5, High confidence. Synthetic.
+- Governing body: suppressed ("Insufficient data") — renders `--` in UI. Acceptable.
+- Event: no score data — renders `--` in UI. Acceptable.
+
+**DB change — visible_in_ui enabled:**
+```sql
+UPDATE properties SET visible_in_ui = true
+WHERE sport = 'rugby'
+  AND property_type IN ('series','governing_body','team','event')
+  AND visible_in_ui = false;
+-- 13 rows updated
+```
+
+**Final visibility state:**
+- visible: series (1), governing_body (1), team (10), event (1) = **13 entities live**
+- hidden: athlete (11), venue (11) = 22 entities intentionally suppressed
+
+### Task 2 — Ingestion run cleanup
+
+**Mode: Audit + Build**
+
+9 ingestion runs existed for `premiership-rugby`. 8 were bad or duplicate and have been removed.
+
+**Removed runs (8 total):**
+
+| Run ID | Reason |
+|---|---|
+| 3927e509 | Pre-v0.7 stale starter, entity_count=0, build_series_structure never called |
+| 784ffb21 | Wrong slug `series-premiership-rugby`, entity_count=0 |
+| fb55fa86 | Statement timeout (pre-fix), entity_count=0, notes marked "safe to ignore" |
+| b82b59bf | Statement timeout (pre-fix), entity_count=0, notes marked "safe to ignore" |
+| a0c05742 | Test run ("test 2"), entity_count=0 |
+| 7879ca79 | Duplicate proper run (entity_count=14) — superseded by 3b21c9b5 |
+| 2be6ae26 | Duplicate proper run (entity_count=14) — superseded by 3b21c9b5 |
+| c42d3b7b | Duplicate proper run (entity_count=14) — superseded by 3b21c9b5 |
+
+**Linked records also removed:**
+- `control_room_log`: all entries for the 8 removed runs
+- `ingestion_run_checklist`: 9 rows (3 per duplicate proper run × 3 runs)
+- `control_room_issue_states`: not touched — those rows are keyed by `series_slug`, not `run_id`, and the 2 existing rows are marked `intentional`
+
+**Keeper run:**
+- `3b21c9b5` — series_slug: `premiership-rugby`, status: `needs-review`, entity_count: 14, created 2026-03-13 22:26:59
+
+**Next steps:**
+- Synthetic FanScore data is in place. If real social data is ingested, scores will update naturally.
+- Athletes remain hidden until portrait images are sourced.
+- Venues remain hidden (no images, no explicit scope for go-live).
+- The Control Room series removal / archive feature is a pending build task (archive flag on ingestion_runs, archive/delete UI, safe-delete conditions).
+
+---
+
+## Previous Session — 2026-03-14 (Explore UX simplification pass)
+
+### Task — Explore UX simplification (7-part spec)
+
+**Mode: Build**
+
+Clean-up and UX improvement pass on `app/explore.html` and related components.
+
+**Part 1 — Grid-only layout**
+
+Removed masonry and list view modes entirely.
+
+- `app/components/layout.js`: stripped to `var activeLayout = 'grid';` only. All masonry engine code (`layoutMasonry`, `clearMasonryPositions`, `setLayout`) removed.
+- `app/ui.js`: removed `_masonryReflow()`, masonry branches from `setGridContent()`, masonry calls from `openChat()`/`closeChat()`. Updated header comment.
+- `app/components/panel.js`: removed `_masonryReflow()` calls from `openDetail()` and `closeDetail()`.
+- `app/explore.html`: removed layout toggle group from right bar (grid/masonry/list buttons), removed `bar-divider-v` after toggle, removed `(function initLayout(){...})()` IIFE, removed masonry resize listener.
+- `app/styles.css`: masonry/list CSS rules remain (non-breaking dead code — left for potential future reuse, will not trigger without class names being applied).
+
+**Part 2 — Full-page property overlay**
+
+Property detail panel converted from a right-side slide-in to a full-page overlay that keeps the grid visible behind.
+
+- `app/explore.html`: detail panel HTML restructured — added `.dp-backdrop` (click-to-close), wrapped content in `.dp-overlay-inner`.
+- `app/styles.css`: `.detail-panel` rewritten as `position:fixed; inset:0; z-index:200; flex-center`. Added `.dp-backdrop` (semi-transparent, backdrop-filter blur). Added `.dp-overlay-inner` (max-width:680px, max-height:calc(100vh - 96px), rounded card). Added `body.detail-open { overflow:hidden }`. Removed old `body.detail-open .content { padding-right }` rule. Mobile: overlay slides up from bottom (border-radius top only).
+- `app/components/panel.js`: added `_savedScrollY` variable. `openDetail()` now saves `window.scrollY` before opening. `closeDetail()` restores scroll position via `window.scrollTo({top: _savedScrollY, behavior:'instant'})`.
+
+**Part 3 — Load More pagination**
+
+Initial 24 cards rendered; +24 per Load More click. Full 200-card fetch retained.
+
+- `app/ui.js`: added `PAGE_SIZE = 24`, `_displayedCount`, `_currentVis` variables. `renderGrid()` resets `_displayedCount` to `PAGE_SIZE` on every filter/sort change, renders first page only. Added `loadMore()` — appends next 24 cards by mutating the DOM (no full re-render). Added `updateFooter(shown, total)` — renders count + Load More button into `#explore-footer`.
+- `app/explore.html`: added `<div class="explore-footer" id="explore-footer">` after card grid.
+- `app/styles.css`: added `.explore-footer`, `.ef-count`, `.ef-load-more` styles.
+
+**Part 4 — Scroll-to-top button**
+
+Understated fixed button, appears after 320px scroll, smooth scroll back to top.
+
+- `app/explore.html`: added `<button class="scroll-top-btn" id="scroll-top-btn">` with upward chevron. Scroll listener in `init()` toggles `.visible` class at 320px threshold. `scrollToTop()` global function added.
+- `app/styles.css`: added `.scroll-top-btn` — fixed bottom-right, 36px circle, opacity transition, shifts up when compare tray open.
+
+**Interaction flow preserved:** user lands on grid → scrolls → loads more → clicks card → overlay opens (scroll locked) → browses detail → closes (grid still at exact scroll position). Filter/sort resets to page 1. Escape key closes overlay (pre-existing handler unchanged).
+
+**Files changed:**
+- `app/explore.html`
+- `app/components/layout.js`
+- `app/components/panel.js`
+- `app/ui.js`
+- `app/styles.css`
+
+---
+
+## Previous Session — 2026-03-14 (Control Room image audit table + Premiership Rugby go-live cleanup)
+
+### Task 1 — Control Room image audit table
+
+**Mode: Build**
+
+Enhanced Section 2.5 (Images) in `app/control-room.html` to be a proper image audit surface.
+
+**Changes:**
+- `<script src="images.js"></script>` added before the inline script block, making `PROPERTY_IMAGES` and `EVENT_VENUE_MAP` available in the Control Room
+- CSS: added `.cr-img-status` variants for `missing`, `broken`, `manual`, `js-fallback` (all semantic tokens, with dark-mode overrides for all six statuses)
+- `buildImgEntityRow()` fully replaced: now resolves effective status from both entity_images and images.js fallback; surfaces `js-fallback` when no entity_images row but a static entry exists; surfaces `broken` via per-image onerror → `imgLoadError()` helper; shows `manual` label when source_type is manual; adds per-row Scan button for entities without a confirmed image; stable badge IDs for runtime broken detection
+- `renderImagesTable()` summary stats: hardcoded hex removed (now uses `--color-success-700`, `--color-warning-700`, `--color-error-600`); adds `images.js fallback` and `missing` counts
+- `imgLoadError(img, badgeId)` helper added adjacent to `buildImgEntityRow`
+
+**Status values now covered:** confirmed, suggested, placeholder, rejected, manual, js-fallback, missing, broken
+
+**Actions now covered:** confirm, reject, mark placeholder, edit URL (inline), add URL (per-row shortcut), scan (per-row scan series trigger)
+
+### Task 2 — Premiership Rugby go-live cleanup
+
+**Mode: Audit + Build**
+
+Full ecosystem audit of `premiership-rugby` using the new image audit surface and direct SQL queries.
+
+**Entities audited:** 24 total — 10 teams, 11 athletes, 1 series, 1 event, 1 governing body
+
+**Findings pre-fix:**
+- 1 confirmed image (bath-rugby), 9 suggested (unverified team badges from incrowdsports CDN)
+- newcastle-falcons, premiership-rugby (series), premiership-rugby-ltd had images.js entries but no entity_images rows
+- premiership-rugby-final-2026: EVENT_VENUE_MAP → allianz-stadium-twickenham — fallback works correctly
+- 11 athletes: no images anywhere — intentional, no source identified
+
+**Fixes applied (Supabase):**
+- Confirmed all 9 suggested team images (verified=true) — source is official incrowdsports/cortextech CDN
+- Inserted confirmed entity_images rows for newcastle-falcons, premiership-rugby, premiership-rugby-ltd (promoted from images.js)
+
+**Post-fix coverage:**
+- Teams: 10/10 confirmed (100%)
+- Series: 1/1 confirmed
+- Governing body: 1/1 confirmed
+- Event: images.js fallback via EVENT_VENUE_MAP working correctly
+- Athletes: 0/11 — intentional gap, no portrait source identified
+
+**ready_for_ui: NOT auto-enabled** — all entities remain `visible_in_ui = false`. Series is structurally ready for operator review. Athlete images are the remaining gap before full coverage.
+
+### Files changed
+- `app/control-room.html` — `<script src="images.js">` added; CSS expanded; `buildImgEntityRow` replaced; `renderImagesTable` summary updated; `imgLoadError` helper added
+- `entity_images` (Supabase) — 8 rows confirmed; 3 rows inserted (newcastle-falcons, premiership-rugby, premiership-rugby-ltd)
+- `docs/WORKING_CONTEXT.md` — this update
+- `project-docs/DEVELOPMENT_LEDGER.md` — updated
+
+### What comes next
+- Operator to review premiership-rugby ecosystem in Control Room and manually enable `visible_in_ui` when satisfied
+- Athlete portrait sourcing for premiership-rugby (premiershiprugby.com or press image library)
+- Ecosystem relationship explanation layer (property profile UX)
+
+---
+
+## Previous Session — 2026-03-14 (shared UI helpers layer)
+
+### What was done
+
+Created `app/ui-helpers.js` — a shared reusable helper module for all public-facing pages. Exposes `window.SAI_UIH` namespace with 12 helpers.
+
+Helpers centralised:
+- `initTheme()` — replaced 6 identical `(function initTheme(){...})()` IIFEs across all pages
+- `navigateTo(page)` — removed local definition from compare.html, watchlist.html, property.html; now a global via `window.navigateTo` alias
+- `initMenuListeners()` — replaced 15-line click-outside + escape key blocks in 5 pages (compare, watchlist, portfolio, opportunities, property); explore.html retains its own richer version with sort/chat/detail panel handling
+
+New helpers available for future UI work (not retroactively applied to existing rendering code):
+- `typeBadgeHtml(type)` — themed type badge `<span>`
+- `fanScoreText(prop, dp?)` — score with suppression handling
+- `trendText(val)` / `trendColor(val)` — arrow + `/d` string + CSS var
+- `propertyCountText(count, noun?)` — "1 property" / "4 properties"
+- `isOnWatchlist(slug)` / `isInPortfolio(slug)` / `isInCompare(slug)` — saved-state guards
+- `errorHtml(msg)` / `loadingHtml(msg?)` — standard state div HTML
+
+### Files changed
+- `app/ui-helpers.js` — created (new)
+- `app/compare.html` — script tag added, 3 consolidations applied
+- `app/watchlist.html` — script tag added, 3 consolidations applied
+- `app/portfolio.html` — script tag added, 2 consolidations applied
+- `app/opportunities.html` — script tag added, 2 consolidations applied
+- `app/property.html` — script tag added, 3 consolidations applied
+- `app/explore.html` — script tag added, 1 consolidation (initTheme only)
+- `CLAUDE.md` — new "Shared UI Helpers" section added before Enforcement Rules
+- `project-docs/DEVELOPMENT_LEDGER.md` — ui-helpers.js row added
+- `docs/WORKING_CONTEXT.md` — this update
+
+### What comes next
+- Ecosystem relationship explanation layer (property profile UX — shows how entity relates to its series/team/event ecosystem)
+- No outstanding blockers
+
+---
+
+## Previous Session — 2026-03-14 (QA pass, rugby images, Control Room image workflow)
+
+### Task 1 — Full public product QA pass
+
+**Mode: Build + Review**
+
+Scanned explore.html, panel.js, compare.html, watchlist.html, portfolio.html, property.html, card.js, storage.js, data.js.
+
+**Findings:**
+
+No critical bugs found. Two low-severity observations:
+
+1. **Dead code — `.card-btn` legacy click handler in `explore.html` `init()`** (lines 635-644): The else branch toggles `.active` class on `.card-btn` without persisting to storage. Not a functional bug because all current cards render `.hero-btn`, not `.card-btn`. The `.card-btn` handler for compare correctly calls `compareToggle`. No code change applied — flagging only.
+
+2. **Score label on cards** (`card.js` line 79): `'<div class="score-lbl">FanScore &middot; 30d avg</div>'` still includes "30d avg". Intentionally different from the cleaned property profile label (compact card format). Type A difference — acceptable.
+
+All action wiring confirmed correct: `SAI_STORAGE.watchlist`, `.portfolio`, `.compare` — all toggle correctly from card overlay, panel, and property page. `compareList` seeding on init is correct. `syncCompareButtons`, `syncWatchlistButtons`, `syncPortfolioButtons` all operate on current button states at toggle time.
+
+**No code changes applied from this task.**
+
+---
+
+### Task 2 — Momentum chart validation
+
+**Mode: Review**
+
+Confirmed momentum chart implementation against spec. All field wiring correct:
+
+| Metric | Source | Status |
+|---|---|---|
+| 30d change | `s30 - s60` | Correct |
+| 90d change | `s30 - s90` | Correct |
+| Daily trend | `t30` | Correct |
+| Chart line | `currentProperty.sparks` | Correct |
+| FanScore label | `"FanScore"` with `.prop-score-context` subtext | Correct — fixed previous session |
+
+**Difference classification:**
+
+- Type A (acceptable): Cards still show "FanScore · 30d avg" in compact label — different from property page, intentional
+- Type B (spec vs impl): None remaining after label fix
+- Type C (planned, not built): Sponsorship Context section in property profile
+- Type D (intentional deviation): Confidence tier field not shown inline on property profile — shown as band label only (correct, not a bug)
+
+**No code changes applied from this task.**
+
+---
+
+### Task 3 — Premiership Rugby image pass
+
+**Mode: Build**
+
+Added 13 new entries to `PROPERTY_IMAGES` in `app/images.js` and 1 new entry to `EVENT_VENUE_MAP`.
+
+**Added entries:**
+
+| Slug | Kind | Source |
+|---|---|---|
+| `premiership-rugby` | series | premiershiprugby.com CDN (cortextech.io) |
+| `premiership-rugby-ltd` | series | Same as series logo |
+| `allianz-stadium-twickenham` | venue | Wikimedia Commons aerial (MD5 path computed 2026-03-14) |
+| `bath-rugby` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `bristol-bears` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `exeter-chiefs` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `gloucester-rugby` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `harlequins` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `leicester-tigers` | logo | premiershiprugby.com CDN (cortextech.io) |
+| `newcastle-falcons` | logo | premiershiprugby.com CDN (cortextech.io) — club rebranded as Newcastle Red Bulls 2024-25 |
+| `northampton-saints` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `sale-sharks` | logo | premiershiprugby.com CDN (incrowdsports.com) |
+| `saracens` | logo | premiershiprugby.com CDN (cortextech.io) |
+
+EVENT_VENUE_MAP: `'premiership-rugby-final-2026': 'allianz-stadium-twickenham'`
+
+**Gaps remaining:**
+
+11 athletes (alex-mitchell, ben-spencer, ellis-genge, finn-russell, freddie-steward, henry-slade, jack-nowell, kyle-sinckler, marcus-smith-rugby, maro-itoje, tom-curry) have no portrait entry. Comment added to images.js noting these require club portrait photography or premiershiprugby.com player portal sourcing. All fall through to placeholder hero icon.
+
+**Image count after this session:** PROPERTY_IMAGES: 91 entries. EVENT_VENUE_MAP: 19 entries.
+
+**ready_for_ui decision:** Teams, series, venue, governing body all have images. All 25 entities visible when series is set to `visible_in_ui: true`. Athletes will render with placeholder icon. Recommend: set `visible_in_ui: true` after running a Control Room image audit to validate the CDN URLs load. Athletes can stay as placeholder for initial visible state.
+
+**Files changed:** `app/images.js`
+
+---
+
+### Task 4 — Control Room image workflow
+
+**Mode: Build**
+
+The existing Images section (section 2.5) was already substantially complete — per-entity table with status, preview, source, confirm/reject/placeholder actions, and a bottom manual-add form. Two gaps were identified and fixed.
+
+**Gap 1 — No per-entity Add button for entities with no image**
+
+Previously: entities with `status: 'none'` (no image row yet) showed an empty actions cell. The only add path was scrolling to the bottom form and manually selecting the entity from a dropdown.
+
+Fix: `buildImgEntityRow()` now renders an `Add URL` button for primary rows with no image. The button calls `openInlineAdd(entityId)`, which scrolls to the manual add form and pre-selects the correct entity. The URL field is focused automatically.
+
+**Gap 2 — `openEditImgUrl()` used `prompt()` dialog**
+
+The edit URL action used a blocking browser `prompt()` which is inconsistent with the rest of the CR UI.
+
+Fix: Replaced `openEditImgUrl()` with `openEditImgUrlInline(id, currentUrl)`. Clicking "Edit URL" now replaces the actions cell content with an inline `<input>` (styled with `cr-img-url-input`) plus Save / Cancel buttons. Save calls `saveEditImgUrlInline(id)` which patches Supabase and reloads the section. Cancel calls `loadImagesSection(IMAGES_SERIES)` to restore the row.
+
+Each actions cell now has `id="img-actions-{rowId}"` for stable targeting, and each entity row has `id="img-entity-row-{entityId}"` for future row-level operations.
+
+**Files changed:** `app/control-room.html`
+
+---
+
+## Previous Session — 2026-03-14 (Momentum charts on property profile)
+
+### Momentum charts — `app/property.html`
+
+**Mode: Build**
+
+Added a full momentum chart section to the property profile page. The existing page showed a small 90-day sparkline in the FanScore block but had no trend metric tiles and no chart in the Momentum section.
+
+**What was added:**
+
+Two new rendering functions in `property.html`:
+
+- `renderMomentumMetrics()` -- synchronous; called at end of `renderProperty()`. Reads `s30`, `s60`, `s90`, and `t30` from `currentProperty`. Renders up to three stat tiles (30d change, 90d change, Daily trend) with semantic colour from `arrC()`. Handles null values with clean `--` fallback tiles. Hidden when `sup30` is set.
+
+- `renderMomentumChart()` -- async; called from the sparks `.then()` path alongside `renderSparkline()`. Renders a full-width 72px-tall SVG chart using the existing `renderSpark()` helper from `data.js`. Adds date labels (first / last date in sparks array) below the chart. Shows a clean "Insufficient data for chart" notice when fewer than 2 valid data points exist. Hidden when `sup30` is set.
+
+The Momentum section HTML was extended to include:
+- `#momentum-metrics` (hidden until populated)
+- `#momentum-chart-wrap` > `#momentum-chart` + `#momentum-chart-unavail` (hidden until populated)
+
+New CSS classes added to the embedded `<style>` block:
+`.momentum-metrics-row`, `.momentum-metric`, `.momentum-metric-lbl`, `.momentum-metric-val`, `.momentum-metric-na`, `.momentum-metric-sub`, `.momentum-chart-svg-wrap`, `.momentum-chart-dates`, `.momentum-chart-unavail`
+
+The existing FanScore `#prop-spark` small sparkline was preserved unchanged.
+
+**Data used (no schema change required):**
+
+| Metric | Source | Notes |
+|---|---|---|
+| 30d change | `s30 - s60` | "Current 30d avg vs prior 30d avg" |
+| 90d change | `s30 - s90` | "Current 30d avg vs 90d window avg" |
+| Daily trend | `t30` | 30-day slope, units per day |
+| Chart line | `currentProperty.sparks` | `{d, v}` array; null gaps preserved as visual breaks |
+
+**Missing-data handling:**
+
+| Condition | Behaviour |
+|---|---|
+| `sup30` set | Metrics hidden; chart hidden |
+| `s60 == null` | 30d change tile shows `--` |
+| `s90 == null` | 90d change tile shows `--` |
+| `t30 == null` | Daily trend tile omitted |
+| `validPts.length < 2` | Chart replaced by "Insufficient data for chart" notice |
+| All tiles produce `--` only | Metrics section still shown (data gap is itself informative) |
+
+---
+
+## Previous Session — 2026-03-14 (Watchlist/Portfolio button sync pass)
+
+### Watchlist and Portfolio UI sync — correctness pass
+
+**Mode: Build + Review**
+
+A small UI sync pass to close the known minor gap from the previous session. Watchlist and Portfolio button states now stay visually current everywhere Compare already did.
+
+**Root causes of stale state:**
+
+Two paths where a toggle updated storage and one button but not the other:
+
+1. **Card overlay → Panel**: clicking a watchlist/portfolio hero-btn updated that card's overlay button but not the panel button if the panel was open for that card.
+2. **Panel → Card overlay**: `dpAction('watch'/'portfolio')` updated the panel button but left the corresponding card hero-btn at its render-time state.
+
+**Fix — two new helpers added to `app/explore.html`:**
+
+```js
+function syncWatchlistButtons(slug, nowIn) { ... }
+function syncPortfolioButtons(slug, nowIn) { ... }
+```
+
+Each queries `document.querySelectorAll('.hero-btn[data-action="..."]')`, filters by `data-slug`, and sets `.active` and `.title` in place. No card re-render required.
+
+**Fix — delegation handler updated (`app/explore.html`):**
+
+After any watchlist or portfolio toggle from a card overlay, the sync helper is called (updates all matching hero-btns). If the panel is open for that same card (`detailCardId === id`), `_dpRefreshBtn` is also called to update the panel button immediately.
+
+**Fix — `dpAction` updated (`app/components/panel.js`):**
+
+After any watch or portfolio toggle from the panel, the sync helper is called (updates card overlay hero-btns). The `typeof` guard keeps panel.js portable on pages without the helpers.
+
+**Remaining limitation (unchanged, acceptable):**
+
+Watchlist and Portfolio removes on their respective destination pages involve full page navigation back to Explore. Cards render with correct state from SAI_STORAGE on load. There is no cross-tab live sync (consistent with how Compare and watchlist page removal already worked).
+
+---
+
+## Previous Session — 2026-03-14 (Explore card action fixes)
+
+### Explore card action flow — end-to-end fix
+
+**Mode: Build + Review**
+
+Three root-cause bugs were identified and fixed. All three card overlay actions (Watch, Compare, Portfolio) now work correctly from the card surface, the slide-out panel, and the property page. Destination pages (Watchlist, Portfolio, Compare) confirm correct state on load.
+
+**Root cause 1 — `onclick="event.stopPropagation()"` on `.card-hero-actions` (card.js)**
+
+The overlay container had an inline `stopPropagation` that killed all hero-btn click events before they could reach the document-level delegation handler in explore.html. Removed. The `.fanscore-card` onclick was simultaneously updated to guard against accidental card-open when the user clicks inside the overlay background:
+
+```js
+// Before:
+heroHtml += '<div class="card-hero-actions" onclick="event.stopPropagation()">'
+// After:
+heroHtml += '<div class="card-hero-actions">'
+// fanscore-card onclick:
+onclick="if(!event.target.closest('.card-hero-actions'))selectCard('...')"
+```
+
+**Root cause 2 -- compareList desync on page load (explore.html)**
+
+`compareList` started as `[]` even when `SAI_STORAGE.compare` had saved slugs. On first click, an item in storage that should remove instead added again. Fixed by seeding `compareList` from `SAI_STORAGE.compare` after `allCards` loads in the `init()` IIFE.
+
+**Root cause 3 -- double-toggle in panel compare action (panel.js)**
+
+`dpAction('compare')` previously called `SAI_STORAGE.compare.toggle(slug)` directly, then also called `compareToggle(id)` -- which toggles storage again. Net: two toggles = no change. Fixed by removing the direct storage call. `dpAction('compare')` now delegates exclusively to `compareToggle(id)` when available, with a fallback to direct storage toggle on pages without compareToggle.
+
+**compareToggle rewritten (explore.html)**
+
+Rewritten to check both `compareList` and `SAI_STORAGE` when determining whether an item is currently selected. Returns a boolean (true = now in selection). Handles the "add" and "remove" paths cleanly without storage/list desync.
+
+**`syncCompareButtons()` (explore.html)**
+
+Extended to update `.hero-btn[data-action="compare"]` elements: sets `.active`, `.disabled`, `aria-disabled`, and `title` correctly based on the current `compareList` and `SAI_STORAGE.compare`. Called at the end of every `compareToggle()` call.
+
+**Parts 4-6 audit findings**
+
+- `panel.js`: Watch and Portfolio actions use `SAI_STORAGE.[list].toggle(slug)` and refresh the panel button with `_dpRefreshBtn`. Initial state at panel open reads from `SAI_STORAGE`. All correct.
+- `property.html`: Watchlist toggle uses `SAI_STORAGE.watchlist.toggle/has`. Initial state set in `renderProperty()`. Compare button navigates to `compare.html?a=slug` (by design -- not a toggle). No portfolio action on the property page (intentional -- read-only view).
+- `watchlist.html`: Reads from `SAI_STORAGE.watchlist.get()` on load. `removeFromWatchlist()` calls `SAI_STORAGE.watchlist.remove()`. ✓
+- `portfolio.html`: Reads from `SAI_STORAGE.portfolio.get()` on load. `removeFromPortfolio()` calls `SAI_STORAGE.portfolio.remove()`. ✓
+- `compare.html`: Reads from SAI_STORAGE and URL params as fallback. Confirmed working for 1, 2, and 3-way comparisons. ✓
+
+**Known minor gap (logged, not blocking)**
+
+When a user adds to watchlist or portfolio via the panel, the corresponding card overlay `.hero-btn` on the grid won't update its `.active` state until the card re-renders. Storage is always correct; only the hover-visible DOM button state can be stale within the same page session. This is consistent with how compare buttons worked before `syncCompareButtons()` was introduced. A future `syncWatchlistButtons()` / `syncPortfolioButtons()` pass would close this gap.
+
+**Next UX item logged (not built)**
+
+Property profile momentum charts: replace the static 30d FanScore spark with a chart showing 30d and 90d change clearly. This is the most analytically valuable missing visual on the property page. Logged in product backlog and roadmap. No code changes made.
+
+---
+
+## Previous Session — 2026-03-14 (Navigation tidy + 3-way Compare)
+
+### Opportunities removed from primary navigation
+
+**Mode: Build**
+
+The Opportunities page has been removed from the navigation menu across all 6 pages (explore.html, compare.html, watchlist.html, portfolio.html, property.html, opportunities.html). The page itself is unchanged and remains accessible via direct URL. No routing or links within page content were affected -- only the floating nav menu items were removed.
+
+Nav now shows: Col 1 (Explore, Portfolio, Compare), Col 2 with divider (Watchlist). Opportunities is no longer present in any nav.
+
+### Compare extended to 3-way side-by-side
+
+**Mode: Build**
+
+Compare now supports up to 3 properties side by side. All changes are backward-compatible: existing 2-way compare behaviour is preserved.
+
+**`app/storage.js`**
+
+`SAI_STORAGE.compare` max bumped from 2 to 3. Key: `sai-compare`, now stores up to 3 slugs.
+
+**`app/compare.html`**
+
+- Third selector added: "Property C" (labelled optional)
+- `selectedC` global state variable added
+- URL param `?c=slug` supported in addition to `?a=` and `?b=`
+- `loadProperties()` reads `?c=` from URL params and `saved[2]` from localStorage fallback
+- `populateSelectors()` now populates all three `<select>` elements
+- `updateComparison()` reads selectedC, persists up to 3 slugs to SAI_STORAGE, fetches 2 or 3 properties in parallel, passes array to `renderComparisonTable()`
+- `renderComparisonTable(props)` now accepts an array of 2 or 3 property objects; table header and body columns scale accordingly
+- `saveComparisonLink()` includes `?c=` when a third property is selected
+- `clearCompareSelection()` also clears selectedC and select-c
+- Selection status line added below selectors: "Select up to 3 properties to compare" / "1 of 3 selected" / "2 of 3 -- add a third for a 3-way view" / "3 of 3 selected"
+- Partial state (1 selected): inline message "Select 1 more property to start comparing. Add a third for a 3-way view."
+- Selector grid updated to `repeat(auto-fit, minmax(180px, 1fr))` -- handles 2 or 3 columns automatically
+
+**`app/components/card.js`**
+
+Hero compare button now shows count feedback:
+- Title: "Add to compare (N/3 selected)" when queue is partial, "Compare queue full (3/3)" when full and this card is not in it, "Remove from compare" when active
+- `.disabled` class and `aria-disabled="true"` when queue is full and card is not already in the selection
+- `.hero-btn.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }` added to styles.css
+
+**`app/components/panel.js`**
+
+Panel compare button label reflects count:
+- "Comparing" when active, "Compare (N/3)" when queue has items but this property is not selected, "Compare (full)" when all 3 slots taken
+- After dpAction toggle: label updates to "Compare (N/3)" with current count or "Comparing"
+
+**`app/explore.html`**
+
+- `syncCompareButtons()` extended to update `.hero-btn[data-action="compare"]` elements: sets `.active`, `.disabled`, `aria-disabled`, and `title` correctly based on current in-page `compareList` and `SAI_STORAGE.compare`
+- In-page tray compare cap remains at 3 (was already correct)
+- `clearCompare()` already clears SAI_STORAGE (confirmed no change needed)
+
+**localStorage keys (current):**
+
+- `sai-theme` -- light/dark mode preference
+- `sai-watchlist` -- JSON array of property slugs (unbounded)
+- `sai-portfolio` -- JSON array of property slugs (unbounded)
+- `sai-compare` -- JSON array of up to 3 property slugs (cross-page compare selection)
+- `sai-layout` -- grid/masonry/list (explore.html only)
+
+---
+
+## Previous Session — 2026-03-14 (Cross-page QA + saved state wiring)
+
+### Cross-page QA pass + Watchlist/Portfolio/Compare fully wired
+
+**Mode: Build + Review**
+
+All public-facing pages have been QA-checked and all saved-state actions (Watch, Portfolio, Compare) are now fully wired, persisted, and visually consistent across Explore, panel, Watchlist, Portfolio, and Compare.
+
+**New file: `app/storage.js`**
+
+Shared localStorage helper module. Provides a consistent API for all three saved lists:
+
+- `SAI_STORAGE.watchlist` -- `sai-watchlist` key, array of slugs
+- `SAI_STORAGE.portfolio` -- `sai-portfolio` key, array of slugs
+- `SAI_STORAGE.compare` -- `sai-compare` key, max 3 slugs (cross-page compare selection)
+
+Methods on each list: `.get()`, `.set(arr)`, `.has(slug)`, `.add(slug)`, `.remove(slug)`, `.toggle(slug)`. All pages now load `storage.js` before `data.js`.
+
+**`app/components/panel.js` -- dpAction wired**
+
+`dpAction('watch', id)`, `dpAction('portfolio', id)`, and `dpAction('compare', id)` are now real implementations (previously a no-op placeholder). Each:
+- Resolves the slug from `allCards` using the property UUID
+- Calls `SAI_STORAGE.[list].toggle(slug)` and updates button label and `.active` class in-place
+- Compare action also syncs with Explore's in-page compare tray via `compareToggle(id)` if available
+
+Action buttons in the panel now show active state on open: "Watching" / "In portfolio" / "Comparing" with `.active` class if already saved.
+
+Panel "Compare" button is no longer permanently disabled.
+
+**`app/components/card.js` -- hero buttons wired + bug fix**
+
+Coverage percentage display bug fixed: `(c.cov30*100)` was incorrect (value is already 0-100); corrected to `Math.round(c.cov30)`.
+
+Hero overlay buttons (`data-action="watchlist"`, `data-action="compare"`, `data-action="portfolio"`) now:
+- Include `data-slug` attribute for direct slug lookup
+- Reflect saved state as `.active` class on render (check SAI_STORAGE)
+- Show correct tooltip ("Add to" vs "Remove from") on render
+
+**`app/explore.html` -- hero-btn event handler + compare sync**
+
+Event delegation handler added for `.hero-btn[data-action]` clicks. Watchlist and portfolio buttons write to `SAI_STORAGE` and toggle `.active` in-place. Compare button calls `compareToggle(id)` (existing in-page tray).
+
+`compareToggle()` now also syncs the compare slug to `SAI_STORAGE.compare` so compare.html can pick it up. `clearCompare()` also clears `SAI_STORAGE.compare`.
+
+**`app/compare.html` -- pre-populated from localStorage**
+
+Compare page now reads `SAI_STORAGE.compare` as a fallback when no URL params are present. Priority: URL params (`?a=slug&b=slug`) first, then `sai-compare` localStorage.
+
+`updateComparison()` writes back to `SAI_STORAGE.compare` when selectors change, keeping state in sync.
+
+`saveComparisonLink()` replaced `alert()` with an inline opacity-fade notice element (`#compare-notice`).
+
+New `clearCompareSelection()` function clears both selectors, `SAI_STORAGE.compare`, the comparison table, and the URL params.
+
+**`app/watchlist.html` -- SAI_STORAGE**
+
+`removeFromWatchlist(slug)` now calls `SAI_STORAGE.watchlist.remove(slug)` instead of raw localStorage. Removes the item from the rendered list without a full reload when items remain. `loadWatchlist()` uses `SAI_STORAGE.watchlist.get()`.
+
+**`app/portfolio.html` -- SAI_STORAGE + confirm removed**
+
+`loadPortfolio()` uses `SAI_STORAGE.portfolio.get()`. `removeFromPortfolio(idx)` now calls `SAI_STORAGE.portfolio.remove(slug)` and removes the `confirm()` dialog (inline remove, consistent with the tool's analytical tone).
+
+**`app/property.html` -- SAI_STORAGE**
+
+`toggleWatchlist()` and `updateWatchlistButton()` now use `SAI_STORAGE.watchlist.toggle/has`. Watchlist button also updates `aria-label` and `title` to reflect state.
+
+**`app/styles.css` -- dp-action-btn active state**
+
+`.dp-action-btn.active` added: accent background, white text, no border. `.dp-action-btn.active:hover` at 88% opacity.
+
+**localStorage keys in use (updated):**
+
+- `sai-theme` -- light/dark mode preference
+- `sai-watchlist` -- JSON array of property slugs
+- `sai-portfolio` -- JSON array of property slugs
+- `sai-compare` -- JSON array of up to 3 property slugs (cross-page compare selection)
+- `sai-layout` -- grid/masonry/list (explore.html only)
+
+---
+
+## Previous Session — 2026-03-13 (Page structure v1 — full app navigation, property profiles, real data)
+
+### Page structure v1 — all pages rebuilt on design system
+
+All six app pages are now consistent: floating bar navigation, design system tokens (styles.css), real Supabase data, FitScore fully removed everywhere.
+
+**Pages rebuilt or rewritten:**
+
+- `app/property.html` — complete rewrite. Loads real data from `v_property_summary_current?slug=eq.{slug}`. Sections: property header with image (resolveImageMeta), FanScore signal card (avg_score_30d, trend, confidence, sparkline), audience signals (followers, engagement rate, posts, platforms), momentum badges (computeMomentumScore), ecosystem section (loadRelationships + related entity cards), recent posts (loadPosts). Watchlist toggle uses `localStorage['sai-watchlist']`. Compare links to `compare.html?a={slug}`. Navigation: same floating bar shell as explore.html.
+
+- `app/compare.html` — complete rewrite. URL-driven (?a=slug&b=slug). Loads all properties from DB for dropdowns. Side-by-side comparison table: FanScore, trend, confidence, followers, engagement, posts, sport, region. "Save as link" button copies URL to clipboard. No FitScore.
+
+- `app/watchlist.html` — complete rewrite. Reads slugs from `localStorage['sai-watchlist']`. Fetches live property data from Supabase for those slugs. Shows: name, type badge, country flag, FanScore with trend, confidence. Actions: View, Compare, Remove. Empty state links to explore.html.
+
+- `app/portfolio.html` — complete rewrite. Same pattern as watchlist but uses `localStorage['sai-portfolio']`. Structured table layout with summary stats bar (count, avg FanScore, rising count). Actions: View, Compare, Remove.
+
+- `app/opportunities.html` — rewritten as honest placeholder with "coming soon" messaging in brand tone + bridge content (top 5 FanScore properties from live DB data, each linking to property.html).
+
+- `app/explore.html` — nav updated only. Added Watchlist and Opportunities to nav menu, replaced SPA-only `setNavActive` calls with proper `window.location.href` navigation.
+
+**Navigation consistency:**
+
+All pages now use the same 2-column floating bar nav:
+- Col 1: Explore, Portfolio, Compare
+- Col 2 (with divider): Watchlist, Opportunities
+
+Active page is highlighted. All links navigate correctly with `window.location.href`.
+
+**panel.js change:**
+
+Added "Full profile" link to the detail panel action row in `app/components/panel.js`. When a property card is opened in the detail panel, "Full profile" links to `property.html?slug={slug}`. This completes the Explore → Property navigation path.
+
+**Design system compliance:**
+
+All pages use CSS custom properties from styles.css only. No hardcoded hex values in any CSS. FitScore: zero mentions across all pages. Property type colours use `--{type}-bg` / `--{type}-fg` token pairs. Spacing uses `--spacing-*` tokens.
+
+**localStorage keys in use:**
+
+- `sai-theme` — light/dark mode preference
+- `sai-watchlist` — JSON array of slugs (property.html watchlist button + watchlist.html)
+- `sai-portfolio` — JSON array of slugs (portfolio.html)
+- `sai-layout` — grid/masonry/list (explore.html only)
+
+---
+
+## Previous Session — 2026-03-13 (Control Room v0.7 — Ingestion pipeline automation)
 
 ### Control Room v0.7 -- automated ingestion pipeline
 

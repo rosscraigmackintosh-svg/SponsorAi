@@ -28,15 +28,28 @@ function renderCard(c, idx) {
     heroHtml += '<div class="card-hero-placeholder" style="color:'+cfg.fgVar+'">'+(HERO_ICONS[c.type]||HERO_ICONS.series)+'</div>';
   }
   /* Hover overlay — actions centred over image, fade in on card hover, no layout impact */
-  heroHtml += '<div class="card-hero-actions" onclick="event.stopPropagation()">'
-    +'<button class="hero-btn" data-action="watchlist" data-id="'+c.id+'" title="Add to watchlist"><i data-lucide="bookmark"></i></button>'
-    +'<button class="hero-btn'+(typeof compareList!=='undefined'&&compareList.indexOf(c.id)>=0?' active':'')+'" data-action="compare" data-id="'+c.id+'" title="Compare"><i data-lucide="check-check"></i></button>'
-    +'<button class="hero-btn" data-action="portfolio" data-id="'+c.id+'" title="Add to portfolio"><i data-lucide="briefcase"></i></button>'
+  var _slug     = c.slug || '';
+  var _inWL     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.watchlist.has(_slug);
+  var _inPF     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.portfolio.has(_slug);
+  var _inCmpS   = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.compare.has(_slug);
+  var _inCmpL   = typeof compareList !== 'undefined' && compareList.indexOf(c.id) >= 0;
+  var _inCmp    = _inCmpS || _inCmpL;
+  var _cmpCount = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
+  var _cmpFull  = !_inCmp && _cmpCount >= 3;
+  var _cmpTitle = _inCmp    ? 'Remove from compare'
+                : _cmpFull  ? 'Compare queue full (3/3)'
+                : _cmpCount > 0 ? 'Add to compare (' + _cmpCount + '/3 selected)'
+                : 'Add to compare';
+  heroHtml += '<div class="card-hero-actions">'
+    +'<button class="hero-btn'+(_inWL   ? ' active' : '')+'" data-action="watchlist" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inWL   ? 'Remove from watchlist' : 'Add to watchlist')+'"><i data-lucide="bookmark"></i></button>'
+    +'<button class="hero-btn'+(_inCmp  ? ' active' : '')+(_cmpFull ? ' disabled' : '')+'" data-action="compare" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+_cmpTitle+'"'
+    +(_cmpFull ? ' aria-disabled="true"' : '')+'><i data-lucide="check-check"></i></button>'
+    +'<button class="hero-btn'+(_inPF   ? ' active' : '')+'" data-action="portfolio" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inPF   ? 'Remove from portfolio'  : 'Add to portfolio'  )+'"><i data-lucide="briefcase"></i></button>'
     +'</div>';
   heroHtml += '</div>';
 
   return '<div class="fanscore-card"' + delay + ' data-type="'+c.type+'" data-id="'+c.id
-    +'" onclick="selectCard(\''+c.id+'\')" tabindex="0" role="article"'
+    +'" onclick="if(!event.target.closest(\'.card-hero-actions\'))selectCard(\''+c.id+'\')" tabindex="0" role="article"'
     +' onkeydown="if(event.key===\'Enter\'||event.key===\' \')selectCard(\''+c.id+'\')">'
 
     +heroHtml
@@ -68,7 +81,7 @@ function renderCard(c, idx) {
     +'</div>'
     +'<div class="score-aside">'
     +(c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
-    +(c.cov30!=null?'<div class="conf-line">'+(c.cov30*100).toFixed(0)+'% coverage</div>':'')
+    +(c.cov30!=null?'<div class="conf-line">'+Math.round(c.cov30)+'% coverage</div>':'')
     +'</div></div>'
 
     +(sup?'<div class="sup-notice">'+c.sup30+'</div>':'')

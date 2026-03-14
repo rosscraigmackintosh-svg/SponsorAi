@@ -33,25 +33,25 @@ Never present SponsorAI outputs as guarantees or predictions.
 
 Before generating any UI, layout, styling, component, or frontend code:
 
-Claude must read the full Design_System folder in the defined load order.
+Claude must read the full design system folder in the defined load order.
 
 Required path:
 
-Design_System/
+_internal/03_Design_System/
 
 Load order:
 
-1. Design_System/00_README.md  
-2. Design_System/01_Foundations.md  
-3. Design_System/02_Tokens_Light_Mode.md  
-4. Design_System/03_Tokens_Dark_Mode.md (if applicable)  
-5. Design_System/04_Layout_and_Density.md  
-6. Design_System/05_Components_Core.md  
-7. Design_System/06_Components_Contracts.md  
-8. Design_System/07_DataViz_and_Charts.md  
-9. Design_System/08_Accessibility_and_Interaction.md  
-10. Design_System/09_Copy_and_Tone.md  
-11. Design_System/10_Generation_Rules_for_Claude.md  
+1. _internal/03_Design_System/00_README.md
+2. _internal/03_Design_System/01_Color_System.md
+3. _internal/03_Design_System/02_Typography.md
+4. _internal/03_Design_System/03_Spacing_System.md
+5. _internal/03_Design_System/04_Grid_Layout.md
+6. _internal/03_Design_System/05_Components.md
+7. _internal/03_Design_System/06_Cards.md
+8. _internal/03_Design_System/07_Data_Displays.md
+9. _internal/03_Design_System/08_Interaction_Patterns.md
+10. _internal/03_Design_System/09_Page_Patterns.md
+11. _internal/03_Design_System/10_Generation_Rules_for_Claude.md
 
 No UI generation may occur before these files are read.
 
@@ -91,6 +91,23 @@ For full mode detail, prompt templates, and workflow sequences, see `project-doc
 **Default rule:** If anything can be safely automated instead of manual, automate it.
 
 **Balancing rule:** Where ambiguity or risk exists, keep a human in the loop rather than faking automation. Do not simulate success. Do not paper over gaps with optimistic defaults.
+
+---
+
+## Shared UI Helpers
+
+`app/ui-helpers.js` contains reusable helpers for all public-facing pages.
+Exposed as `window.SAI_UIH`. Also exposes `window.navigateTo` as a global alias.
+
+Before creating any of the following in a public page script, check ui-helpers.js first:
+
+- UI fragment helpers (empty states, loading states, error states)
+- Formatting helpers (score text, trend text, type badges, count pluralisation)
+- Saved-state checks (watchlist, portfolio, compare)
+- Cross-page navigation or menu listener setup
+
+Prefer extending SAI_UIH over creating page-local duplicates.
+If a new helper belongs in ui-helpers.js, add it there and document it with a JSDoc comment.
 
 ---
 

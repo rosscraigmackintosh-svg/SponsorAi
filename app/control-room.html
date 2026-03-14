@@ -456,6 +456,121 @@
   opacity: 0.6;
 }
 
+/* ─── split-button + row action menu ─── */
+.cr-split-btn {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-border);
+  overflow: visible;
+  position: relative;
+}
+.cr-split-primary {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: none;
+  border-right: 1px solid var(--accent-border);
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cr-split-primary:hover { background: var(--accent-border); }
+.cr-split-arrow {
+  font-family: var(--font);
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: none;
+  padding: 4px 7px;
+  cursor: pointer;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.cr-split-arrow:hover { background: var(--accent-border); }
+.cr-row-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 3px);
+  right: 0;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 168px;
+  padding: 4px 0;
+}
+.cr-row-menu.open { display: block; }
+.cr-row-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-1);
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cr-row-menu button:hover { background: var(--surface-muted); }
+.cr-row-menu hr { border: none; border-top: 1px solid var(--border); margin: 3px 0; }
+
+.cr-row-menu button.cr-menu-danger { color: var(--color-error-600); }
+.cr-row-menu button.cr-menu-danger:hover { background: var(--color-error-50); }
+[data-theme="dark"] .cr-row-menu button.cr-menu-danger { color: var(--color-error-400); }
+[data-theme="dark"] .cr-row-menu button.cr-menu-danger:hover { background: rgba(185,28,28,0.12); }
+
+/* ─── images management section ─── */
+.cr-img-thumb {
+  width: 44px;
+  height: 32px;
+  object-fit: contain;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  display: block;
+}
+.cr-img-status {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cr-img-status[data-status="confirmed"]   { background: #e6f4ea; color: #1e7e34; border: 1px solid #c3e6cb; }
+.cr-img-status[data-status="suggested"]   { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.cr-img-status[data-status="rejected"]    { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+.cr-img-status[data-status="placeholder"] { background: var(--surface-muted); color: var(--text-3); border: 1px solid var(--border); }
+.cr-img-status[data-status="none"]        { background: var(--surface-muted); color: var(--text-3); border: 1px solid var(--border); }
+.cr-img-status[data-status="missing"]     { background: var(--color-error-50);  color: var(--color-error-700);   border: 1px solid var(--color-error-100); }
+.cr-img-status[data-status="broken"]      { background: var(--color-error-50);  color: var(--color-error-700);   border: 1px solid var(--color-error-100); }
+.cr-img-status[data-status="manual"]      { background: var(--accent-soft);     color: var(--accent);            border: 1px solid var(--accent-border); }
+.cr-img-status[data-status="js-fallback"] { background: var(--surface-muted);   color: var(--text-2);            border: 1px solid var(--border); }
+
+[data-theme="dark"] .cr-img-status[data-status="confirmed"]   { background: rgba(9,148,85,0.15);   color: var(--color-success-300); border-color: rgba(9,148,85,0.25); }
+[data-theme="dark"] .cr-img-status[data-status="suggested"]   { background: rgba(220,104,3,0.15);  color: var(--color-warning-300); border-color: rgba(220,104,3,0.25); }
+[data-theme="dark"] .cr-img-status[data-status="rejected"]    { background: rgba(185,28,28,0.15);  color: var(--color-error-400);   border-color: rgba(185,28,28,0.25); }
+[data-theme="dark"] .cr-img-status[data-status="missing"],
+[data-theme="dark"] .cr-img-status[data-status="broken"]      { background: rgba(185,28,28,0.15);  color: var(--color-error-400);   border-color: rgba(185,28,28,0.25); }
+[data-theme="dark"] .cr-img-status[data-status="manual"]      { background: rgba(var(--accent-rgb,99,91,255),0.15); }
+
+.cr-img-url-input {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-1);
+  width: 260px;
+}
+
 /* ─── progress bars for coverage columns ─── */
 .cr-coverage {
   display: flex;
@@ -608,6 +723,24 @@
   gap: var(--spacing-md);
   justify-content: flex-end;
   margin-top: var(--spacing-3xl);
+}
+
+.cr-btn-danger {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: #fff;
+  background: var(--color-error-600);
+  border: 1px solid var(--color-error-600);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+.cr-btn-danger:hover {
+  background: var(--color-error-700);
+  border-color: var(--color-error-700);
 }
 
 .cr-stub-notice {
@@ -1149,6 +1282,25 @@
   </section>
 
 
+  <!-- ── SECTION 2.5: IMAGES ── -->
+  <section class="cr-section" id="section-images-wrap" aria-labelledby="section-images">
+
+    <div class="cr-section-header">
+      <h2 class="cr-section-title" id="section-images">Images</h2>
+      <select id="images-series-select" class="cr-input" style="font-size:var(--text-xs);padding:3px 8px;width:auto;max-width:220px;margin-left:auto;"
+        onchange="loadImagesSection(this.value)">
+        <option value="">Select a series&hellip;</option>
+      </select>
+      <button class="cr-section-action" onclick="loadImagesSection(document.getElementById('images-series-select').value)">Refresh</button>
+    </div>
+
+    <div id="images-section-body" style="color:var(--text-3);font-size:var(--text-sm);padding:var(--spacing-md) 0;">
+      Select a series above to view and manage entity images.
+    </div>
+
+  </section>
+
+
   <!-- ── SECTION 3: ISSUES ── -->
   <section class="cr-section" aria-labelledby="section-issues">
 
@@ -1231,6 +1383,7 @@
 
 
 <!-- ── SCRIPTS ── -->
+<script src="images.js"></script>
 <script>
 
 // ──────────────────────────────────────────────
@@ -1514,18 +1667,24 @@ function renderStatus() {
       + '<td class="cr-mono">' + s.last_run + '</td>'
       + '<td style="min-width:80px;">'
         + visBadge(s)
-        + '<div style="display:flex; gap: var(--spacing-xs); flex-wrap:wrap; margin-top:5px;">'
-          + visActionBtns(s)
-        + '</div>'
       + '</td>'
-      + '<td>'
-        + '<div style="display:flex; gap: var(--spacing-xs); flex-wrap:wrap;">'
-          + '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
-            + ' onclick="runAuditForSeries(\'' + s.slug + '\')">Run audit</button>'
-          + '<button class="cr-action-btn" style="font-size:11px; white-space:nowrap;"'
-            + ' onclick="handleScanImages(\'' + s.slug + '\', ' + JSON.stringify(s.image_source_url || '') + ')"'
-            + ' title="Fetch the image source URL and match candidate images to series entities">Scan images</button>'
-          + clBtn
+      + '<td style="position:relative; white-space:nowrap;">'
+        + '<div class="cr-split-btn">'
+          + '<button class="cr-split-primary" onclick="runAuditForSeries(\'' + s.slug + '\')">Run audit</button>'
+          + '<button class="cr-split-arrow" onclick="toggleRowMenu(event,\'' + s.slug + '\')" aria-label="More actions" title="More actions">&#9660;</button>'
+        + '</div>'
+        + '<div class="cr-row-menu" id="rmenu-' + s.slug + '">'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');runAuditForSeries(\'' + s.slug + '\')">Run audit</button>'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleRerun(\'' + s.slug + '\')">Run again</button>'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleScanImages(\'' + s.slug + '\',' + JSON.stringify(s.image_source_url||'') + ')">Scan images</button>'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');loadImagesSection(\'' + s.slug + '\')">View images</button>'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleEditRun(\'' + s.slug + '\')">Edit run</button>'
+          + (s.run_id ? '<button onclick="closeRowMenu(\'' + s.slug + '\');toggleChecklist(\'' + s.run_id + '\',\'' + s.slug + '\')">Checklist</button>' : '')
+          + '<hr>'
+          + rowVisMenuItems(s)
+          + '<hr>'
+          + '<button class="cr-menu-danger" onclick="closeRowMenu(\'' + s.slug + '\');confirmArchiveRun(\'' + s.slug + '\')">Archive run</button>'
+          + (s.run_id ? '<button class="cr-menu-danger" onclick="closeRowMenu(\'' + s.slug + '\');confirmDeleteRun(\'' + s.slug + '\')">Delete permanently</button>' : '')
         + '</div>'
       + '</td>'
       + '</tr>';
@@ -1973,6 +2132,14 @@ function openModal(action, id, entity) {
 
 function closeModal() {
   document.getElementById('action-modal').classList.remove('open');
+  /* Reset any danger styling set by archive/delete confirmations */
+  var confirm  = document.getElementById('modal-confirm');
+  var stubNote = document.getElementById('modal-stub-notice');
+  if (confirm && confirm.classList.contains('cr-btn-danger')) {
+    confirm.className = 'cr-btn-primary';
+    confirm.onclick   = closeModal;
+  }
+  if (stubNote) stubNote.style.display = '';
 }
 
 document.getElementById('action-modal').addEventListener('click', function(e) {
@@ -2066,7 +2233,7 @@ async function loadIngestionRuns() {
   try {
     const url = API_URL + '/ingestion_runs'
       + '?select=id,series_slug,series_name,season,sport,status,entity_count,issue_count,image_source_url,created_at'
-      + '&order=created_at.desc&limit=100';
+      + '&archived=eq.false&order=created_at.desc&limit=100';
     const rows = await fetch(url, {
       headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
     }).then(function(r) { return r.json(); });
@@ -2243,10 +2410,13 @@ async function handleScanImages(slug, storedSourceUrl) {
           'Prefer':        'resolution=ignore-duplicates'
         },
         body: JSON.stringify({
-          property_id: c.property_id,
-          image_url:   c.image_url,
-          source_url:  sourceUrl,
-          verified:    false
+          property_id:      c.property_id,
+          image_url:        c.image_url,
+          source_url:       sourceUrl,
+          status:           'suggested',
+          source_type:      'scan',
+          match_confidence: c.confidence || null,
+          verified:         false
         })
       });
       if (r.ok) inserted++;
@@ -3178,7 +3348,861 @@ document.addEventListener('click', function(e) {
   loadLog();
   // Load unverified image scan suggestions into the Issues panel.
   loadImageScanSuggestions();
+
+  // Populate series selector in Images section
+  setTimeout(function() {
+    const sel = document.getElementById('images-series-select');
+    if (!sel) return;
+    SERIES_STATUS.forEach(function(s) {
+      if ([...sel.options].some(function(o) { return o.value === s.slug; })) return;
+      const opt = document.createElement('option');
+      opt.value = s.slug; opt.textContent = s.name || s.slug;
+      sel.appendChild(opt);
+    });
+  }, 1500);
 })();
+
+// ──────────────────────────────────────────────
+// ROW MENU — split-button dropdown
+// ──────────────────────────────────────────────
+
+function toggleRowMenu(event, slug) {
+  event.stopPropagation();
+  const menu = document.getElementById('rmenu-' + slug);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  // Close all open menus first
+  document.querySelectorAll('.cr-row-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  if (!isOpen) menu.classList.add('open');
+}
+
+function closeRowMenu(slug) {
+  const menu = document.getElementById('rmenu-' + slug);
+  if (menu) menu.classList.remove('open');
+}
+
+// Close any open row menu when clicking elsewhere
+document.addEventListener('click', function() {
+  document.querySelectorAll('.cr-row-menu.open').forEach(function(m) { m.classList.remove('open'); });
+});
+
+// Contextual visibility menu items for the row dropdown
+function rowVisMenuItems(s) {
+  const v    = visData(s.slug);
+  const slug = s.slug;
+  let html   = '';
+  if (v.visible_in_ui) {
+    html += '<button onclick="closeRowMenu(\'' + slug + '\');hideSeriesFromUI(\'' + slug + '\')">Hide from UI</button>';
+  } else {
+    html += '<button onclick="closeRowMenu(\'' + slug + '\');setSeriesLive(\'' + slug + '\')">Go live</button>';
+  }
+  if (!v.ready_for_ui) {
+    html += '<button onclick="closeRowMenu(\'' + slug + '\');setSeriesReady(\'' + slug + '\',true)">Mark ready</button>';
+  } else if (!v.visible_in_ui) {
+    html += '<button onclick="closeRowMenu(\'' + slug + '\');setSeriesReady(\'' + slug + '\',false)">Mark not ready</button>';
+  }
+  return html;
+}
+
+// ──────────────────────────────────────────────
+// EDIT RUN — modal to edit persisted run details
+// ──────────────────────────────────────────────
+
+let editRunSlug = null; // slug of the run being edited
+
+function handleEditRun(slug) {
+  const s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s) { alert('Run record not found for ' + slug); return; }
+  editRunSlug = slug;
+
+  // Build modal body with current run values
+  const body = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-sm) var(--spacing-md);">'
+    + field('Series name',    'er-name',    'text',     s.name        !== '--' ? s.name    : '')
+    + field('Slug',           'er-slug',    'text',     s.slug        || '')
+    + field('Season / year',  'er-season',  'text',     s.season      !== '--' ? s.season  : '')
+    + field('Sport',          'er-sport',   'text',     s.sport       !== '--' ? s.sport   : '')
+    + field('Image source URL','er-imgsrc', 'url',      s.image_source_url || '', true)
+    + field('Notes',          'er-notes',   'text',     s.notes       || '',     true)
+    + '<div style="grid-column:1/-1;">'
+      + '<label style="font-size:var(--text-xs);color:var(--text-2);display:block;margin-bottom:4px;">Include flags</label>'
+      + '<div style="display:flex;gap:var(--spacing-md);flex-wrap:wrap;">'
+        + checkbox('er-inc-teams',    'Teams',            s.include_teams    !== false)
+        + checkbox('er-inc-athletes', 'Athletes',         s.include_athletes !== false)
+        + checkbox('er-inc-events',   'Events',           s.include_events   !== false)
+        + checkbox('er-inc-venues',   'Venues',           !!s.include_venues)
+        + checkbox('er-synthetic',    'Synthetic signals',s.synthetic_signals !== false)
+      + '</div>'
+    + '</div>'
+  + '</div>';
+
+  openModalRaw('Edit run: ' + slug, body, 'saveEditRun', 'Save changes');
+}
+
+function field(label, id, type, value, fullWidth) {
+  return '<div' + (fullWidth ? ' style="grid-column:1/-1;"' : '') + '>'
+    + '<label for="' + id + '" style="font-size:var(--text-xs);color:var(--text-2);display:block;margin-bottom:3px;">' + label + '</label>'
+    + '<input id="' + id + '" type="' + type + '" value="' + escHtml(String(value)) + '"'
+    + ' style="width:100%;box-sizing:border-box;font-family:var(--font-mono);font-size:11px;padding:4px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-1);">'
+  + '</div>';
+}
+
+function checkbox(id, label, checked) {
+  return '<label style="display:flex;align-items:center;gap:5px;font-size:var(--text-xs);color:var(--text-1);cursor:pointer;">'
+    + '<input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '>'
+    + label
+  + '</label>';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function saveEditRun() {
+  if (!editRunSlug) return;
+  const s = SERIES_STATUS.find(function(x) { return x.slug === editRunSlug; });
+  if (!s || !s.run_id) { addLogEntry('No run_id for ' + editRunSlug + ' — cannot save edits.', 'error'); closeModal(); return; }
+
+  const updates = {
+    series_name:       document.getElementById('er-name')?.value.trim()   || null,
+    season:            document.getElementById('er-season')?.value.trim() || null,
+    sport:             document.getElementById('er-sport')?.value.trim()  || null,
+    image_source_url:  document.getElementById('er-imgsrc')?.value.trim()|| null,
+    notes:             document.getElementById('er-notes')?.value.trim()  || null,
+    include_teams:     document.getElementById('er-inc-teams')?.checked    ?? true,
+    include_athletes:  document.getElementById('er-inc-athletes')?.checked ?? true,
+    include_events:    document.getElementById('er-inc-events')?.checked   ?? true,
+    include_venues:    document.getElementById('er-inc-venues')?.checked   ?? false,
+    synthetic_signals: document.getElementById('er-synthetic')?.checked    ?? true,
+  };
+
+  try {
+    const resp = await fetch(API_URL + '/ingestion_runs?id=eq.' + s.run_id, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal'
+      },
+      body: JSON.stringify(updates)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  } catch (err) {
+    addLogEntry('Edit run save failed for <strong>' + editRunSlug + '</strong>: ' + err.message, 'error');
+    closeModal();
+    return;
+  }
+
+  // Update local SERIES_STATUS entry
+  Object.assign(s, {
+    name:              updates.series_name || s.name,
+    season:            updates.season      || s.season,
+    sport:             updates.sport       || s.sport,
+    image_source_url:  updates.image_source_url,
+    notes:             updates.notes,
+    include_teams:     updates.include_teams,
+    include_athletes:  updates.include_athletes,
+    include_events:    updates.include_events,
+    include_venues:    updates.include_venues,
+    synthetic_signals: updates.synthetic_signals,
+  });
+
+  addLogEntry('Run record updated for <strong>' + editRunSlug + '</strong>', 'ingest');
+  renderStatus();
+  closeModal();
+  editRunSlug = null;
+}
+
+// ──────────────────────────────────────────────
+// RUN AGAIN — reuse saved run config to create
+// a new ingestion execution attempt
+// ──────────────────────────────────────────────
+
+async function handleRerun(slug) {
+  const s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s) { alert('No run record found for ' + slug); return; }
+
+  if (!confirm('Run again for ' + (s.name || slug) + '?\n\nThis will create a new ingestion attempt using the saved run configuration.')) return;
+
+  addLogEntry('Re-run started for <strong>' + (s.name || slug) + '</strong> (using saved config)', 'ingest');
+
+  currentAuditSlug = slug;
+
+  // Mark as running immediately
+  s.status = 'running';
+  renderStatus();
+
+  // Create a fresh ingestion_runs record flagged as a rerun
+  const run = await createIngestionRun({
+    series_slug:       slug,
+    series_name:       s.name       !== '--' ? s.name       : null,
+    season:            s.season     !== '--' ? s.season     : null,
+    sport:             s.sport      !== '--' ? s.sport      : null,
+    image_source_url:  s.image_source_url || null,
+    notes:             s.notes      ? '[RERUN] ' + s.notes  : '[RERUN]',
+    include_teams:     s.include_teams    !== false,
+    include_athletes:  s.include_athletes !== false,
+    include_events:    s.include_events   !== false,
+    include_venues:    !!s.include_venues,
+    synthetic_signals: s.synthetic_signals !== false,
+    status:            'running',
+    started_at:        new Date().toISOString()
+  });
+
+  currentRunId = run ? run.id : null;
+
+  // Update row with new run_id so Checklist etc. use the fresh record
+  if (run) {
+    s.run_id = run.id;
+    renderStatus();
+  }
+
+  addLogEntry('Rerun ingestion run created for <strong>' + slug + '</strong> — calling structure builder…', 'ingest');
+
+  // Call build_series_structure with saved config
+  let structureResult = null;
+  let entitiesCreated = 0, entitiesUpdated = 0, relsCreated = 0;
+  const started = Date.now();
+
+  try {
+    structureResult = await callRPC('build_series_structure', {
+      p_series_slug:   slug,
+      p_season:        (s.season && s.season !== '--') ? parseInt(s.season, 10) : null,
+      p_sport:         (s.sport  && s.sport  !== '--') ? s.sport                : null,
+      p_include_flags: {
+        include_teams:    s.include_teams    !== false,
+        include_athletes: s.include_athletes !== false,
+        include_events:   s.include_events   !== false,
+        include_venues:   !!s.include_venues
+      },
+      p_synthetic_signals: s.synthetic_signals !== false
+    });
+
+    entitiesCreated = (structureResult && structureResult.entities_created) || 0;
+    entitiesUpdated = (structureResult && structureResult.entities_updated) || 0;
+    relsCreated     = (structureResult && structureResult.relationships_created) || 0;
+    const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+
+    addLogEntry(
+      'Rerun structure builder complete for <strong>' + slug + '</strong> — '
+      + entitiesCreated + ' created, ' + entitiesUpdated + ' updated, '
+      + relsCreated + ' rels (' + elapsed + 's)',
+      'ingest'
+    );
+  } catch (err) {
+    addLogEntry('Rerun structure builder failed for <strong>' + slug + '</strong>: ' + err.message, 'error');
+    s.status = 'error';
+    if (run) await fetch(API_URL + '/ingestion_runs?id=eq.' + run.id, {
+      method: 'PATCH',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: 'error', completed_at: new Date().toISOString() })
+    });
+    renderStatus();
+    return;
+  }
+
+  // Update run status to needs-review
+  const entityCount = entitiesCreated + entitiesUpdated;
+  s.status    = 'needs-review';
+  s.entities  = entityCount;
+  renderStatus();
+
+  if (run) {
+    await fetch(API_URL + '/ingestion_runs?id=eq.' + run.id, {
+      method: 'PATCH',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        status:       'needs-review',
+        entity_count: entityCount,
+        completed_at: new Date().toISOString()
+      })
+    });
+  }
+
+  addLogEntry('Rerun complete for <strong>' + slug + '</strong>. Launching audit…', 'ingest');
+  await runAuditForSeries(slug);
+}
+
+// ──────────────────────────────────────────────
+// OPEN MODAL (raw) — generic modal launcher that
+// accepts arbitrary HTML body. Used by editRun.
+// ──────────────────────────────────────────────
+
+function openModalRaw(title, bodyHtml, confirmFn, confirmLabel) {
+  const modal = document.getElementById('cr-modal');
+  if (!modal) return;
+  const titleEl = modal.querySelector('.cr-modal-title');
+  const bodyEl  = modal.querySelector('.cr-modal-body');
+  const confBtn = modal.querySelector('.cr-modal-confirm');
+  if (titleEl) titleEl.textContent = title;
+  if (bodyEl)  bodyEl.innerHTML    = bodyHtml;
+  if (confBtn) {
+    confBtn.textContent = confirmLabel || 'Confirm';
+    confBtn.onclick     = window[confirmFn] || null;
+  }
+  modal.classList.add('open');
+  currentModal = { type: 'raw', confirmFn };
+}
+
+// ──────────────────────────────────────────────
+// IMAGES SECTION — persistent per-entity image
+// management table
+// ──────────────────────────────────────────────
+
+var IMAGES_DATA    = [];  // Current entity_image rows
+var IMAGES_ENTITIES = []; // All entities for the selected series
+var IMAGES_SERIES  = null;
+
+async function loadImagesSection(slug) {
+  if (!slug) return;
+  IMAGES_SERIES = slug;
+
+  // Keep select in sync
+  const sel = document.getElementById('images-series-select');
+  if (sel) sel.value = slug;
+
+  const body = document.getElementById('images-section-body');
+  if (body) body.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);">Loading…</p>';
+
+  // 1. Get series property id
+  let seriesId = null;
+  try {
+    const sRows = await fetch(API_URL + '/properties?slug=eq.' + encodeURIComponent(slug) + '&select=id', {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    }).then(function(r) { return r.json(); });
+    seriesId = sRows && sRows[0] ? sRows[0].id : null;
+  } catch(e) { /* ignore */ }
+
+  // 2. Get related entity IDs (forward + reverse)
+  let entityIds = seriesId ? [seriesId] : [];
+  if (seriesId) {
+    try {
+      const [fwd, rev] = await Promise.all([
+        fetch(API_URL + '/property_relationships?from_id=eq.' + seriesId + '&select=to_id', {
+          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+        }).then(function(r) { return r.json(); }),
+        fetch(API_URL + '/property_relationships?to_id=eq.' + seriesId + '&select=from_id', {
+          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+        }).then(function(r) { return r.json(); })
+      ]);
+      (fwd || []).forEach(function(r) { if (r.to_id)   entityIds.push(r.to_id);   });
+      (rev || []).forEach(function(r) { if (r.from_id) entityIds.push(r.from_id); });
+      entityIds = [...new Set(entityIds)];
+    } catch(e) { /* ignore */ }
+  }
+
+  // 3. Load all properties for this series
+  let entities = [];
+  if (entityIds.length) {
+    try {
+      const chunk = entityIds.slice(0, 50); // PostgREST in() limit safe
+      entities = await fetch(API_URL + '/properties?id=in.(' + chunk.join(',') + ')&select=id,slug,name,property_type&order=property_type.asc,name.asc', {
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      }).then(function(r) { return r.json(); }) || [];
+    } catch(e) { entities = []; }
+  }
+  IMAGES_ENTITIES = entities;
+
+  // 4. Load entity_images for these entities (all statuses)
+  let imgRows = [];
+  if (entityIds.length) {
+    try {
+      const chunk = entityIds.slice(0, 50);
+      imgRows = await fetch(
+        API_URL + '/entity_images?property_id=in.(' + chunk.join(',') + ')&select=id,property_id,image_url,status,source_type,match_confidence,note,source_url&order=status.asc,created_at.desc',
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY } }
+      ).then(function(r) { return r.json(); }) || [];
+    } catch(e) { imgRows = []; }
+  }
+  IMAGES_DATA = imgRows;
+
+  renderImagesTable();
+
+  // Scroll to images section
+  const sec = document.getElementById('section-images-wrap');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderImagesTable() {
+  const body = document.getElementById('images-section-body');
+  if (!body) return;
+
+  if (!IMAGES_SERIES) {
+    body.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);padding:var(--spacing-md) 0;">Select a series above to view and manage entity images.</p>';
+    return;
+  }
+
+  if (!IMAGES_ENTITIES.length) {
+    body.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);padding:var(--spacing-md) 0;">No entities found for this series.</p>';
+    return;
+  }
+
+  // Build a map: property_id → best image row (prefer confirmed, then suggested)
+  const imgByProp = {};
+  IMAGES_DATA.forEach(function(row) {
+    const existing = imgByProp[row.property_id];
+    const priority = { confirmed: 0, suggested: 1, placeholder: 2, rejected: 3 };
+    if (!existing || (priority[row.status] || 9) < (priority[existing.status] || 9)) {
+      imgByProp[row.property_id] = row;
+    }
+  });
+
+  // Also build secondary rows (all non-best rows) for display
+  const allByProp = {};
+  IMAGES_DATA.forEach(function(row) {
+    if (!allByProp[row.property_id]) allByProp[row.property_id] = [];
+    allByProp[row.property_id].push(row);
+  });
+
+  const confirmed = IMAGES_DATA.filter(function(r) { return r.status === 'confirmed'; }).length;
+  const suggested = IMAGES_DATA.filter(function(r) { return r.status === 'suggested'; }).length;
+
+  // Count entities covered only by images.js (no entity_images row)
+  function getJsEntry(entity) {
+    if (typeof PROPERTY_IMAGES === 'undefined') return null;
+    var e = PROPERTY_IMAGES[entity.slug] || null;
+    if (!e && entity.property_type === 'event' && typeof EVENT_VENUE_MAP !== 'undefined' && EVENT_VENUE_MAP[entity.slug]) {
+      e = PROPERTY_IMAGES[EVENT_VENUE_MAP[entity.slug]] || null;
+    }
+    return e;
+  }
+  const jsOnlyCount = IMAGES_ENTITIES.filter(function(e) { return !imgByProp[e.id] && !!getJsEntry(e); }).length;
+  const missingCount = IMAGES_ENTITIES.filter(function(e) { return !imgByProp[e.id] && !getJsEntry(e); }).length;
+
+  let html = '<div style="display:flex;gap:var(--spacing-md);margin-bottom:var(--spacing-md);font-size:var(--text-xs);color:var(--text-2);flex-wrap:wrap;align-items:center;">'
+    + '<span>' + IMAGES_ENTITIES.length + ' entities</span>'
+    + '<span style="color:var(--color-success-700);">' + confirmed + ' confirmed</span>'
+    + '<span style="color:var(--color-warning-700);">' + suggested + ' unconfirmed</span>'
+    + (jsOnlyCount ? '<span style="color:var(--text-2);">' + jsOnlyCount + ' images.js fallback</span>' : '')
+    + (missingCount ? '<span style="color:var(--color-error-600);">' + missingCount + ' missing</span>' : '')
+  + '</div>'
+  + '<div style="overflow-x:auto;">'
+  + '<table class="cr-table" style="width:100%;">'
+  + '<thead><tr>'
+    + '<th>Entity</th><th>Type</th><th>Status</th><th>Preview</th>'
+    + '<th>Source</th><th>Confidence</th><th style="min-width:200px;">Actions</th>'
+  + '</tr></thead>'
+  + '<tbody>';
+
+  IMAGES_ENTITIES.forEach(function(entity) {
+    const imgRows = allByProp[entity.id] || [];
+    const best    = imgByProp[entity.id] || null;
+
+    // Primary row
+    html += buildImgEntityRow(entity, best);
+
+    // Secondary rows for additional candidates (suggested only)
+    imgRows.forEach(function(row) {
+      if (row === best) return; // skip the primary row
+      if (row.status !== 'suggested') return; // only show extra suggestions
+      html += buildImgEntityRow(entity, row, true);
+    });
+  });
+
+  html += '</tbody></table></div>';
+
+  // Add manual image entry at the bottom
+  html += '<div style="margin-top:var(--spacing-md);padding:var(--spacing-sm);background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius-sm);">'
+    + '<span style="font-size:var(--text-xs);color:var(--text-2);font-weight:500;">Add image manually: </span>'
+    + '<select id="img-manual-entity" style="font-size:var(--text-xs);padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-1);margin:0 var(--spacing-xs);">'
+    + IMAGES_ENTITIES.map(function(e) {
+        return '<option value="' + e.id + '">' + escHtml(e.name) + ' (' + e.property_type + ')</option>';
+      }).join('')
+    + '</select>'
+    + '<input id="img-manual-url" type="url" placeholder="https://…" class="cr-img-url-input" style="margin:0 var(--spacing-xs);">'
+    + '<select id="img-manual-status" style="font-size:var(--text-xs);padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-1);margin:0 var(--spacing-xs);">'
+    + '<option value="confirmed">Confirmed</option>'
+    + '<option value="suggested">Suggested</option>'
+    + '</select>'
+    + '<button class="cr-action-btn" style="font-size:11px;" onclick="saveManualImageUrl()">Add</button>'
+  + '</div>';
+
+  body.innerHTML = html;
+
+  // Populate series select
+  const sel = document.getElementById('images-series-select');
+  if (sel && sel.options.length <= 1) {
+    SERIES_STATUS.forEach(function(s) {
+      const opt = document.createElement('option');
+      opt.value       = s.slug;
+      opt.textContent = s.name || s.slug;
+      if (s.slug === IMAGES_SERIES) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+/* ── imgLoadError ── Called from img onerror to mark a broken image. ── */
+function imgLoadError(img, badgeId) {
+  img.style.opacity = '0.2';
+  var badge = badgeId ? document.getElementById(badgeId) : null;
+  if (badge && badge.dataset.status !== 'confirmed' && badge.dataset.status !== 'manual') {
+    badge.dataset.status  = 'broken';
+    badge.textContent     = 'broken';
+  }
+}
+
+function buildImgEntityRow(entity, imgRow, isSecondary) {
+  // ── Resolve images.js fallback entry for this entity ─────────────
+  var jsEntry = (typeof PROPERTY_IMAGES !== 'undefined') ? (PROPERTY_IMAGES[entity.slug] || null) : null;
+  if (!jsEntry && entity.property_type === 'event' && typeof EVENT_VENUE_MAP !== 'undefined' && EVENT_VENUE_MAP[entity.slug]) {
+    jsEntry = (typeof PROPERTY_IMAGES !== 'undefined' && PROPERTY_IMAGES[EVENT_VENUE_MAP[entity.slug]]) || null;
+  }
+
+  var rawStatus  = imgRow ? imgRow.status    : null;
+  var imgUrl     = imgRow ? (imgRow.image_url  || '') : '';
+  var srcType    = imgRow ? (imgRow.source_type || '') : '';
+  var conf       = imgRow && imgRow.match_confidence != null ? (imgRow.match_confidence * 100).toFixed(0) + '%' : '';
+  var rowId      = imgRow ? imgRow.id : null;
+  var srcUrl     = imgRow ? (imgRow.source_url || '') : '';
+  var indent     = isSecondary ? ' style="opacity:0.8;background:var(--surface-muted);"' : '';
+
+  // ── Derive display status ─────────────────────────────────────────
+  var displayStatus;
+  if (!imgRow) {
+    displayStatus = jsEntry ? 'js-fallback' : 'missing';
+  } else if (srcType === 'manual' && rawStatus === 'confirmed') {
+    displayStatus = 'manual';
+  } else {
+    displayStatus = rawStatus || 'missing';
+  }
+
+  // ── Preview URL — entity_images first, images.js fallback ────────
+  var previewUrl = imgUrl || (jsEntry ? jsEntry.src : '');
+  var badgeId    = 'img-bstatus-' + entity.id + (rowId ? '-' + rowId : '');
+
+  // ── Thumb ─────────────────────────────────────────────────────────
+  var thumb;
+  if (previewUrl) {
+    thumb = '<img src="' + escHtml(previewUrl) + '" class="cr-img-thumb" alt=""'
+      + ' onerror="imgLoadError(this,\'' + badgeId + '\')"'
+      + '>';
+  } else {
+    thumb = '<div class="cr-img-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:10px;">none</div>';
+  }
+
+  // ── Source label ──────────────────────────────────────────────────
+  var sourceLabel = !imgRow ? (jsEntry ? 'images.js' : '') : (srcType || 'manual');
+  var sourceHostname = srcUrl
+    ? (function() { try { return new URL(srcUrl).hostname; } catch(e) { return ''; } })()
+    : '';
+
+  // ── Actions ───────────────────────────────────────────────────────
+  var actions = '';
+  if (rowId) {
+    if (rawStatus !== 'confirmed') {
+      actions += '<button class="cr-action-btn" style="font-size:10px;" onclick="confirmImageEntry(\'' + rowId + '\')">Confirm</button> ';
+    }
+    if (rawStatus !== 'rejected') {
+      actions += '<button class="cr-action-btn" style="font-size:10px;opacity:0.7;" onclick="rejectImageEntry(\'' + rowId + '\')">Reject</button> ';
+    }
+    if (rawStatus !== 'placeholder') {
+      actions += '<button class="cr-action-btn" style="font-size:10px;opacity:0.7;" onclick="markImagePlaceholder(\'' + rowId + '\')">Placeholder</button> ';
+    }
+    actions += '<button class="cr-action-btn" style="font-size:10px;opacity:0.7;" onclick="openEditImgUrlInline(\'' + rowId + '\',\'' + escHtml(imgUrl) + '\')">Edit URL</button>';
+  } else if (!isSecondary) {
+    actions += '<button class="cr-action-btn" style="font-size:10px;" onclick="openInlineAdd(\'' + entity.id + '\')">Add URL</button> ';
+    actions += '<button class="cr-action-btn" style="font-size:10px;opacity:0.7;" onclick="handleScanImages(IMAGES_SERIES,\'\')" title="Run image scan for this series">Scan</button>';
+  }
+
+  // ── Status badge (stable ID for broken-image update) ─────────────
+  var statusBadge = '<span class="cr-img-status" id="' + badgeId + '" data-status="' + displayStatus + '">' + displayStatus + '</span>';
+
+  var actionsTd = rowId
+    ? '<td id="img-actions-' + rowId + '" style="white-space:nowrap;">' + actions + '</td>'
+    : '<td style="white-space:nowrap;">' + actions + '</td>';
+
+  return '<tr id="img-entity-row-' + entity.id + '"' + indent + '>'
+    + '<td>'
+      + '<div style="font-weight:' + (isSecondary ? '400' : '500') + ';color:var(--text-1);font-size:var(--text-xs);">' + escHtml(entity.name) + '</div>'
+      + (isSecondary
+          ? '<div class="cr-mono" style="font-size:9px;color:var(--text-3);">alt candidate</div>'
+          : '<div class="cr-mono" style="font-size:10px;color:var(--text-3);">' + escHtml(entity.slug) + '</div>')
+    + '</td>'
+    + '<td style="font-size:var(--text-xs);color:var(--text-2);">' + escHtml(entity.property_type) + '</td>'
+    + '<td>' + statusBadge + '</td>'
+    + '<td>' + thumb + '</td>'
+    + '<td style="font-size:10px;color:var(--text-3);">'
+      + escHtml(sourceLabel)
+      + (sourceHostname ? '<br><span class="cr-mono" style="font-size:9px;">' + escHtml(sourceHostname) + '</span>' : '')
+    + '</td>'
+    + '<td style="font-size:var(--text-xs);color:var(--text-2);">' + conf + '</td>'
+    + actionsTd
+  + '</tr>';
+}
+
+async function confirmImageEntry(id) {
+  await patchImageEntry(id, { status: 'confirmed', verified: true });
+  addLogEntry('Image confirmed (id: ' + id + ')', 'ingest');
+  await loadImagesSection(IMAGES_SERIES);
+  await loadImageScanSuggestions();
+}
+
+async function rejectImageEntry(id) {
+  await patchImageEntry(id, { status: 'rejected', verified: false });
+  addLogEntry('Image rejected (id: ' + id + ')', 'repair');
+  await loadImagesSection(IMAGES_SERIES);
+  await loadImageScanSuggestions();
+}
+
+async function markImagePlaceholder(id) {
+  await patchImageEntry(id, { status: 'placeholder', verified: false });
+  addLogEntry('Image marked as placeholder (id: ' + id + ')', 'ingest');
+  await loadImagesSection(IMAGES_SERIES);
+}
+
+// Replaces the actions cell with an inline URL input — no prompt() dialog.
+function openEditImgUrlInline(id, currentUrl) {
+  const td = document.getElementById('img-actions-' + id);
+  if (!td) return;
+  td.innerHTML =
+    '<input id="img-edit-url-' + id + '" type="url" value="' + escHtml(currentUrl) + '" '
+    + 'class="cr-img-url-input" style="width:160px;margin-right:4px;" placeholder="https://\u2026">'
+    + '<button class="cr-action-btn" id="img-edit-save-' + id + '" style="font-size:10px;" '
+    + 'onclick="saveEditImgUrlInline(\'' + id + '\')">Save</button> '
+    + '<button class="cr-action-btn" style="font-size:10px;opacity:0.6;" '
+    + 'onclick="loadImagesSection(IMAGES_SERIES)">Cancel</button>';
+  const input = document.getElementById('img-edit-url-' + id);
+  if (input) { input.focus(); input.select(); }
+}
+
+async function saveEditImgUrlInline(id) {
+  const input   = document.getElementById('img-edit-url-' + id);
+  const saveBtn = document.getElementById('img-edit-save-' + id);
+  if (!input) return;
+  const newUrl = input.value.trim();
+  if (!newUrl) { input.focus(); return; }
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026'; }
+  await patchImageEntry(id, { image_url: newUrl });
+  addLogEntry('Image URL updated (id: ' + id + ')', 'ingest');
+  await loadImagesSection(IMAGES_SERIES);
+}
+
+// Scrolls to the manual add form and pre-selects the entity — one-click shortcut
+// for entities that have no image row yet.
+function openInlineAdd(entityId) {
+  const sel      = document.getElementById('img-manual-entity');
+  const urlInput = document.getElementById('img-manual-url');
+  if (sel) sel.value = entityId;
+  if (urlInput) {
+    urlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    urlInput.focus();
+  }
+}
+
+async function patchImageEntry(id, fields) {
+  try {
+    await fetch(API_URL + '/entity_images?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal'
+      },
+      body: JSON.stringify(fields)
+    });
+  } catch(e) {
+    addLogEntry('Image entry update failed: ' + e.message, 'error');
+  }
+}
+
+async function saveManualImageUrl() {
+  const propertyId = document.getElementById('img-manual-entity')?.value;
+  const url        = document.getElementById('img-manual-url')?.value.trim();
+  const status     = document.getElementById('img-manual-status')?.value || 'confirmed';
+
+  if (!propertyId || !url) { alert('Select an entity and enter an image URL.'); return; }
+
+  try {
+    await fetch(API_URL + '/entity_images', {
+      method: 'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=ignore-duplicates'
+      },
+      body: JSON.stringify({
+        property_id:  propertyId,
+        image_url:    url,
+        status:       status,
+        source_type:  'manual',
+        verified:     status === 'confirmed'
+      })
+    });
+    addLogEntry('Manual image URL added for property <strong>' + propertyId + '</strong>', 'ingest');
+    document.getElementById('img-manual-url').value = '';
+    await loadImagesSection(IMAGES_SERIES);
+  } catch(e) {
+    addLogEntry('Manual image add failed: ' + e.message, 'error');
+  }
+}
+
+// ──────────────────────────────────────────────
+// ARCHIVE RUN
+// Soft-archives a run: sets archived=true on
+// ingestion_runs, hides series from public UI,
+// removes it from the active Control Room list.
+// Data (logs, checklist) is preserved.
+// ──────────────────────────────────────────────
+
+function confirmArchiveRun(slug) {
+  var s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s || !s.run_id) {
+    alert('No persisted run record for ' + slug + '. Nothing to archive.');
+    return;
+  }
+  var overlay  = document.getElementById('action-modal');
+  var title    = document.getElementById('modal-title');
+  var sub      = document.getElementById('modal-sub');
+  var stubNote = document.getElementById('modal-stub-notice');
+  var body     = document.getElementById('modal-body');
+  var confirm  = document.getElementById('modal-confirm');
+
+  title.textContent = 'Archive run';
+  sub.textContent   = s.name + ' \u2014 ' + s.season;
+  if (stubNote) stubNote.style.display = 'none';
+  body.innerHTML =
+    '<p style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;">'
+    + 'This run will be hidden from the active Control Room list. '
+    + 'All underlying data, logs, and checklist stages are preserved and can be recovered '
+    + 'by querying the database directly.'
+    + '</p>'
+    + '<p style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;margin-top:var(--spacing-md);">'
+    + 'If this series is currently visible in the public UI it will also be hidden.'
+    + '</p>';
+  confirm.textContent = 'Archive run';
+  confirm.className   = 'cr-btn-danger';
+  confirm.onclick     = function() { archiveRun(slug); };
+  overlay.classList.add('open');
+}
+
+async function archiveRun(slug) {
+  var s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s || !s.run_id) return;
+  closeModal();
+  try {
+    /* 1. Mark run as archived */
+    var r1 = await fetch(API_URL + '/ingestion_runs?id=eq.' + encodeURIComponent(s.run_id), {
+      method:  'PATCH',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ archived: true, archived_at: new Date().toISOString() })
+    });
+    if (!r1.ok) throw new Error('PATCH ingestion_runs HTTP ' + r1.status);
+
+    /* 2. Hide series from public UI */
+    await fetch(API_URL + '/properties?slug=eq.' + encodeURIComponent(slug), {
+      method:  'PATCH',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ visible_in_ui: false })
+    });
+
+    /* 3. Remove from local state and re-render */
+    var idx = SERIES_STATUS.findIndex(function(x) { return x.slug === slug; });
+    if (idx >= 0) SERIES_STATUS.splice(idx, 1);
+    renderStatus();
+    addLogEntry('Run for <strong>' + escHtml(slug) + '</strong> archived.', 'ingest');
+  } catch(e) {
+    alert('Archive failed: ' + e.message);
+    console.error('archiveRun error:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
+// DELETE RUN (permanent)
+// Cascades: ingestion_run_checklist, control_room_log,
+// then ingestion_runs. Does NOT touch:
+//   control_room_issue_states (slug-keyed, preserved)
+//   series_visibility          (slug-keyed, preserved)
+//   properties / entity data   (never touched)
+// Shows a stronger warning when entity_count > 0.
+// ──────────────────────────────────────────────
+
+function confirmDeleteRun(slug) {
+  var s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s || !s.run_id) {
+    alert('No persisted run record for ' + slug + '. Nothing to delete.');
+    return;
+  }
+  var overlay  = document.getElementById('action-modal');
+  var title    = document.getElementById('modal-title');
+  var sub      = document.getElementById('modal-sub');
+  var stubNote = document.getElementById('modal-stub-notice');
+  var body     = document.getElementById('modal-body');
+  var confirm  = document.getElementById('modal-confirm');
+
+  var entityCount = s.entities || 0;
+
+  title.textContent = 'Delete permanently';
+  sub.textContent   = s.name + ' \u2014 ' + s.season;
+  if (stubNote) stubNote.style.display = 'none';
+
+  var warningHtml = '';
+  if (entityCount > 0) {
+    warningHtml =
+      '<div style="background:var(--color-error-50);border:1px solid var(--color-error-100);'
+      + 'border-radius:var(--radius-sm);padding:var(--spacing-lg);margin-bottom:var(--spacing-xl);">'
+      + '<strong style="font-size:var(--text-sm);color:var(--color-error-700);">'
+      + 'Warning: ' + entityCount + ' linked ' + (entityCount === 1 ? 'entity' : 'entities')
+      + '</strong>'
+      + '<p style="font-size:var(--text-sm);color:var(--color-error-700);margin:var(--spacing-xs) 0 0;line-height:1.5;">'
+      + 'This run is linked to ' + entityCount + ' entities. Deleting the run record removes '
+      + 'ingestion history and logs only. Entities and their public data are not affected.'
+      + '</p>'
+      + '</div>';
+  }
+
+  body.innerHTML = warningHtml
+    + '<p style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;">'
+    + 'Permanently deletes: the ingestion run record, all linked checklist stages, '
+    + 'and all Control Room log entries for this run. This cannot be undone.'
+    + '</p>'
+    + (entityCount > 0
+        ? '<p style="font-size:var(--text-xs);color:var(--text-3);margin-top:var(--spacing-md);">Consider using Archive instead to preserve the run history.</p>'
+        : '');
+
+  confirm.textContent = entityCount > 0 ? 'Delete anyway' : 'Delete permanently';
+  confirm.className   = 'cr-btn-danger';
+  confirm.onclick     = function() { deleteRun(slug); };
+  overlay.classList.add('open');
+}
+
+async function deleteRun(slug) {
+  var s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  if (!s || !s.run_id) return;
+  var runId = s.run_id;
+  closeModal();
+  try {
+    /* 1. Delete checklist rows */
+    await fetch(API_URL + '/ingestion_run_checklist?run_id=eq.' + encodeURIComponent(runId), {
+      method:  'DELETE',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    });
+
+    /* 2. Delete Control Room log entries for this run */
+    await fetch(API_URL + '/control_room_log?run_id=eq.' + encodeURIComponent(runId), {
+      method:  'DELETE',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    });
+
+    /* 3. Delete the run itself */
+    var r3 = await fetch(API_URL + '/ingestion_runs?id=eq.' + encodeURIComponent(runId), {
+      method:  'DELETE',
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+    });
+    if (!r3.ok) throw new Error('DELETE ingestion_runs HTTP ' + r3.status);
+
+    /* 4. Remove from local state and re-render */
+    var idx = SERIES_STATUS.findIndex(function(x) { return x.slug === slug; });
+    if (idx >= 0) SERIES_STATUS.splice(idx, 1);
+    renderStatus();
+    addLogEntry('Run for <strong>' + escHtml(slug) + '</strong> permanently deleted.', 'ingest');
+  } catch(e) {
+    alert('Delete failed: ' + e.message);
+    console.error('deleteRun error:', e);
+  }
+}
 
 </script>
 

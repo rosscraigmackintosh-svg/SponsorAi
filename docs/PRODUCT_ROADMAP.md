@@ -2,7 +2,7 @@
 
 SponsorAI — Product Roadmap
 
-Last updated: 2026-03-13 (Control Room v0.7 — Ingestion pipeline automation)
+Last updated: 2026-03-14 (Control Room — archive/delete run feature)
 
 ---
 
@@ -34,12 +34,15 @@ Brand Fit scoring and FitScore are intentionally excluded from v1. SponsorAI mus
 - Car image zoom behaviour — `cubic-bezier(0.22, 1, 0.36, 1)` ease-out zoom scoped to `[data-img-kind="car"]` only; logos and portraits unaffected
 - Sort controls — UI sort menu with alpha, FanScore, followers, engagement rate, and trend options
 - Filter controls — type filter chips (All, Drivers, Teams, Series, Events, Venues) with live count
-- Image registry system — typed asset schema (`kind`, `fit`, `pos`, `pad`, `bg`) in `images.js`; 78 registered entries
-- Event to venue mapping — `EVENT_VENUE_MAP` with 18 entries providing automatic venue image fallback for events without dedicated photography
+- Image registry system — typed asset schema (`kind`, `fit`, `pos`, `pad`, `bg`) in `images.js`; 91 registered entries
+- Event to venue mapping — `EVENT_VENUE_MAP` with 19 entries providing automatic venue image fallback for events without dedicated photography
+- Grid-only layout — masonry and list view modes removed; single canonical card grid
+- Load More pagination — initial 24 cards, +24 per click, footer count badge; full 200-card fetch retained client-side
+- Scroll-to-top button — appears after 320px scroll, smooth scroll, shifts above compare tray when open
 
 ### Property Panels
 
-- Slide-out panel — detail panel with open/close animation, masonry reflow on transition
+- Full-page overlay — detail panel converted to full-viewport overlay with semi-transparent backdrop blur; grid visible behind; scroll locked on body while open; closes on backdrop click or Escape; scroll position restored precisely on close
 - Panel renderer — `components/panel.js` with 10 structured sections
 - Property information display — FanScore block, engagement snapshot (audience, engagement, growth, loyalty), score explanation, key facts, score history, related properties, data and transparency, recent posts
 - Image hero — typed image displayed in panel header with kind-appropriate fit and padding
@@ -55,6 +58,7 @@ Brand Fit scoring and FitScore are intentionally excluded from v1. SponsorAI mus
 - Image mapping — `PROPERTY_IMAGES` registry with venue (Wikimedia Commons preferred), team logo, athlete portrait, and series logo entries
 - Series ingestion process -- standardised workflow defined in `docs/SERIES_INGESTION_PROCESS.md`; all future series expansions follow this process
 - Automated ingestion pipeline -- `build_series_structure` RPC covers `premiership-rugby` (full creation) and `gt-world-challenge-europe` (repair). "Start ingestion" in the Control Room now runs structure creation, checklist auto-advancement, and audit in a single pipeline. Seed SQL files: `database/seeds/premiership_rugby_2026.sql`, `database/seeds/gtwce_2024.sql`.
+- Control Room archive/delete -- `ingestion_runs` now has `archived` (boolean) and `archived_at` (timestamptz) columns. Row menu: Archive run (soft-delete, data preserved, series hidden from UI) and Delete permanently (cascade: checklist + logs + run; entity-count warning if linked entities > 0). Archived runs filtered from active list on load.
 
 ### AI Layer
 
@@ -84,6 +88,25 @@ Brand Fit scoring and FitScore are intentionally excluded from v1. SponsorAI mus
 - Trending / Emerging properties — `momentum_score` derived client-side; Trending sort option; properties surfaced by recent movement, not just size
 - Fastest growing drivers — surface athletes showing strongest follower growth relative to their tier
 - Cooling properties — identify properties with declining trend scores for contrast and completeness of market view
+
+### Saved State + Navigation
+
+- Watchlist, Portfolio, Compare pages — now fully active with live data, SAI_STORAGE persistence, and cross-page state sync
+- `app/storage.js` — shared localStorage module loaded across all pages; `sai-compare` supports up to 3 slugs
+- Compare page — 3-way side-by-side comparison (?a=slug&b=slug&c=slug), localStorage-driven fallback, selection status feedback, 0/1/2/3 selection states, clear selection, save-as-link
+- Panel action buttons — Watch, Portfolio, Compare reflect active state with count feedback (e.g. "Compare (1/3)")
+- Card hero compare button — shows count feedback in title; disabled when queue full (3/3)
+- `syncCompareButtons()` in explore.html extended to update hero-btn active/disabled/title states
+- Coverage percentage bug fixed in card renderer
+- Opportunities page removed from primary nav across all 6 pages (page remains accessible directly)
+- Card overlay actions (Watch, Compare, Portfolio) fixed: root cause was `stopPropagation` on the overlay container blocking the document-level delegation handler; compareList desync on page load also fixed; panel compare double-toggle bug fixed
+- All three entry points (card overlay, panel, property page) confirmed working with shared SAI_STORAGE state
+
+### Property Profile UX
+
+- Momentum charts -- **DONE 2026-03-14**. Momentum section on property.html now shows three metric tiles (30d change, 90d change, daily trend slope) rendered synchronously from `s30`/`s60`/`s90`/`t30`, plus a full-width SVG line chart rendered async from `sparks`. Date labels (first/last) shown below chart. Suppressed properties show neither tiles nor chart. Insufficient sparks show a clean unavailable notice. Existing FanScore small sparkline preserved.
+
+- Ecosystem influence and relationship explanation layer -- **DONE 2026-03-14**. The Ecosystem section on property.html now groups related entities by relationship type, adds a short contextual description per group, and shows a lightweight influence summary bar (connected entity count, combined follower reach, strongest entity by FanScore, rising count). Cards include a subtle trend arrow. All uses real live data from `v_property_summary_current` (added `total_followers_latest`, `trend_value_30d` to the ecosystem fetch). No schema change was required. `REL_LABELS_PROP` (20 entries) and `REL_CONTEXT_PROP` (16 entries) defined locally in property.html. Sparse/missing ecosystems handled cleanly with silent non-render.
 
 ### Explore Improvements
 
@@ -261,10 +284,22 @@ Still manual after v0.7:
 - Entity name corrections and duplicate resolution
 - Exception documentation in DEVELOPMENT_LEDGER.md
 
-### v0.8 — planned
+### v0.8 — 2026-03-14 (complete)
 
-- `Add image URL` action: write proposed URL to a staging table for review before `images.js` is updated
+Images section upgraded to a full per-entity persistent image management surface.
+
+Delivered:
+
+- `buildImgEntityRow()` updated: entities with no image row now show an `Add URL` button that scrolls to the manual add form and pre-selects the entity. Primary entity rows have `id="img-entity-row-{entityId}"` for row-level targeting.
+- `openEditImgUrl()` (blocking `prompt()` dialog) replaced by `openEditImgUrlInline(id, currentUrl)`: clicking "Edit URL" replaces the actions cell with an inline `<input>` (using existing `cr-img-url-input` style) plus Save / Cancel buttons. Actions cell has `id="img-actions-{rowId}"` for stable targeting.
+- `saveEditImgUrlInline(id)` patches `entity_images` via Supabase and reloads the section. Cancel reloads from DB without change.
+- `openInlineAdd(entityId)` helper: scrolls to and focuses the manual add form with entity pre-selected.
+- All image edits remain fully persistent via `entity_images` Supabase table (no local-only state).
+
+### v0.9 — planned
+
 - Log filtering by tag (audit / ingest / repair / error) in the UI
+- Image audit validation: bulk-test all registered image URLs in a series on demand; flag dead/hotlink-blocked URLs back into the Issues table
 
 ---
 

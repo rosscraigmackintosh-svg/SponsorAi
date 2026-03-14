@@ -2,7 +2,7 @@
 
 SponsorAI — Current Development State
 
-Last updated: 2026-03-13 (Control Room v0.7 — Ingestion pipeline automation)
+Last updated: 2026-03-14 (Property page — ecosystem relationship explanation layer)
 
 ---
 
@@ -24,34 +24,39 @@ The authoritative issue list is the March 2026 code review at:
 
 | Surface | Status | Notes |
 |---|---|---|
-| Control Room (`app/control-room.html`) | Active — v0.7 (runs, states, log, checklist, visibility, automated pipeline) | Internal-only page. "Start ingestion" now calls `build_series_structure` RPC before the audit. Supported templates: `premiership-rugby` (full creation), `gt-world-challenge-europe` (repair). Unsupported slugs fall through to manual SQL path. Checklist auto-advances on pipeline completion. Status set to 'running' immediately on run creation. |
-| Explore screen (`app/explore.html`) | Active | Live Supabase data, AI chat, filtering, sorting |
-| Card grid | Active | Renders up to 200 FanScore cards from live data |
+| Control Room (`app/control-room.html`) | Active — v1.0 (archive/delete run, 2026-03-14) | Internal-only page. "Start ingestion" calls `build_series_structure` RPC. Row menu: Run audit, Run again, Scan images, View images, Edit run, Checklist, visibility controls, Archive run, Delete permanently. Archive: soft-delete (archived=true on ingestion_runs + visible_in_ui=false on properties). Delete: cascade removes ingestion_run_checklist + control_room_log + ingestion_run; entity-count warning shown if entities>0; does NOT touch control_room_issue_states, series_visibility, or properties. loadIngestionRuns filters archived=eq.false. Section 2.5 (Images): full image audit surface. |
+| Explore screen (`app/explore.html`) | Active — simplified UX (2026-03-14) | Grid-only layout. Full-page property overlay (scroll-preserving). Load More pagination (24 + 24). Scroll-to-top button. Masonry and list views removed. |
+| Card grid | Active | Fetches up to 200 cards; renders first 24, loads +24 on demand |
 | Type filters | Active | All / Drivers / Teams / Series / Events — client-side |
 | AI chat panel | Active | Direct Anthropic API call, CMD-based grid control |
-| Property detail panel | Active | Full panel: FanScore history, confidence, signals, bio, related properties. Action buttons (watchlist/compare/portfolio) are console-only stubs. |
+| Property detail panel | Active — full-page overlay (2026-03-14) | Full-page overlay with backdrop blur, closes on backdrop click or Escape, scroll position restored on close. Content: FanScore history, confidence, signals, bio, related properties, recent posts. Action buttons (Watch, Portfolio, Compare) wired to SAI_STORAGE. |
 | Theme toggle | Active | Light/dark mode, persisted in localStorage |
 | FanScore display | Active | 30d average, trend direction, confidence band, coverage % |
 | Suppression handling | Active | Suppressed cards render `--` instead of score |
-| Property images | Active | Typed image asset system (`images.js`). Kinds: car, portrait, logo, venue, series. `EVENT_VENUE_MAP` provides venue image fallback for events. Car assets apply CSS zoom + cubic-bezier ease-out on hover. |
+| Property images | Active | Typed image asset system (`images.js`). Kinds: car, portrait, logo, venue, series. `EVENT_VENUE_MAP` provides venue image fallback for events. Car assets apply CSS zoom + cubic-bezier ease-out on hover. 91 PROPERTY_IMAGES entries; 19 EVENT_VENUE_MAP entries. Premiership Rugby ecosystem: series, venue, 10 team logos, governing body all in images.js. entity_images: 13 confirmed rows post 2026-03-14 cleanup (bath, bristol, exeter, gloucester, harlequins, leicester, newcastle, northampton, sale, saracens, premiership-rugby series, premiership-rugby-ltd, + bath previously confirmed). Event (premiership-rugby-final-2026) uses EVENT_VENUE_MAP fallback. Athletes: 11 pending portrait sourcing. |
 | Sort controls | Active | Sort menu UI with alpha, score, followers, engagement, trend, and Trending options. Triggered from explore header. |
 | Momentum signals | Active | Signal badges on cards and in panel. `computeMomentumScore()` derives up to 2 badges (Rising Fast, Growing, Losing Momentum, High Engagement, Audience Surge) from `t30`, `engRate30d`, `followersDelta`, `followers`. Suppressed cards show no badges. Panel section 4b renders when signals are present; omits section entirely when none. |
 | CSS token spacing | Active | Spacing rhythm pass applied 2026-03-13. Five raw-px values replaced with semantic tokens (`--spacing-xs` through `--spacing-xl`). |
+| Shared UI helpers (`app/ui-helpers.js`) | Active — v1.0 (2026-03-14) | `window.SAI_UIH` namespace. Centralises: `initTheme`, `navigateTo` (global alias), `initMenuListeners`, `typeBadgeHtml`, `fanScoreText`, `trendText`, `trendColor`, `propertyCountText`, `isOnWatchlist`, `isInPortfolio`, `isInCompare`, `errorHtml`, `loadingHtml`. All 6 public pages load it after `ui.js`. CLAUDE.md rule added: check ui-helpers.js before creating new UI fragments or helpers. |
 
 ### What exists as stub only
 
 | Surface | Status | Notes |
 |---|---|---|
 | Control Room — entity creation SQL | Not started | Start ingestion creates a run record and runs the audit. The actual property/account/post data population is still manual via Supabase SQL editor. |
-| Compare view | Stub | Nav item works; no content |
-| Portfolio view | Stub | Nav item works; no content |
-| Watchlist view | Stub | Nav item works; card action buttons toggle visually only (no persistence) |
-| Scenarios | Stub | Nav item only |
-| Reports | Stub | Nav item only |
+| Compare view (`app/compare.html`) | Active | 3-way side-by-side comparison. URL-driven (?a=slug&b=slug&c=slug). localStorage-driven fallback. Handles 0/1/2/3 selection states with status feedback. Table scales to 2 or 3 columns. Clear selection + save-as-link. |
+| Portfolio view (`app/portfolio.html`) | Active | Table layout. Loads live data from Supabase for saved slugs. Summary stats bar (count, avg FanScore, rising count). Remove, View, Compare actions all functional. SAI_STORAGE wired. |
+| Watchlist view (`app/watchlist.html`) | Active | List layout. Loads live data from Supabase for saved slugs. Remove, View, Compare actions functional. SAI_STORAGE wired. |
+| Property profile (`app/property.html`) | Active — ecosystem explanation added (2026-03-14) | Full property view. FanScore card, audience signals, momentum chart, ecosystem (grouped by relationship type with contextual labels + influence summary bar), recent posts. Watchlist toggle wired to SAI_STORAGE. |
+| Opportunities (`app/opportunities.html`) | Placeholder | Bridge content only (top 5 FanScore properties). Not in main nav. Page loads directly but is not linked from primary navigation. |
+| Scenarios | Removed | Nav item removed from all pages |
+| Reports | Removed | Nav item removed from all pages |
+| Shared storage module (`app/storage.js`) | Active | SAI_STORAGE.watchlist / .portfolio / .compare (max 3). Consistent localStorage API across all pages. |
 | FitScore | Not started | Referenced in docs; no data in schema, no UI |
-| Sparkline charts | Not started | Data is fetched and stored in `c.sparks` but never rendered |
+| Sparkline charts — FanScore (small) | Active | Rendered in FanScore block on property.html via `renderSparkline()`. 120x48 SVG, async after sparks load. |
+| Momentum chart (large) | Active | Rendered in Momentum section on property.html via `renderMomentumChart()`. Full-width 600x72 SVG with date labels. Metric tiles (30d/90d change, daily trend) rendered synchronously via `renderMomentumMetrics()`. |
 | Search input | Not started | Search is chat-only; no keyword search field exists |
-| Pagination | Not started | Hard limit of 200 cards; no infinite scroll |
+| Pagination | Active — client-side (2026-03-14) | PAGE_SIZE=24. First 24 rendered on load/filter/sort. Load More appends +24. Full 200-card fetch preserved. Footer shows count + Load More button. |
 | Panel relationship sections | Active | DB-backed; `loadRelationships()` queries `property_relationships` forward+reverse; grouped by `REL_LABELS` with 20 type×direction mappings; capped 8 per group; renders clickable `.dp-rel-item` rows |
 | Momentum signals | Active | `computeMomentumScore()` in `data.js`; up to 2 badges per card; panel section 4b rendered conditionally; suppressed cards show no badges |
 | Trending sort | Active | Trending sort option in explore sort menu; momentum_score derived client-side |
@@ -113,7 +118,7 @@ Derived from the March 2026 code review. Full detail at:
 
 16. `escHtml` function defined after first use — works due to function hoisting, but inconsistent.
 
-17. Detail panel action buttons are non-functional stubs that appear interactive.
+17. ~~Detail panel action buttons are non-functional stubs.~~ RESOLVED 2026-03-14 -- all three panel action buttons (Watch, Portfolio, Compare) are fully wired. See WORKING_CONTEXT for detail.
 
 18. Old prototype files in `prototype-archive/Old/` are not yet formally archived to `99_Archive/`.
 
@@ -152,10 +157,12 @@ These are the most impactful improvements to work toward, roughly ordered by pri
 - Move TypeScript data layer into active use
 
 **Product features**
-- Implement property detail panel action buttons — panel renders fully; watchlist/compare/portfolio actions in `dpAction()` are console-only stubs
-- Implement sparkline rendering (data is already fetched and stored in `c.sparks`)
+- ~~Implement property detail panel action buttons~~ DONE 2026-03-14 -- Watch, Portfolio, Compare fully wired in panel and card overlay
+- ~~Implement persistent watchlist/compare/portfolio state~~ DONE 2026-03-14 -- SAI_STORAGE wired across all pages; cross-page state sync confirmed
+- ~~Watchlist/Portfolio card button state stale after panel action~~ DONE 2026-03-14 -- syncWatchlistButtons/syncPortfolioButtons helpers added; all toggle paths now cross-update card and panel buttons immediately
+- Property profile momentum charts -- replace static sparkline with a proper 30d / 90d change chart on the property profile page (next prioritised UX item)
+- Implement sparkline rendering on cards (data is already fetched and stored in `c.sparks`)
 - Populate `image_url` with real property images
-- Implement persistent watchlist/compare/portfolio state
 
 ---
 

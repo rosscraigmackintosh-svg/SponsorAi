@@ -2,22 +2,21 @@
    Depends on globals from data.js:    allCards, TYPE, n, fmt, arr, arrC, countryFlag,
                                        escHtml
    Depends on globals from card.js:    HERO_ICONS
-   Depends on globals in ui.js (runtime only, not parse time):
-     _masonryReflow()
    Must load after components/layout.js and before the inline script block.
 ────────────────────────────────────────────────────────────────────────── */
-var detailOpen   = false;
-var detailCardId = null;
+var detailOpen      = false;
+var detailCardId    = null;
+var _savedScrollY   = 0;   /* restored when overlay closes */
 var PLATFORM_LABELS = { instagram:'Instagram', x:'X', youtube:'YouTube', tiktok:'TikTok', linkedin:'LinkedIn' };
 
 function openDetail(c) {
-  detailCardId = c.id;
+  _savedScrollY = window.scrollY || window.pageYOffset || 0;
+  detailCardId  = c.id;
   populateDetail(c);
   detailOpen = true;
   document.body.classList.add('detail-open');
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('dp-scroll').scrollTop = 0;
-  _masonryReflow();
 }
 
 function closeDetail() {
@@ -26,7 +25,8 @@ function closeDetail() {
   document.body.classList.remove('detail-open');
   document.getElementById('detail-panel').classList.remove('open');
   document.querySelectorAll('.fanscore-card').forEach(function(el) { el.classList.remove('selected'); });
-  _masonryReflow();
+  /* Restore scroll position so user lands back where they were */
+  window.scrollTo({ top: _savedScrollY, behavior: 'instant' });
 }
 
 function populateDetail(c) {
@@ -90,11 +90,27 @@ function populateDetail(c) {
     var shortDesc = c.bio.length > 160 ? c.bio.slice(0, 160).replace(/\s+\S+$/, '') + '\u2026' : c.bio;
     h += '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;margin-top:var(--spacing-md)">' + escHtml(shortDesc) + '</div>';
   }
-  /* Actions */
+  /* Actions — reflect current saved state from SAI_STORAGE */
+  var _slug     = c.slug || null;
+  var _inWL     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.watchlist.has(_slug);
+  var _inPF     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.portfolio.has(_slug);
+  var _inCmp    = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.compare.has(_slug);
+  var _cmpCount = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
+  var _cmpFull  = !_inCmp && _cmpCount >= 3;
+  var _cmpLabel = _inCmp   ? 'Comparing'
+                : _cmpFull ? 'Compare (full)'
+                : _cmpCount > 0 ? 'Compare (' + _cmpCount + '/3)' : 'Compare';
   h += '<div class="dp-actions">';
-  h += '<button class="dp-action-btn" onclick="dpAction(\'watch\',\'' + c.id + '\')">Watch</button>';
-  h += '<button class="dp-action-btn" onclick="dpAction(\'portfolio\',\'' + c.id + '\')">Portfolio</button>';
-  h += '<button class="dp-action-btn disabled" title="Select another property first to enable compare">Compare</button>';
+  h += '<button class="dp-action-btn' + (_inWL  ? ' active' : '') + '" id="dp-btn-watch"'
+     + ' onclick="dpAction(\'watch\',\'' + c.id + '\')">'
+     + (_inWL  ? 'Watching'     : 'Watch')     + '</button>';
+  h += '<button class="dp-action-btn' + (_inPF  ? ' active' : '') + '" id="dp-btn-portfolio"'
+     + ' onclick="dpAction(\'portfolio\',\'' + c.id + '\')">'
+     + (_inPF  ? 'In portfolio' : 'Portfolio') + '</button>';
+  h += '<button class="dp-action-btn' + (_inCmp ? ' active' : '') + '" id="dp-btn-compare"'
+     + ' onclick="dpAction(\'compare\',\'' + c.id + '\')" data-slug="' + (_slug || '') + '">'
+     + _cmpLabel + '</button>';
+  if (c.slug) h += '<a class="dp-action-btn" href="property.html?slug=' + encodeURIComponent(c.slug) + '" style="text-decoration:none">Full profile</a>';
   h += '</div>';
   h += '</div>'; /* /section */
 
@@ -467,9 +483,54 @@ function dpToggleExpand(btn) {
   if (arrow) arrow.innerHTML = content.classList.contains('open') ? '&#9650;' : '&#9660;';
 }
 
+/* ── Panel action helpers ─────────────────────────────────────────────── */
+
+function _dpRefreshBtn(btnId, labelTrue, labelFalse, isActive) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.textContent = isActive ? labelTrue : labelFalse;
+  btn.classList.toggle('active', !!isActive);
+}
+
 function dpAction(action, id) {
-  /* Placeholder — future implementation */
-  console.log('[SponsorAI] panel action:', action, id);
+  var card = allCards.filter(function(c) { return c.id === id; })[0];
+  var slug = card ? card.slug : null;
+
+  if (action === 'watch') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.watchlist.toggle(slug);
+    _dpRefreshBtn('dp-btn-watch', 'Watching', 'Watch', nowIn);
+    /* Sync card overlay buttons on the grid without requiring a re-render */
+    if (typeof syncWatchlistButtons === 'function') syncWatchlistButtons(slug, nowIn);
+
+  } else if (action === 'portfolio') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.portfolio.toggle(slug);
+    _dpRefreshBtn('dp-btn-portfolio', 'In portfolio', 'Portfolio', nowIn);
+    /* Sync card overlay buttons on the grid without requiring a re-render */
+    if (typeof syncPortfolioButtons === 'function') syncPortfolioButtons(slug, nowIn);
+
+  } else if (action === 'compare') {
+    if (!slug) return;
+    /* Delegate entirely to compareToggle when available (explore.html context).
+       compareToggle handles both compareList and SAI_STORAGE to avoid double-toggle.
+       Fall back to direct storage toggle on pages without compareToggle (e.g. future pages). */
+    var nowIn;
+    if (typeof compareToggle === 'function') {
+      nowIn = compareToggle(id);
+    } else {
+      nowIn = SAI_STORAGE.compare.toggle(slug);
+    }
+    var _newCount = SAI_STORAGE.compare.get().length;
+    var _cmpFull  = !nowIn && _newCount >= 3;
+    var _newLabel = nowIn     ? 'Comparing'
+                  : _cmpFull  ? 'Compare (full)'
+                  : _newCount > 0 ? 'Compare (' + _newCount + '/3)' : 'Compare';
+    _dpRefreshBtn('dp-btn-compare', _newLabel, _newLabel, nowIn);
+
+  } else if (action === 'report') {
+    console.log('[SponsorAI] data issue report for property:', id);
+  }
 }
 
 function selectCard(id) {

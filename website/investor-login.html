@@ -43,33 +43,21 @@
         </div>
 
         <h1 class="login-card__heading">Investor login</h1>
-        <p class="login-card__sub">This area is for invited investors only.</p>
+        <p class="login-card__sub">This area is for invited investors only. Enter your email address and we'll send you a sign-in link.</p>
 
+        <!-- Magic link request form -->
         <form class="login-form" id="loginForm" novalidate autocomplete="off">
 
           <div class="login-field">
-            <label class="login-label" for="username">Username</label>
+            <label class="login-label" for="emailInput">Email address</label>
             <input
               class="login-input"
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Enter username"
-              autocomplete="username"
+              type="email"
+              id="emailInput"
+              name="email"
+              placeholder="you@company.com"
+              autocomplete="email"
               spellcheck="false"
-              required
-            />
-          </div>
-
-          <div class="login-field">
-            <label class="login-label" for="password">Password</label>
-            <input
-              class="login-input"
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter password"
-              autocomplete="current-password"
               required
             />
           </div>
@@ -77,11 +65,21 @@
           <p class="login-error" id="loginError" aria-live="polite"></p>
 
           <button class="login-btn" type="submit">
-            <span class="login-btn__text">Sign in</span>
+            <span class="login-btn__text">Send sign-in link</span>
             <span class="login-btn__arrow">→</span>
           </button>
 
         </form>
+
+        <!-- Sent confirmation (hidden until magic link dispatched) -->
+        <div class="login-sent" id="loginSent" style="display:none;" aria-live="polite">
+          <div class="login-card__eyebrow">
+            <span class="eyebrow-dot eyebrow-dot--success"></span>
+            <span>Link sent</span>
+          </div>
+          <p class="login-card__sub">Check your inbox. Click the link in the email to access the investor briefing.</p>
+          <p class="login-sent__note">The link expires after 1 hour. If you don't see it, check your spam folder.</p>
+        </div>
 
       </div>
     </main>
@@ -95,6 +93,8 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
   <script src="investor-auth.js"></script>
 </body>
 </html>

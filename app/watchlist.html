@@ -13,8 +13,8 @@
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
-<div class="float-bar bar-left" role="banner">
+<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<header class="app-header" role="banner">
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
     aria-label="Open navigation menu"
@@ -62,9 +62,24 @@
     </svg>
 
   <div class="bar-divider"></div>
-  <span class="bar-page-title" id="page-view-title">Watchlist</span>
-
-</div>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="navigateTo('explore.html')">Explore</button>
+    <button class="chip" onclick="navigateTo('portfolio.html')">Portfolio</button>
+    <button class="chip" onclick="navigateTo('compare.html')">Compare</button>
+    <button class="chip active" onclick="navigateTo('watchlist.html')" aria-current="page">Watchlist</button>
+    <button class="chip" onclick="navigateTo('board.html')">Board</button>
+    <button class="chip" onclick="navigateTo('opportunities.html')">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RS
+    </button>
+  </div>
+</header>
 
 <!-- Nav dropdown -->
 <nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
@@ -77,6 +92,8 @@
     <div class="menu-col">
       <div class="menu-col-divider"></div>
       <button class="menu-item active" data-nav="Watchlist" onclick="navigateTo('watchlist.html'); closeNavMenu()" aria-current="page">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="navigateTo('board.html'); closeNavMenu()">Board</button>
+      <button class="menu-item" data-nav="Opportunities" onclick="navigateTo('opportunities.html'); closeNavMenu()">Opportunities</button>
     </div>
   </div>
   <div class="menu-divider"></div>
@@ -102,17 +119,6 @@
   <div class="menu-divider"></div>
   <div class="menu-model-label" id="nav-model-label">model v1.0</div>
 </nav>
-
-<!-- ────────────────── RIGHT FLOATING BAR — profile ───────────────── -->
-<div class="float-bar bar-right">
-  <button class="bar-btn-profile" id="profile-btn"
-    onclick="toggleProfileMenu()"
-    aria-label="Account menu"
-    aria-expanded="false"
-    aria-controls="profile-menu">
-    RS
-  </button>
-</div>
 
 <!-- Profile dropdown -->
 <div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
@@ -176,8 +182,8 @@
               <polyline points="7 3 7 8 17 8"/>
             </svg>
           </div>
-          <p class="watchlist-empty-text">No properties in your watchlist.</p>
-          <p class="watchlist-empty-hint">Browse <a href="explore.html" class="watchlist-empty-link">Explore</a> to add some.</p>
+          <p class="watchlist-empty-text">Your watchlist is empty</p>
+          <p class="watchlist-empty-hint">Add properties from <a href="explore.html" class="watchlist-empty-link">Explore</a> to track their momentum.</p>
         </div>
       </div>
 
@@ -260,6 +266,13 @@ function updateSubtitle(count) {
   }
 }
 
+/* ── Board action ──────────────────────────────────────────────────── */
+function addToBoard(slug) {
+  if (!slug) return;
+  SAI_STORAGE.board.addToStage(slug, 'watching');
+  renderWatchlist();
+}
+
 /* ── Render watchlist items ────────────────────────────────────────── */
 function renderWatchlist() {
   var container = document.getElementById('watchlist-items');
@@ -276,7 +289,7 @@ function renderWatchlist() {
     html += '<div class="watchlist-item">';
     html += '<div class="watchlist-item-left">';
     html += '<div class="watchlist-item-header">';
-    html += '<div class="watchlist-item-name">' + escHtml(prop.property_name) + ' ' + flag + '</div>';
+    html += '<div class="watchlist-item-name"><a class="watchlist-item-name-link" href="property.html?slug=' + encodeURIComponent(prop.slug) + '&ref=watchlist">' + escHtml(prop.property_name) + ' ' + flag + '</a></div>';
     html += '</div>';
     html += '<div class="watchlist-item-meta">';
     html += '<span class="watchlist-item-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' +
@@ -296,9 +309,16 @@ function renderWatchlist() {
     html += '<div class="watchlist-item-confidence">' + (prop.confidence_band_30d || '--') + '</div>';
     html += '</div>';
 
+    var boardStage = SAI_STORAGE.board.getSlugStage(prop.slug);
     html += '<div class="watchlist-item-actions">';
-    html += '<button class="watchlist-action-btn" onclick="navigateTo(\'property.html?slug=' + encodeURIComponent(prop.slug) + '\')">View</button>';
+    html += '<button class="watchlist-action-btn" onclick="navigateTo(\'property.html?slug=' + encodeURIComponent(prop.slug) + '&ref=watchlist\')">View</button>';
     html += '<button class="watchlist-action-btn" onclick="navigateTo(\'compare.html?a=' + encodeURIComponent(prop.slug) + '\')">Compare</button>';
+    if (boardStage) {
+      var stageLabel = boardStage.charAt(0).toUpperCase() + boardStage.slice(1);
+      html += '<button class="watchlist-action-btn watchlist-action-onboard" onclick="navigateTo(\'board.html\')" title="On Board: ' + stageLabel + '">On Board</button>';
+    } else {
+      html += '<button class="watchlist-action-btn" onclick="addToBoard(\'' + escHtml(prop.slug) + '\')">Add to Board</button>';
+    }
     html += '<button class="watchlist-action-btn watchlist-action-remove" onclick="removeFromWatchlist(\'' + escHtml(prop.slug) + '\')">Remove</button>';
     html += '</div>';
 
@@ -416,6 +436,23 @@ SAI_UIH.initMenuListeners();
   color: var(--text-1);
 }
 
+.watchlist-item-name-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.watchlist-item-name-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border-strong);
+}
+
+.watchlist-item-name-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
 .watchlist-item-meta {
   display: flex;
   gap: var(--spacing-sm);
@@ -495,6 +532,18 @@ SAI_UIH.initMenuListeners();
 
 .watchlist-action-remove:hover {
   border-color: var(--negative);
+}
+
+.watchlist-action-onboard {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.watchlist-action-onboard:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .state-msg {

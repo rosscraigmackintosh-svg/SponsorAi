@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <style>
 
@@ -63,6 +64,25 @@
   border-radius: var(--radius-sm);
   padding: 3px 8px;
   line-height: 1.4;
+}
+
+.cr-signout-btn {
+  margin-left: var(--spacing-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-3);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: color 0.1s ease, border-color 0.1s ease;
+}
+.cr-signout-btn:hover {
+  color: var(--text-2);
+  border-color: var(--text-3);
 }
 
 [data-theme="dark"] .cr-internal-badge {
@@ -1017,6 +1037,188 @@
   border-color: rgba(185, 28, 28, 0.25);
 }
 
+/* ─── readiness sub-row ─── */
+
+.cr-readiness-row td {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--surface-muted);
+  border-top: none;
+}
+
+[data-theme="dark"] .cr-readiness-row td {
+  background: rgba(255,255,255,0.03);
+}
+
+.cr-readiness-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.cr-readiness-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.cr-readiness-grid {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.cr-readiness-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-width: 96px;
+}
+
+.cr-readiness-metric-label {
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.cr-readiness-metric-value {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.cr-readiness-metric-value.is-ok    { color: var(--color-success-700); }
+.cr-readiness-metric-value.is-gap   { color: var(--color-warning-700); }
+.cr-readiness-metric-value.is-missing { color: var(--color-error-600); }
+
+[data-theme="dark"] .cr-readiness-metric-value.is-ok      { color: var(--color-success-300); }
+[data-theme="dark"] .cr-readiness-metric-value.is-gap     { color: var(--color-warning-300); }
+[data-theme="dark"] .cr-readiness-metric-value.is-missing { color: var(--color-error-400); }
+
+/* ─── wide modal (entity viewer, change log) ─── */
+
+.cr-modal-wide {
+  width: 680px;
+  max-width: calc(100vw - 48px);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* ─── run change log ─── */
+
+.cr-change-summary-counts {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-3xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.cr-change-summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-width: 72px;
+}
+
+.cr-change-summary-stat-label {
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cr-change-summary-stat-val {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.cr-change-group {
+  margin-bottom: var(--spacing-xl);
+}
+
+.cr-change-group-header {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.cr-change-count {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 1px 7px;
+  background: var(--surface-muted);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+}
+
+.cr-change-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cr-change-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+  padding: 4px var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.cr-change-item:hover { background: var(--surface-muted); }
+
+.cr-change-prefix {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+.cr-change-item[data-type="created"] .cr-change-prefix { color: var(--color-success-600); }
+.cr-change-item[data-type="updated"] .cr-change-prefix { color: var(--color-blue-600); }
+.cr-change-item[data-type="skipped"] .cr-change-prefix { color: var(--text-3); }
+.cr-change-item[data-type="error"]   .cr-change-prefix { color: var(--color-error-600); }
+
+[data-theme="dark"] .cr-change-item[data-type="created"] .cr-change-prefix { color: var(--color-success-300); }
+[data-theme="dark"] .cr-change-item[data-type="updated"] .cr-change-prefix { color: var(--color-blue-300); }
+[data-theme="dark"] .cr-change-item[data-type="error"]   .cr-change-prefix { color: var(--color-error-400); }
+
+.cr-change-name { color: var(--text-1); font-weight: 500; }
+.cr-change-note { color: var(--text-3); font-size: 10px; margin-left: auto; }
+
 </style>
 </head>
 <body>
@@ -1115,7 +1317,7 @@
 
 
 <!-- ────────────────── MAIN CONTENT ────────────────── -->
-<main id="cr-main" class="cr-shell">
+<main id="cr-main" class="cr-shell" style="visibility:hidden">
 <div class="cr-container">
 
   <!-- PAGE HEADER -->
@@ -1123,6 +1325,7 @@
     <h1 class="cr-page-title">Control Room</h1>
     <span class="cr-page-sub">Ingestion, validation, and repair</span>
     <span class="cr-internal-badge">Internal</span>
+    <button class="cr-signout-btn" id="cr-signout-btn" onclick="crSignOut()" title="Sign out">Sign out</button>
   </div>
 
 
@@ -1382,9 +1585,46 @@
 </div>
 
 
+<!-- ── ENTITY VIEWER MODAL ── -->
+<div class="cr-modal-overlay" id="entity-modal" role="dialog" aria-modal="true" aria-labelledby="entity-modal-title">
+  <div class="cr-modal cr-modal-wide">
+    <div style="display:flex; align-items:baseline; gap:var(--spacing-lg); margin-bottom:var(--spacing-xl);">
+      <div class="cr-modal-title" id="entity-modal-title">Entities</div>
+      <button class="cr-btn-secondary" onclick="closeEntityModal()" style="margin-left:auto; font-size:var(--text-xs); padding:4px 10px;">Close</button>
+    </div>
+    <div id="entity-modal-body">
+      <!-- populated by viewEntities() -->
+    </div>
+  </div>
+</div>
+
+<!-- ── RUN CHANGE LOG MODAL ── -->
+<div class="cr-modal-overlay" id="changes-modal" role="dialog" aria-modal="true" aria-labelledby="changes-modal-title">
+  <div class="cr-modal cr-modal-wide">
+    <div style="display:flex; align-items:baseline; gap:var(--spacing-lg); margin-bottom:var(--spacing-xs);">
+      <div class="cr-modal-title" id="changes-modal-title">Run changes</div>
+      <button class="cr-btn-secondary" onclick="closeChangesModal()" style="margin-left:auto; font-size:var(--text-xs); padding:4px 10px;">Close</button>
+    </div>
+    <div class="cr-modal-sub" id="changes-modal-sub"></div>
+    <div id="changes-modal-body">
+      <!-- populated by viewChanges() -->
+    </div>
+  </div>
+</div>
+
 <!-- ── SCRIPTS ── -->
 <script src="images.js"></script>
 <script>
+
+// ──────────────────────────────────────────────
+// AUTH TOKEN
+// _crToken starts as the anon key (safe fallback).
+// After the session check in init() it is replaced
+// with session.access_token so all CR writes execute
+// under the authenticated role, not anon.
+// ──────────────────────────────────────────────
+
+var _crToken = API_KEY;
 
 // ──────────────────────────────────────────────
 // DATA — mock audit results derived from
@@ -1403,7 +1643,14 @@ const SERIES_STATUS = [
     fs_pct:      52,   // many athletes/teams without FanScore data
     dup_flags:   ['dup-event'],
     status:      'needs-review',
-    last_run:    '2026-03-13 14:42'
+    last_run:    '2026-03-13 14:42',
+    readiness: {
+      entities_total: 27,
+      entities_bios:  14,
+      fanscore_count: 14,
+      images_count:   20,
+      visible:        false
+    }
   },
   {
     slug:        'british-gt-championship',
@@ -1415,7 +1662,14 @@ const SERIES_STATUS = [
     fs_pct:      71,
     dup_flags:   [],
     status:      'complete',
-    last_run:    '2026-03-12 09:15'
+    last_run:    '2026-03-12 09:15',
+    readiness: {
+      entities_total: 48,
+      entities_bios:  40,
+      fanscore_count: 34,
+      images_count:   42,
+      visible:        true
+    }
   }
 ];
 
@@ -1678,8 +1932,11 @@ function renderStatus() {
           + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleRerun(\'' + s.slug + '\')">Run again</button>'
           + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleScanImages(\'' + s.slug + '\',' + JSON.stringify(s.image_source_url||'') + ')">Scan images</button>'
           + '<button onclick="closeRowMenu(\'' + s.slug + '\');loadImagesSection(\'' + s.slug + '\')">View images</button>'
+          + '<button onclick="closeRowMenu(\'' + s.slug + '\');viewEntities(\'' + s.slug + '\',' + JSON.stringify(s.name||s.slug) + ')">View entities</button>'
+          + (s.run_id ? '<button onclick="closeRowMenu(\'' + s.slug + '\');viewChanges(\'' + s.slug + '\',' + JSON.stringify(s.name||s.slug) + ')">View changes</button>' : '')
           + '<button onclick="closeRowMenu(\'' + s.slug + '\');handleEditRun(\'' + s.slug + '\')">Edit run</button>'
           + (s.run_id ? '<button onclick="closeRowMenu(\'' + s.slug + '\');toggleChecklist(\'' + s.run_id + '\',\'' + s.slug + '\')">Checklist</button>' : '')
+          + (s.readiness ? '<button onclick="closeRowMenu(\'' + s.slug + '\');toggleReadiness(\'' + s.slug + '\')">Readiness</button>' : '')
           + '<hr>'
           + rowVisMenuItems(s)
           + '<hr>'
@@ -1699,12 +1956,397 @@ function renderStatus() {
       + '</td>'
       + '</tr>';
 
-    return mainRow + checklistRow;
+    var readinessRow = '';
+    if (s.readiness) {
+      var r = s.readiness;
+      var tot = r.entities_total || 1; // avoid div-by-zero
+      var bioRatio  = r.entities_bios  / tot;
+      var fsRatio   = r.fanscore_count / tot;
+      var imgRatio  = r.images_count   / tot;
+      readinessRow =
+        '<tr id="rr-row-' + s.slug + '" class="cr-readiness-row" style="display:none;">'
+        + '<td colspan="11">'
+          + '<div class="cr-readiness-panel">'
+            + '<span class="cr-readiness-label">Readiness</span>'
+            + '<div class="cr-readiness-grid">'
+              + crReadinessMetric('Entities', r.entities_total + ' total', true)
+              + crReadinessMetric('Bios', r.entities_bios + ' / ' + r.entities_total, bioRatio >= 0.7, bioRatio < 0.4)
+              + crReadinessMetric('FanScore', r.fanscore_count + ' / ' + r.entities_total, fsRatio >= 0.6, fsRatio < 0.3)
+              + crReadinessMetric('Images', r.images_count + ' / ' + r.entities_total, imgRatio >= 0.7, imgRatio < 0.4)
+              + crReadinessMetric('Visibility', r.visible ? 'Live' : 'Hidden', r.visible, false, !r.visible)
+            + '</div>'
+          + '</div>'
+        + '</td>'
+        + '</tr>';
+    }
+
+    return mainRow + checklistRow + readinessRow;
   }).join('');
 }
 
 function statusLabel(s) {
   return { complete:'Complete', 'needs-review':'Needs review', running:'Running', pending:'Pending' }[s] || s;
+}
+
+// ──────────────────────────────────────────────
+// READINESS HELPERS
+// ──────────────────────────────────────────────
+
+// Renders a single readiness metric tile.
+// isOk=true  → success green
+// isMissing=true → error red (overrides isMissing check)
+// Default → text-2 (neutral)
+// isHidden=true → text-3 dimmed (for visibility=hidden)
+function crReadinessMetric(label, value, isOk, isGap, isHidden) {
+  var cls = isOk ? 'is-ok' : isGap ? 'is-gap' : isHidden ? '' : '';
+  // Refine: if isGap explicitly passed as true, that wins over isOk=false
+  if (isGap)   cls = 'is-gap';
+  if (isOk)    cls = 'is-ok';
+  // isMissing is the 4th arg in the readiness row call; name it per call site
+  var valueStyle = isHidden ? 'color:var(--text-3);' : '';
+  return '<div class="cr-readiness-metric">'
+    + '<span class="cr-readiness-metric-label">' + label + '</span>'
+    + '<span class="cr-readiness-metric-value ' + cls + '" style="' + valueStyle + '">' + value + '</span>'
+    + '</div>';
+}
+
+// Toggles the readiness sub-row for a series.
+// Closes checklist row if it is open, to keep the table tidy.
+function toggleReadiness(slug) {
+  var row = document.getElementById('rr-row-' + slug);
+  if (!row) return;
+  var isVisible = row.style.display !== 'none';
+  // Close the checklist row if open
+  var clRow = document.getElementById('cl-row-' + slug);
+  if (clRow && clRow.style.display !== 'none') clRow.style.display = 'none';
+  row.style.display = isVisible ? 'none' : '';
+}
+
+// ──────────────────────────────────────────────
+// ENTITY VIEWER MODAL
+// Queries Supabase for all properties belonging
+// to the series and shows them in a table with
+// FanScore, image status, and visibility.
+// ──────────────────────────────────────────────
+
+async function viewEntities(slug, name) {
+  var modal   = document.getElementById('entity-modal');
+  var titleEl = document.getElementById('entity-modal-title');
+  var bodyEl  = document.getElementById('entity-modal-body');
+  if (!modal || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = (name || slug) + ' \u2014 entities';
+  bodyEl.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);padding:var(--spacing-xl) 0;">Loading\u2026</p>';
+  modal.classList.add('open');
+
+  try {
+    // Step 1: Resolve series property ID
+    var sRows = await fetch(
+      API_URL + '/properties?slug=eq.' + encodeURIComponent(slug) + '&select=id',
+      { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+    ).then(function(r) { return r.json(); });
+    var seriesId = sRows && sRows[0] ? sRows[0].id : null;
+
+    if (!seriesId) {
+      bodyEl.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);">No property record found for slug <code>' + escHtml(slug) + '</code>.</p>';
+      return;
+    }
+
+    // Step 2: Get all related entity IDs (forward + reverse relationships)
+    var entityIds = [seriesId];
+    var relParts = await Promise.all([
+      fetch(API_URL + '/property_relationships?from_id=eq.' + seriesId + '&select=to_id',
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+      ).then(function(r) { return r.json(); }),
+      fetch(API_URL + '/property_relationships?to_id=eq.' + seriesId + '&select=from_id',
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+      ).then(function(r) { return r.json(); })
+    ]);
+    (relParts[0] || []).forEach(function(r) { if (r.to_id)   entityIds.push(r.to_id); });
+    (relParts[1] || []).forEach(function(r) { if (r.from_id) entityIds.push(r.from_id); });
+    entityIds = entityIds.filter(function(v, i, a) { return a.indexOf(v) === i; });
+
+    // Step 3: Fetch property rows
+    var chunk    = entityIds.slice(0, 50);
+    var entities = await fetch(
+      API_URL + '/properties?id=in.(' + chunk.join(',') + ')&select=id,slug,name,property_type,visible_in_ui&order=property_type.asc,name.asc',
+      { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+    ).then(function(r) { return r.json(); }) || [];
+
+    if (!entities.length) {
+      bodyEl.innerHTML = '<p style="color:var(--text-3);font-size:var(--text-sm);">No entities found for this series.</p>';
+      return;
+    }
+
+    // Step 4: FanScore lookup — most recent 30-day window per entity
+    var fsMap = {};
+    try {
+      var fsRows = await fetch(
+        API_URL + '/fanscore_windows?property_id=in.(' + chunk.join(',') + ')&window_days=eq.30&select=property_id,avg_score&order=as_of_day.desc&limit=' + (chunk.length * 3),
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+      ).then(function(r) { return r.json(); }) || [];
+      fsRows.forEach(function(r) {
+        if (fsMap[r.property_id] == null) fsMap[r.property_id] = r.avg_score;
+      });
+    } catch(e) { /* non-fatal */ }
+
+    // Step 5: Image status — confirmed entity_images rows
+    var imgMap = {};
+    try {
+      var imgRows = await fetch(
+        API_URL + '/entity_images?property_id=in.(' + chunk.join(',') + ')&status=eq.confirmed&select=property_id',
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+      ).then(function(r) { return r.json(); }) || [];
+      imgRows.forEach(function(r) { imgMap[r.property_id] = true; });
+    } catch(e) { /* non-fatal */ }
+
+    // Step 6: Build table
+    var rows = entities.map(function(e) {
+      var fs  = fsMap[e.id] != null ? parseFloat(fsMap[e.id]).toFixed(1) : '\u2014';
+      // Images: entity_images confirmed row, or images.js PROPERTY_IMAGES fallback
+      var hasImg = imgMap[e.id] || (typeof PROPERTY_IMAGES !== 'undefined' && !!PROPERTY_IMAGES[e.slug]);
+      var imgCell = hasImg
+        ? '<span style="color:var(--color-success-700);font-weight:500;">yes</span>'
+        : '<span style="color:var(--text-3);">no</span>';
+      var vis = e.visible_in_ui
+        ? '<span class="cr-vis-badge" data-vis="live">Live</span>'
+        : '<span class="cr-vis-badge" data-vis="hidden">Hidden</span>';
+      return '<tr>'
+        + '<td><div style="font-weight:500;font-size:var(--text-xs);color:var(--text-1);">' + escHtml(e.name) + '</div>'
+          + '<div class="cr-mono" style="font-size:10px;color:var(--text-3);">' + escHtml(e.slug) + '</div></td>'
+        + '<td style="color:var(--text-2);font-size:var(--text-xs);text-transform:capitalize;">' + escHtml(e.property_type || '') + '</td>'
+        + '<td class="cr-mono" style="font-size:var(--text-xs);">' + fs + '</td>'
+        + '<td style="font-size:var(--text-xs);">' + imgCell + '</td>'
+        + '<td>' + vis + '</td>'
+        + '</tr>';
+    }).join('');
+
+    bodyEl.innerHTML =
+      '<div style="overflow-x:auto;">'
+      + '<table class="cr-table" style="width:100%;">'
+        + '<thead><tr>'
+          + '<th>Entity</th><th>Type</th><th>FanScore</th><th>Image</th><th>Visibility</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rows + '</tbody>'
+      + '</table></div>'
+      + '<p style="font-size:var(--text-xs);color:var(--text-3);margin-top:var(--spacing-md);">'
+        + entities.length + ' entities (first 50 shown)'
+      + '</p>';
+
+  } catch(e) {
+    bodyEl.innerHTML = '<p style="color:var(--color-error-600);font-size:var(--text-sm);">Failed to load entities: ' + escHtml(e.message) + '</p>';
+  }
+}
+
+function closeEntityModal() {
+  var modal = document.getElementById('entity-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+// Backdrop click to close modals (wired immediately — script runs after body)
+(function() {
+  var em = document.getElementById('entity-modal');
+  if (em) em.addEventListener('click', function(e) { if (e.target === em) closeEntityModal(); });
+  var cm = document.getElementById('changes-modal');
+  if (cm) cm.addEventListener('click', function(e) { if (e.target === cm) closeChangesModal(); });
+})();
+
+// ──────────────────────────────────────────────
+// RUN CHANGE LOG
+// Derives a structured change summary for a run
+// by parsing the control_room_log entries linked
+// to that run_id.
+//
+// Data source:   control_room_log (tag + message)
+// Fidelity:      best-effort — log lines are
+//                human-readable strings, not
+//                structured records. Parsing may
+//                miss entries from older runs that
+//                used different message formats.
+//                Entries with clear +/~/=/ prefixes
+//                or "created/updated/skipped/failed"
+//                keywords are classified; others
+//                fall into a catch-all "info" bucket.
+// ──────────────────────────────────────────────
+
+async function viewChanges(slug, name) {
+  var modal   = document.getElementById('changes-modal');
+  var titleEl = document.getElementById('changes-modal-title');
+  var subEl   = document.getElementById('changes-modal-sub');
+  var bodyEl  = document.getElementById('changes-modal-body');
+  if (!modal || !bodyEl) return;
+
+  var s = SERIES_STATUS.find(function(x) { return x.slug === slug; });
+  var runId = s ? s.run_id : null;
+
+  titleEl.textContent = (name || slug) + ' \u2014 run changes';
+  subEl.textContent   = runId ? 'Run ID: ' + runId : 'No persisted run ID available';
+  bodyEl.innerHTML    = '<p style="color:var(--text-3);font-size:var(--text-sm);padding:var(--spacing-xl) 0;">Loading\u2026</p>';
+  modal.classList.add('open');
+
+  // If no run_id, we cannot query the log by run
+  if (!runId) {
+    bodyEl.innerHTML =
+      '<div class="cr-stub-notice">'
+        + '<span class="cr-stub-notice-icon">&#x26A0;</span>'
+        + '<span>No run record is linked to this series entry. Start an ingestion run to generate a change log.</span>'
+      + '</div>';
+    return;
+  }
+
+  try {
+    var url = API_URL + '/control_room_log'
+      + '?run_id=eq.' + encodeURIComponent(runId)
+      + '&select=tag,message,created_at'
+      + '&order=created_at.asc&limit=500';
+    var logRows = await fetch(url, {
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
+    }).then(function(r) { return r.json(); });
+
+    if (!Array.isArray(logRows) || logRows.length === 0) {
+      bodyEl.innerHTML =
+        '<p style="color:var(--text-3);font-size:var(--text-sm);">No log entries found for this run. Log entries may have been deleted or this run predates structured logging.</p>';
+      return;
+    }
+
+    // Parse log entries into change buckets
+    var change = { created: [], updated: [], skipped: [], errors: [] };
+    var structureResult = null; // look for the summary line from build_series_structure
+
+    logRows.forEach(function(row) {
+      var msg = row.message || '';
+      // Strip HTML tags for classification
+      var plain = msg.replace(/<[^>]+>/g, '').trim();
+
+      if (row.tag === 'error') {
+        change.errors.push({ name: plain, note: row.created_at ? row.created_at.slice(0,16).replace('T',' ') : '' });
+        return;
+      }
+
+      // Structure builder summary: "X created, Y updated, Z relationships added"
+      var structMatch = plain.match(/(\d+)\s+created,\s*(\d+)\s+updated.*?(\d+)\s+relationship/i);
+      if (structMatch) {
+        structureResult = {
+          created: parseInt(structMatch[1], 10),
+          updated: parseInt(structMatch[2], 10),
+          rels:    parseInt(structMatch[3], 10)
+        };
+        return;
+      }
+
+      // Skip metadata-only lines
+      if (/^(Ingestion run started|Audit started|Audit complete|Rerun|Structure builder complete)/i.test(plain)) return;
+
+      // Checklist stage changes
+      if (/^Checklist:/i.test(plain)) {
+        change.updated.push({ name: plain.replace(/^Checklist:\s*/i, ''), note: 'checklist' });
+        return;
+      }
+
+      // Visibility changes
+      if (/^UI visibility:/i.test(plain)) {
+        change.updated.push({ name: plain.replace(/^UI visibility:\s*/i, ''), note: 'visibility' });
+        return;
+      }
+
+      // Image actions
+      if (/^Image confirmed|^Image rejected|^Image URL updated|^Manual image/i.test(plain)) {
+        change.updated.push({ name: plain, note: 'image' });
+        return;
+      }
+
+      // Explicit error keywords
+      if (/failed|error|timeout/i.test(plain) && row.tag !== 'ingest') {
+        change.errors.push({ name: plain, note: '' });
+      }
+    });
+
+    // Fold in structureResult counts as summary entries if present
+    if (structureResult) {
+      if (structureResult.created > 0) {
+        change.created.unshift({ name: structureResult.created + ' entities created via structure builder', note: 'build' });
+      }
+      if (structureResult.updated > 0) {
+        change.updated.unshift({ name: structureResult.updated + ' entities updated via structure builder', note: 'build' });
+      }
+      if (structureResult.rels > 0) {
+        change.updated.push({ name: structureResult.rels + ' relationship' + (structureResult.rels !== 1 ? 's' : '') + ' added', note: 'relationships' });
+      }
+    }
+
+    // Audit stats from ingestion_runs
+    var auditStats = null;
+    try {
+      var runRow = await fetch(
+        API_URL + '/ingestion_runs?id=eq.' + encodeURIComponent(runId) + '&select=entity_count,issue_count,status,created_at,completed_at',
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
+      ).then(function(r) { return r.json(); });
+      auditStats = runRow && runRow[0] ? runRow[0] : null;
+    } catch(e) { /* non-fatal */ }
+
+    // Render
+    var totalEntries = change.created.length + change.updated.length + change.skipped.length + change.errors.length;
+    var isIncomplete = totalEntries === 0 && !structureResult;
+
+    var html = '';
+
+    // Summary counts row
+    var entityCount = (auditStats && auditStats.entity_count) || (structureResult ? structureResult.created + structureResult.updated : 0);
+    var issueCount  = (auditStats && auditStats.issue_count)  || change.errors.length;
+    html += '<div class="cr-change-summary-counts">'
+      + stat('Status',   auditStats ? statusLabel(auditStats.status) : (s ? statusLabel(s.status) : '\u2014'))
+      + stat('Entities', entityCount || '\u2014')
+      + stat('Issues',   issueCount  || '0')
+      + stat('Log entries', logRows.length)
+    + '</div>';
+
+    if (isIncomplete) {
+      html += '<div class="cr-stub-notice">'
+        + '<span class="cr-stub-notice-icon">&#x26A0;</span>'
+        + '<span>Structured change data is incomplete for this run. The log contains ' + logRows.length + ' entries but none could be classified as entity creates, updates, or skips. This may be an older run or one that ran without structural changes.</span>'
+      + '</div>';
+    } else {
+      if (change.created.length) html += changeGroup('Created', change.created, 'created', '+');
+      if (change.updated.length) html += changeGroup('Updated', change.updated, 'updated', '~');
+      if (change.skipped.length) html += changeGroup('Skipped', change.skipped, 'skipped', '=');
+      if (change.errors.length)  html += changeGroup('Errors',  change.errors,  'error',   '!');
+    }
+
+    bodyEl.innerHTML = html;
+
+  } catch(e) {
+    bodyEl.innerHTML = '<p style="color:var(--color-error-600);font-size:var(--text-sm);">Failed to load run log: ' + escHtml(e.message) + '</p>';
+  }
+}
+
+function stat(label, value) {
+  return '<div class="cr-change-summary-stat">'
+    + '<span class="cr-change-summary-stat-label">' + label + '</span>'
+    + '<span class="cr-change-summary-stat-val">' + value + '</span>'
+    + '</div>';
+}
+
+function changeGroup(title, items, type, prefix) {
+  return '<div class="cr-change-group">'
+    + '<div class="cr-change-group-header">'
+      + title
+      + '<span class="cr-change-count">' + items.length + '</span>'
+    + '</div>'
+    + '<ul class="cr-change-list">'
+      + items.map(function(item) {
+          return '<li class="cr-change-item" data-type="' + type + '">'
+            + '<span class="cr-change-prefix">' + prefix + '</span>'
+            + '<span class="cr-change-name">' + escHtml(item.name) + '</span>'
+            + (item.note ? '<span class="cr-change-note">' + escHtml(item.note) + '</span>' : '')
+          + '</li>';
+        }).join('')
+    + '</ul>'
+  + '</div>';
+}
+
+function closeChangesModal() {
+  var modal = document.getElementById('changes-modal');
+  if (modal) modal.classList.remove('open');
 }
 
 // ──────────────────────────────────────────────
@@ -1832,7 +2474,7 @@ async function checkFanscoreStatus(propertyId) {
     const data = await fetch(
       API_URL + '/fanscore_windows?property_id=eq.' + propertyId +
       '&window_days=eq.30&order=as_of_day.desc&limit=1',
-      { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY } }
+      { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
     ).then(function(r) { return r.json(); });
     return data.length > 0
       ? { found: true, score: data[0].avg_score, asOf: data[0].as_of_day }
@@ -1971,13 +2613,13 @@ async function confirmImageSuggestion(issue) {
       // Override: delete the old suggestion row, insert a new verified one
       await fetch(API_URL + '/entity_images?id=eq.' + issue.entity_image_id, {
         method: 'DELETE',
-        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
       });
       await fetch(API_URL + '/entity_images', {
         method: 'POST',
         headers: {
           'apikey':        API_KEY,
-          'Authorization': 'Bearer ' + API_KEY,
+          'Authorization': 'Bearer ' + _crToken,
           'Content-Type':  'application/json',
           'Prefer':        'resolution=merge-duplicates'
         },
@@ -1994,7 +2636,7 @@ async function confirmImageSuggestion(issue) {
         method: 'PATCH',
         headers: {
           'apikey':        API_KEY,
-          'Authorization': 'Bearer ' + API_KEY,
+          'Authorization': 'Bearer ' + _crToken,
           'Content-Type':  'application/json'
         },
         body: JSON.stringify({ verified: true, image_url: finalUrl })
@@ -2024,7 +2666,7 @@ async function dismissImageSuggestion(issue) {
   try {
     await fetch(API_URL + '/entity_images?id=eq.' + issue.entity_image_id, {
       method: 'DELETE',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     });
     addLogEntry('Image suggestion dismissed for <strong>' + issue.entity + '</strong>', 'audit');
   } catch (e) {
@@ -2172,7 +2814,7 @@ async function persistLogEntry(msg, tag) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json'
       },
       body: JSON.stringify({
@@ -2194,7 +2836,7 @@ async function loadLog() {
       + '&order=created_at.desc'
       + '&limit=' + LOG_LIMIT;
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     if (!Array.isArray(rows) || rows.length === 0) return;
     // Replace in-memory log with the persisted history (already newest-first)
@@ -2235,7 +2877,7 @@ async function loadIngestionRuns() {
       + '?select=id,series_slug,series_name,season,sport,status,entity_count,issue_count,image_source_url,created_at'
       + '&archived=eq.false&order=created_at.desc&limit=100';
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     if (!Array.isArray(rows) || rows.length === 0) return;
 
@@ -2283,7 +2925,7 @@ async function createIngestionRun(data) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'return=representation'
       },
@@ -2304,7 +2946,7 @@ async function updateIngestionRun(id, fields) {
       method: 'PATCH',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json'
       },
       body: JSON.stringify(fields)
@@ -2359,7 +3001,7 @@ async function handleScanImages(slug, storedSourceUrl) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json'
       },
       body: JSON.stringify({ source_url: sourceUrl, series_slug: slug })
@@ -2405,7 +3047,7 @@ async function handleScanImages(slug, storedSourceUrl) {
         method: 'POST',
         headers: {
           'apikey':        API_KEY,
-          'Authorization': 'Bearer ' + API_KEY,
+          'Authorization': 'Bearer ' + _crToken,
           'Content-Type':  'application/json',
           'Prefer':        'resolution=ignore-duplicates'
         },
@@ -2445,7 +3087,7 @@ async function loadImageScanSuggestions() {
       + '&verified=eq.false'
       + '&order=created_at.desc&limit=200';
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
 
     if (!Array.isArray(rows)) return;
@@ -2770,7 +3412,7 @@ function callRPC(funcName, params) {
     method: 'POST',
     headers: {
       'apikey':        API_KEY,
-      'Authorization': 'Bearer ' + API_KEY,
+      'Authorization': 'Bearer ' + _crToken,
       'Content-Type':  'application/json'
     },
     body: JSON.stringify(params)
@@ -2795,7 +3437,7 @@ async function loadPersistedStates(slug) {
       + '?series_slug=eq.' + encodeURIComponent(slug)
       + '&select=property_id,issue_key,state,note';
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     // Build lookup: property_id|issue_key → { state, note }
     const map = {};
@@ -2818,7 +3460,7 @@ async function persistIssueState(issue, state, note) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'resolution=merge-duplicates'
       },
@@ -2846,7 +3488,7 @@ async function deletePersistedState(issue) {
         + '&issue_key=eq.'   + encodeURIComponent(issue.flag),
       {
         method: 'DELETE',
-        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
       }
     );
   } catch(e) {
@@ -3092,7 +3734,7 @@ async function loadSeriesVisibility() {
     const url = API_URL + '/series_visibility'
       + '?select=series_slug,ready_for_ui,visible_in_ui,note';
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     if (!Array.isArray(rows)) return;
     rows.forEach(function(r) {
@@ -3114,7 +3756,7 @@ async function upsertSeriesVisibility(slug, fields) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'resolution=merge-duplicates'
       },
@@ -3196,7 +3838,7 @@ async function loadChecklistForRun(runId) {
       + '?run_id=eq.' + runId
       + '&select=id,stage_key,state,note';
     const rows = await fetch(url, {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     if (!CHECKLIST_DATA[runId]) CHECKLIST_DATA[runId] = {};
     if (Array.isArray(rows)) {
@@ -3216,7 +3858,7 @@ async function upsertChecklistStage(runId, stageKey, state) {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'resolution=merge-duplicates'
       },
@@ -3337,6 +3979,52 @@ document.addEventListener('click', function(e) {
   // Populate preview immediately so the season default is reflected on load.
   updatePreview();
 
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  // Check for a valid Supabase session before loading any data.
+  // If no session, redirect to the admin login page.
+  // If session found, swap _crToken to the session JWT and load data.
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    // SDK not loaded — should not happen in production; fail open with warning.
+    console.warn('[SponsorAI] Control Room: Supabase JS SDK not found. Proceeding without auth guard.');
+    _crLoadData();
+    return;
+  }
+
+  var _supabaseUrl = API_URL.replace('/rest/v1', '');
+  var _db = window.supabase.createClient(_supabaseUrl, API_KEY);
+
+  _db.auth.getSession().then(function(result) {
+    var session = result.data && result.data.session;
+    if (!session) {
+      window.location.replace('control-room-login.html');
+      return;
+    }
+    // Authenticated: swap token and reveal the page.
+    _crToken = session.access_token;
+    var shell = document.getElementById('cr-main');
+    if (shell) shell.style.visibility = 'visible';
+    _crLoadData();
+  }).catch(function(err) {
+    console.error('[SponsorAI] Control Room auth check failed:', err);
+    window.location.replace('control-room-login.html');
+  });
+})();
+
+function crSignOut() {
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    window.location.replace('control-room-login.html');
+    return;
+  }
+  var _supabaseUrl = API_URL.replace('/rest/v1', '');
+  var _db = window.supabase.createClient(_supabaseUrl, API_KEY);
+  _db.auth.signOut().then(function() {
+    window.location.replace('control-room-login.html');
+  }).catch(function() {
+    window.location.replace('control-room-login.html');
+  });
+}
+
+function _crLoadData() {
   renderStatus();
   renderIssues();
   renderLog();
@@ -3360,7 +4048,7 @@ document.addEventListener('click', function(e) {
       sel.appendChild(opt);
     });
   }, 1500);
-})();
+}
 
 // ──────────────────────────────────────────────
 // ROW MENU — split-button dropdown
@@ -3480,7 +4168,7 @@ async function saveEditRun() {
       method: 'PATCH',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'return=minimal'
       },
@@ -3594,7 +4282,7 @@ async function handleRerun(slug) {
     s.status = 'error';
     if (run) await fetch(API_URL + '/ingestion_runs?id=eq.' + run.id, {
       method: 'PATCH',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ status: 'error', completed_at: new Date().toISOString() })
     });
     renderStatus();
@@ -3610,7 +4298,7 @@ async function handleRerun(slug) {
   if (run) {
     await fetch(API_URL + '/ingestion_runs?id=eq.' + run.id, {
       method: 'PATCH',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({
         status:       'needs-review',
         entity_count: entityCount,
@@ -3668,7 +4356,7 @@ async function loadImagesSection(slug) {
   let seriesId = null;
   try {
     const sRows = await fetch(API_URL + '/properties?slug=eq.' + encodeURIComponent(slug) + '&select=id', {
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     }).then(function(r) { return r.json(); });
     seriesId = sRows && sRows[0] ? sRows[0].id : null;
   } catch(e) { /* ignore */ }
@@ -3679,10 +4367,10 @@ async function loadImagesSection(slug) {
     try {
       const [fwd, rev] = await Promise.all([
         fetch(API_URL + '/property_relationships?from_id=eq.' + seriesId + '&select=to_id', {
-          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
         }).then(function(r) { return r.json(); }),
         fetch(API_URL + '/property_relationships?to_id=eq.' + seriesId + '&select=from_id', {
-          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+          headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
         }).then(function(r) { return r.json(); })
       ]);
       (fwd || []).forEach(function(r) { if (r.to_id)   entityIds.push(r.to_id);   });
@@ -3697,7 +4385,7 @@ async function loadImagesSection(slug) {
     try {
       const chunk = entityIds.slice(0, 50); // PostgREST in() limit safe
       entities = await fetch(API_URL + '/properties?id=in.(' + chunk.join(',') + ')&select=id,slug,name,property_type&order=property_type.asc,name.asc', {
-        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+        headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
       }).then(function(r) { return r.json(); }) || [];
     } catch(e) { entities = []; }
   }
@@ -3710,7 +4398,7 @@ async function loadImagesSection(slug) {
       const chunk = entityIds.slice(0, 50);
       imgRows = await fetch(
         API_URL + '/entity_images?property_id=in.(' + chunk.join(',') + ')&select=id,property_id,image_url,status,source_type,match_confidence,note,source_url&order=status.asc,created_at.desc',
-        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY } }
+        { headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken } }
       ).then(function(r) { return r.json(); }) || [];
     } catch(e) { imgRows = []; }
   }
@@ -3996,7 +4684,7 @@ async function patchImageEntry(id, fields) {
       method: 'PATCH',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'return=minimal'
       },
@@ -4019,7 +4707,7 @@ async function saveManualImageUrl() {
       method: 'POST',
       headers: {
         'apikey':        API_KEY,
-        'Authorization': 'Bearer ' + API_KEY,
+        'Authorization': 'Bearer ' + _crToken,
         'Content-Type':  'application/json',
         'Prefer':        'resolution=ignore-duplicates'
       },
@@ -4086,7 +4774,7 @@ async function archiveRun(slug) {
     /* 1. Mark run as archived */
     var r1 = await fetch(API_URL + '/ingestion_runs?id=eq.' + encodeURIComponent(s.run_id), {
       method:  'PATCH',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken, 'Content-Type': 'application/json' },
       body:    JSON.stringify({ archived: true, archived_at: new Date().toISOString() })
     });
     if (!r1.ok) throw new Error('PATCH ingestion_runs HTTP ' + r1.status);
@@ -4094,7 +4782,7 @@ async function archiveRun(slug) {
     /* 2. Hide series from public UI */
     await fetch(API_URL + '/properties?slug=eq.' + encodeURIComponent(slug), {
       method:  'PATCH',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken, 'Content-Type': 'application/json' },
       body:    JSON.stringify({ visible_in_ui: false })
     });
 
@@ -4177,19 +4865,19 @@ async function deleteRun(slug) {
     /* 1. Delete checklist rows */
     await fetch(API_URL + '/ingestion_run_checklist?run_id=eq.' + encodeURIComponent(runId), {
       method:  'DELETE',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     });
 
     /* 2. Delete Control Room log entries for this run */
     await fetch(API_URL + '/control_room_log?run_id=eq.' + encodeURIComponent(runId), {
       method:  'DELETE',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     });
 
     /* 3. Delete the run itself */
     var r3 = await fetch(API_URL + '/ingestion_runs?id=eq.' + encodeURIComponent(runId), {
       method:  'DELETE',
-      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY }
+      headers: { 'apikey': API_KEY, 'Authorization': 'Bearer ' + _crToken }
     });
     if (!r3.ok) throw new Error('DELETE ingestion_runs HTTP ' + r3.status);
 

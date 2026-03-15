@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — Explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- No external SDK — direct REST API via fetch -->
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="page-explore">
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+
+<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<header class="app-header" role="banner">
+
+  <button class="bar-btn" id="menu-btn"
+    onclick="toggleNavMenu()"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="nav-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <g filter="url(#filter0_i_18_100)">
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+        <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="1"/>
+          <feGaussianBlur stdDeviation="0.5"/>
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+          <feBlend mode="normal" in2="shape" result="effect1_innerShadow_18_100"/>
+        </filter>
+      </defs>
+    </svg>
+  </button>
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+      <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+      <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+      <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+      <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+      <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+      <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+      <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_linear_21_11)"/>
+      <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_linear_21_11)"/>
+      <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="paint0_linear_21_11" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_21_11" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+  <div class="bar-divider"></div>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip active" onclick="window.location.href='explore.html'" aria-current="page">Explore</button>
+    <button class="chip" onclick="window.location.href='portfolio.html'">Portfolio</button>
+    <button class="chip" onclick="window.location.href='compare.html'">Compare</button>
+    <button class="chip" onclick="window.location.href='watchlist.html'">Watchlist</button>
+    <button class="chip" onclick="window.location.href='board.html'">Board</button>
+    <button class="chip" onclick="window.location.href='opportunities.html'">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RS
+    </button>
+  </div>
+</header>
+
+<!-- Nav dropdown (opens below left bar) -->
+<nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
+
+  <div class="menu-cols">
+
+    <div class="menu-col">
+
+      <button class="menu-item active" data-nav="Explore" onclick="setNavActive('Explore'); closeNavMenu()" aria-current="page">Explore</button>
+      <button class="menu-item" data-nav="Portfolio" onclick="window.location.href='portfolio.html'; closeNavMenu()">Portfolio</button>
+      <button class="menu-item" data-nav="Compare" onclick="window.location.href='compare.html'; closeNavMenu()">Compare</button>
+    </div>
+
+    <div class="menu-col">
+      <div class="menu-col-divider"></div>
+
+      <button class="menu-item" data-nav="Watchlist" onclick="window.location.href='watchlist.html'; closeNavMenu()">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="window.location.href='board.html'; closeNavMenu()">Board</button>
+      <button class="menu-item" data-nav="Opportunities" onclick="window.location.href='opportunities.html'; closeNavMenu()">Opportunities</button>
+    </div>
+
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <!-- Theme toggle inline in menu -->
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">Appearance</span>
+    <div class="theme-toggle-pill" role="group" aria-label="Theme">
+      <button class="theme-opt" id="theme-light" onclick="setTheme('light')" aria-label="Light mode" title="Light">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="2.2"/>
+          <line x1="6.5" y1="1"    x2="6.5" y2="2.2"/>
+          <line x1="6.5" y1="10.8" x2="6.5" y2="12"/>
+          <line x1="1"   y1="6.5"  x2="2.2" y2="6.5"/>
+          <line x1="10.8" y1="6.5" x2="12"  y2="6.5"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="theme-dark" onclick="setTheme('dark')" aria-label="Dark mode" title="Dark">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M10.5 7.5A4.5 4.5 0 0 1 4.5 1.5c0-.27.03-.54.07-.8A4.5 4.5 0 1 0 10.8 8.43 4.5 4.5 0 0 1 10.5 7.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- AI Chat toggle inline in menu -->
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">AI Chat</span>
+    <div class="theme-toggle-pill" role="group" aria-label="AI Chat">
+      <button class="theme-opt" id="chat-toggle-on" onclick="openChat()" aria-label="Enable chat" title="On">
+        <svg width="12" height="12" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11.5 7.5A4.5 4.5 0 0 1 7.17 11.5L4 12.5l.83-2.83A4.5 4.5 0 1 1 11.5 7.5Z"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="chat-toggle-off" onclick="closeChat()" aria-label="Disable chat" title="Off">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <line x1="1" y1="1" x2="10" y2="10"/>
+          <line x1="10" y1="1" x2="1" y2="10"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="menu-divider"></div>
+  <div class="menu-model-label" id="nav-model-label">model v1.0</div>
+
+</nav>
+
+<!-- Bottom meta bar — centered, floating above card container -->
+<div class="float-bar bar-bottom-meta" role="status" aria-live="polite">
+  <span id="page-meta">Loading properties&hellip;</span>
+  <span class="bar-sort-divider" aria-hidden="true"></span>
+  <button class="sort-trigger" id="sort-trigger"
+    onclick="toggleSortMenu()"
+    aria-haspopup="true" aria-expanded="false" aria-label="Change sort order">
+    <span id="sort-trigger-label">Sorted A&ndash;Z</span>
+    <svg class="sort-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M1.5 7L5 3L8.5 7"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Sort dropdown — opens upward from bottom meta bar -->
+<div class="sort-menu" id="sort-menu" role="menu" aria-label="Sort options">
+  <button class="sort-item active" role="menuitem" data-sort="alpha-asc" onclick="applySort('alpha-asc')">Sorted A&ndash;Z</button>
+  <button class="sort-item" role="menuitem" data-sort="alpha-desc" onclick="applySort('alpha-desc')">Sorted Z&ndash;A</button>
+  <div class="sort-divider" aria-hidden="true"></div>
+  <button class="sort-item" role="menuitem" data-sort="score-desc" onclick="applySort('score-desc')">FanScore high to low</button>
+  <button class="sort-item" role="menuitem" data-sort="score-asc" onclick="applySort('score-asc')">FanScore low to high</button>
+  <div class="sort-divider" aria-hidden="true"></div>
+  <button class="sort-item" role="menuitem" data-sort="followers-desc" onclick="applySort('followers-desc')">Followers high to low</button>
+  <button class="sort-item" role="menuitem" data-sort="engagement-desc" onclick="applySort('engagement-desc')">Engagement rate high to low</button>
+  <div class="sort-divider" aria-hidden="true"></div>
+  <button class="sort-item" role="menuitem" data-sort="trend-up" onclick="applySort('trend-up')">Trend up first</button>
+  <button class="sort-item" role="menuitem" data-sort="trend-down" onclick="applySort('trend-down')">Trend down first</button>
+  <div class="sort-divider" aria-hidden="true"></div>
+  <button class="sort-item" role="menuitem" data-sort="trending" onclick="applySort('trending')">Trending first</button>
+</div>
+
+<!-- Profile dropdown -->
+<div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
+  <div class="profile-header">
+    <div class="profile-name">Ross Mackintosh</div>
+    <div class="profile-email">rosscraigmackintosh@gmail.com</div>
+  </div>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="4.5" r="2.5"/>
+      <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+    </svg>
+    Profile settings
+  </button>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="2"/>
+      <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12M2.8 2.8l.85.85M9.35 9.35l.85.85M9.35 3.65l.85-.85M3.65 9.35l-.85.85"/>
+    </svg>
+    Workspace settings
+  </button>
+  <div class="menu-divider"></div>
+  <button class="profile-item" role="menuitem" style="color:var(--negative)">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <path d="M8.5 4.5L12 6.5l-3.5 2"/>
+      <line x1="12" y1="6.5" x2="5" y2="6.5"/>
+      <path d="M5 1.5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3"/>
+    </svg>
+    Sign out
+  </button>
+</div>
+
+<!-- ────────────────── CHAT SLIDE PANEL ──────────────────────────────────── -->
+<!-- Panel -->
+<aside class="chat-panel" id="chat-panel" role="dialog" aria-label="AI Search" aria-modal="true">
+  <div class="cp-fade-bottom" id="cp-fade-bottom"></div>
+
+  <div class="cp-msgs" id="cp-msgs">
+    <div class="cp-spacer"></div>
+  </div>
+
+  <div class="cp-input-row">
+    <div class="cp-input-wrap">
+      <textarea class="cp-input" id="cp-input"
+        placeholder="e.g. show drivers, who has highest score..."
+        aria-label="Chat input"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+      <button class="cp-send" onclick="sendChat()" aria-label="Send">
+        <svg width="12" height="12" viewBox="0 0 13 13" fill="white" aria-hidden="true">
+          <path d="M11.5 6.5L1 1l2.5 5.5L1 12l10.5-5.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ────────────────── DETAIL OVERLAY ─────────────────────────────────── -->
+<aside class="detail-panel" id="detail-panel" role="dialog" aria-label="Property detail" aria-modal="true">
+  <!-- Backdrop — click to close, grid visible behind -->
+  <div class="dp-backdrop" onclick="closeDetail()" aria-hidden="true"></div>
+  <!-- Content card -->
+  <div class="dp-overlay-inner">
+    <button class="dp-close" id="dp-close" onclick="closeDetail()" aria-label="Close">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/>
+      </svg>
+    </button>
+    <div class="dp-scroll" id="dp-scroll">
+      <div class="dp-hero" id="dp-hero"></div>
+      <div class="dp-body">
+        <div id="dp-content"></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ────────────────── COMPARE TRAY ─────────────────────────────────────── -->
+<div class="compare-tray" id="compare-tray" role="region" aria-label="Compare selected properties" aria-live="polite">
+  <div class="compare-table-wrap" id="compare-table-wrap"></div>
+  <div class="compare-tray-inner">
+    <div class="compare-slots" id="compare-slots"></div>
+    <div class="compare-tray-actions">
+      <button class="compare-go-btn" id="compare-go-btn" onclick="toggleCompareTable()" disabled>Compare</button>
+      <button class="compare-clear-btn" onclick="clearCompare()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── EXPLORE STICKY CONTROL BAR ──────────────────────────── -->
+<!-- Visible only once the user scrolls past the editorial intro block -->
+<div class="eh-sticky-bar" id="eh-sticky-bar" aria-hidden="true">
+  <div class="eh-sticky-inner">
+    <!-- Brand anchor — logo persists in the compact scrolled state -->
+    <div class="eh-sticky-brand">
+      <svg class="eh-stk-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+        <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+        <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+        <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+        <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+        <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+        <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+        <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_stk)"/>
+        <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_stk)"/>
+        <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="paint0_stk" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FD7E14"/>
+            <stop offset="1" stop-color="#BE4BDB"/>
+          </linearGradient>
+          <linearGradient id="paint1_stk" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FD7E14"/>
+            <stop offset="1" stop-color="#BE4BDB"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <!-- Mini search -->
+    <div class="search-bar eh-sticky-search" id="eh-sticky-search-bar" role="search" aria-label="Search properties">
+      <svg class="search-bar-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="5.5" cy="5.5" r="4"/>
+        <line x1="9" y1="9" x2="12" y2="12"/>
+      </svg>
+      <!-- Shared input — this bar proxies the main search-input via JS -->
+      <input class="search-bar-input" id="sticky-search-input" type="search"
+        placeholder="Search properties"
+        aria-label="Search properties"
+        autocomplete="off"
+        spellcheck="false">
+      <button class="search-bar-clear" id="sticky-search-clear" onclick="clearSearch()" aria-label="Clear search" style="display:none">
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <line x1="1" y1="1" x2="8" y2="8"/><line x1="8" y1="1" x2="1" y2="8"/>
+        </svg>
+      </button>
+    </div>
+    <!-- Mini type tabs -->
+    <div class="eh-sticky-tabs" role="group" aria-label="Filter by property type">
+      <button class="eh-stab chip active" data-filter="all"    onclick="setFilter(this)">All</button>
+      <button class="eh-stab chip"        data-filter="driver" onclick="setFilter(this)">Athletes</button>
+      <button class="eh-stab chip"        data-filter="team"   onclick="setFilter(this)">Teams</button>
+      <button class="eh-stab chip"        data-filter="event"  onclick="setFilter(this)">Events</button>
+      <button class="eh-stab chip"        data-filter="venue"  onclick="setFilter(this)">Venues</button>
+      <button class="eh-stab chip"        data-filter="series" onclick="setFilter(this)">Series</button>
+    </div>
+    <!-- Sort shortcut -->
+    <button class="eh-filter-btn eh-sticky-sort" onclick="toggleSortMenu()" aria-haspopup="true" aria-controls="sort-menu">
+      <span id="sticky-sort-label">Sort</span>
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+    </button>
+    <!-- Clear — shown only when search or filter is active -->
+    <button class="eh-stclear" id="eh-sticky-reset" onclick="resetExplore()" aria-label="Clear all filters" style="display:none">Clear</button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────── MAIN ─────────────────────────────────── -->
+<main class="main" id="main-content" tabindex="-1">
+  <div class="content">
+
+    <div class="page-header" id="page-header">
+      <div class="explore-header">
+
+        <!-- ── Intro block ──────────────────────────────────────────────── -->
+        <div class="eh-intro">
+          <!-- Small section label — hidden in result state -->
+          <p class="eh-kicker">SponsorAI Explore</p>
+          <h1 class="eh-title">Explore the Sponsorship Market</h1>
+          <p class="eh-subtitle">Find teams, athletes, events and series across sport.</p>
+          <!-- Visible only in result state (search or filter active) -->
+          <button class="eh-reset-btn" id="eh-reset-btn" onclick="resetExplore()" aria-label="Clear all filters and return to all properties">Clear</button>
+        </div>
+
+        <!-- ── Search ───────────────────────────────────────────────────── -->
+        <div class="eh-search-wrap">
+          <div class="search-bar" id="search-bar" role="search" aria-label="Search properties">
+            <svg class="search-bar-icon" width="14" height="14" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="5.5" cy="5.5" r="4"/>
+              <line x1="9" y1="9" x2="12" y2="12"/>
+            </svg>
+            <input class="search-bar-input" id="search-input" type="search"
+              placeholder="Search by name, sport, type or location"
+              aria-label="Search properties"
+              autocomplete="off"
+              spellcheck="false">
+            <button class="search-bar-clear" id="search-clear" onclick="clearSearch()" aria-label="Clear search" style="display:none">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                <line x1="1" y1="1" x2="8" y2="8"/><line x1="8" y1="1" x2="1" y2="8"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Type tabs ────────────────────────────────────────────────── -->
+        <!-- Keep .chip class so setFilter() selector (.chip[data-filter]) still works -->
+        <div class="eh-type-tabs" role="group" aria-label="Filter by property type">
+          <button class="eh-tab chip active" data-filter="all"    onclick="setFilter(this)">All</button>
+          <button class="eh-tab chip"        data-filter="driver" onclick="setFilter(this)">Athletes</button>
+          <button class="eh-tab chip"        data-filter="team"   onclick="setFilter(this)">Teams</button>
+          <button class="eh-tab chip"        data-filter="event"  onclick="setFilter(this)">Events</button>
+          <button class="eh-tab chip"        data-filter="venue"  onclick="setFilter(this)">Venues</button>
+          <button class="eh-tab chip"        data-filter="series" onclick="setFilter(this)">Series</button>
+        </div>
+
+        <!-- ── Analytical filter row ─────────────────────────────────────── -->
+        <div class="eh-filter-row">
+          <!-- Sport filter -->
+          <div class="sport-filter-wrap">
+            <button class="eh-filter-btn" id="sport-btn"
+                    onclick="toggleSportMenu()"
+                    aria-haspopup="true" aria-controls="sport-menu" aria-expanded="false">
+              <span class="sport-btn-label">Sport</span>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+            </button>
+            <div class="sport-menu" id="sport-menu" role="menu">
+              <button class="sport-item" role="menuitem" onclick="applySport(null)">All sports</button>
+              <div class="sport-divider" aria-hidden="true"></div>
+              <button class="sport-item" role="menuitem" onclick="applySport('motorsport')">Motorsport</button>
+              <button class="sport-item" role="menuitem" onclick="applySport('rugby')">Rugby</button>
+            </div>
+          </div>
+          <!-- Geography filter -->
+          <div class="geo-filter-wrap">
+            <button class="eh-filter-btn" id="geo-btn"
+                    onclick="toggleGeoMenu()"
+                    aria-haspopup="true" aria-controls="geo-menu" aria-expanded="false">
+              <span class="geo-btn-label">Geography</span>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+            </button>
+            <div class="geo-menu" id="geo-menu" role="menu">
+              <button class="geo-item" role="menuitem" onclick="applyGeo(null)">All geographies</button>
+              <div class="geo-divider" aria-hidden="true"></div>
+              <button class="geo-item" role="menuitem" onclick="applyGeo('uk')">United Kingdom</button>
+              <button class="geo-item" role="menuitem" onclick="applyGeo('europe')">Continental Europe</button>
+              <button class="geo-item" role="menuitem" onclick="applyGeo('asia')">Asia</button>
+            </div>
+          </div>
+          <!-- Audience filter -->
+          <div class="aud-filter-wrap">
+            <button class="eh-filter-btn" id="aud-btn"
+                    onclick="toggleAudMenu()"
+                    aria-haspopup="true" aria-controls="aud-menu" aria-expanded="false">
+              <span class="aud-btn-label">Audience</span>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+            </button>
+            <div class="aud-menu" id="aud-menu" role="menu">
+              <button class="aud-item" role="menuitem" onclick="applyAud(null)">All audience sizes</button>
+              <div class="aud-divider" aria-hidden="true"></div>
+              <button class="aud-item" role="menuitem" onclick="applyAud('small')">Under 100k</button>
+              <button class="aud-item" role="menuitem" onclick="applyAud('mid')">100k &ndash; 1M</button>
+              <button class="aud-item" role="menuitem" onclick="applyAud('large')">1M+</button>
+            </div>
+          </div>
+          <!-- Confidence filter -->
+          <div class="conf-filter-wrap">
+            <button class="eh-filter-btn" id="conf-btn"
+                    onclick="toggleConfMenu()"
+                    aria-haspopup="true" aria-controls="conf-menu" aria-expanded="false">
+              <span class="conf-btn-label">Confidence</span>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+            </button>
+            <div class="conf-menu" id="conf-menu" role="menu">
+              <button class="conf-item" role="menuitem" onclick="applyConf(null)">All confidence levels</button>
+              <div class="conf-divider" aria-hidden="true"></div>
+              <button class="conf-item" role="menuitem" onclick="applyConf('high')">High confidence</button>
+              <button class="conf-item" role="menuitem" onclick="applyConf('medium')">Medium confidence</button>
+              <button class="conf-item" role="menuitem" onclick="applyConf('low')">Low confidence</button>
+              <div class="conf-divider" aria-hidden="true"></div>
+              <button class="conf-item conf-item--muted" role="menuitem" onclick="applyConf('none')">No score</button>
+            </div>
+          </div>
+          <!-- Divider -->
+          <span class="eh-filter-sep" aria-hidden="true"></span>
+          <!-- Sort — delegates to existing sort menu and bottom-bar trigger -->
+          <button class="eh-filter-btn eh-filter-sort" onclick="toggleSortMenu()" aria-haspopup="true" aria-controls="sort-menu">
+            <span id="eh-sort-label">Sort</span>
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3L4.5 6L7.5 3"/></svg>
+          </button>
+          <!-- Count — pushed right -->
+          <span class="eh-filter-count" id="eh-count" aria-live="polite"></span>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="card-grid" id="card-grid">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        Connecting to database&hellip;
+      </div>
+    </div>
+
+    <!-- Load more footer -->
+    <div class="explore-footer" id="explore-footer" style="display:none"></div>
+
+    <!-- Site footer — always reachable -->
+    <footer class="site-footer">
+      <div class="sf-inner">
+        <span class="sf-brand">SponsorAI</span>
+        <span class="sf-dot" aria-hidden="true">&middot;</span>
+        <span class="sf-tagline">Sponsorship Intelligence</span>
+        <span class="sf-dot" aria-hidden="true">&middot;</span>
+        <span class="sf-copy">&copy; 2026</span>
+      </div>
+    </footer>
+
+  </div>
+</main>
+
+<!-- Scroll to top -->
+<button class="scroll-top-btn" id="scroll-top-btn" onclick="scrollToTop()" title="Back to top" aria-label="Scroll to top">
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M1.5 8L6 3.5 10.5 8"/>
+  </svg>
+</button>
+
+<div class="grid-fade-bottom" id="grid-fade-bottom"></div>
+
+<!-- ─────────────────────────────── SCRIPT ───────────────────────────────── -->
+<script src="config.js"></script>
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="images.js"></script>
+<script src="components/card.js"></script>
+<script src="components/layout.js"></script>
+<script src="components/panel.js"></script>
+<script src="ui.js"></script>
+<script src="ui-helpers.js"></script>
+<script src="ai.js"></script>
+<script>
+
+/* ── Theme ─────────────────────────────────────────────────────────────── */
+SAI_UIH.initTheme();
+
+/* ── Compare shortlist ───────────────────────────────────────────────── */
+var compareList = [];
+
+/* Returns true if the item is NOW in the selection (added), false if removed.
+   Checks BOTH compareList and SAI_STORAGE so the active state at render time
+   and the live tray state stay consistent. */
+function compareToggle(id) {
+  var card = allCards.filter(function(c) { return c.id === id; })[0];
+  var slug = card ? card.slug : null;
+  var idx = compareList.indexOf(id);
+  var inStorage = slug && SAI_STORAGE.compare.has(slug);
+  var wasIn = idx >= 0 || inStorage;
+
+  if (wasIn) {
+    if (idx >= 0) compareList.splice(idx, 1);
+    if (slug) SAI_STORAGE.compare.remove(slug);
+  } else {
+    if (compareList.length >= 3) return false; /* queue full — no change */
+    compareList.push(id);
+    if (slug) SAI_STORAGE.compare.add(slug);
+  }
+  syncCompareButtons();
+  updateCompareTray();
+  /* Refresh table if it's currently open */
+  var tray = document.getElementById('compare-tray');
+  if (tray && tray.classList.contains('expanded')) buildCompareTable();
+  return !wasIn; /* true = now in selection */
+}
+
+function syncCompareButtons() {
+  var cmpCount = compareList.length;
+  /* Sync hero-btn compare buttons (grid/list cards) */
+  document.querySelectorAll('.hero-btn[data-action="compare"]').forEach(function(btn) {
+    var isIn  = compareList.indexOf(btn.dataset.id) >= 0;
+    var slug  = btn.dataset.slug || null;
+    var inStorage = slug && SAI_STORAGE.compare.has(slug);
+    var active = isIn || inStorage;
+    var isFull = !active && cmpCount >= 3;
+    btn.classList.toggle('active', active);
+    btn.classList.toggle('disabled', isFull);
+    btn.setAttribute('aria-disabled', isFull ? 'true' : 'false');
+    btn.title = active   ? 'Remove from compare'
+              : isFull   ? 'Compare queue full (3/3)'
+              : cmpCount > 0 ? 'Add to compare (' + cmpCount + '/3 selected)'
+              : 'Add to compare';
+  });
+  /* Legacy card-btn selectors (retain for compatibility) */
+  document.querySelectorAll('.card-btn[data-action="compare"]').forEach(function(btn) {
+    btn.classList.toggle('active', compareList.indexOf(btn.dataset.id) >= 0);
+  });
+}
+
+/* Sync all hero-btn watchlist buttons for a given slug to the given state.
+   Called after any watchlist toggle so card buttons stay current without a full re-render. */
+function syncWatchlistButtons(slug, nowIn) {
+  if (!slug) return;
+  document.querySelectorAll('.hero-btn[data-action="watchlist"]').forEach(function(btn) {
+    if (btn.dataset.slug !== slug) return;
+    btn.classList.toggle('active', nowIn);
+    btn.title = nowIn ? 'Remove from watchlist' : 'Add to watchlist';
+  });
+}
+
+/* Sync all hero-btn portfolio buttons for a given slug to the given state.
+   Called after any portfolio toggle so card buttons stay current without a full re-render. */
+function syncPortfolioButtons(slug, nowIn) {
+  if (!slug) return;
+  document.querySelectorAll('.hero-btn[data-action="portfolio"]').forEach(function(btn) {
+    if (btn.dataset.slug !== slug) return;
+    btn.classList.toggle('active', nowIn);
+    btn.title = nowIn ? 'Remove from portfolio' : 'Add to portfolio';
+  });
+}
+
+/* Sync all hero-btn board buttons for a given slug to the given state.
+   Called after any board toggle so card buttons stay current without a full re-render. */
+function syncBoardButtons(slug, nowIn) {
+  if (!slug) return;
+  document.querySelectorAll('.hero-btn[data-action="board"]').forEach(function(btn) {
+    if (btn.dataset.slug !== slug) return;
+    btn.classList.toggle('active', nowIn);
+    btn.title = nowIn ? 'Remove from Board' : 'Add to Board';
+  });
+}
+
+function updateCompareTray() {
+  var tray   = document.getElementById('compare-tray');
+  var slots  = document.getElementById('compare-slots');
+  var goBtn  = document.getElementById('compare-go-btn');
+  if (!tray || !slots || !goBtn) return;
+
+  var hasItems = compareList.length > 0;
+  tray.classList.toggle('open', hasItems);
+  document.body.classList.toggle('compare-open', hasItems);
+
+  var html = '';
+  compareList.forEach(function(id) {
+    var c = allCards.filter(function(x) { return x.id === id; })[0];
+    if (!c) return;
+    var sup = !!c.sup30;
+    html += '<div class="compare-slot">';
+    html += '<span class="compare-slot-name" title="' + escHtml(c.name) + '">' + escHtml(c.name) + '</span>';
+    if (!sup && c.s30 != null) html += '<span class="compare-slot-score">\u00B7 ' + fmt(c.s30, 1) + '</span>';
+    html += '<button class="compare-slot-remove" onclick="compareToggle(\'' + id + '\')" aria-label="Remove ' + escHtml(c.name) + '">\u00D7</button>';
+    html += '</div>';
+  });
+  slots.innerHTML = html;
+  goBtn.disabled = compareList.length < 2;
+}
+
+function clearCompare() {
+  compareList = [];
+  SAI_STORAGE.compare.set([]);
+  var wrap = document.getElementById('compare-table-wrap');
+  var tray = document.getElementById('compare-tray');
+  var goBtn = document.getElementById('compare-go-btn');
+  if (wrap) wrap.innerHTML = '';
+  if (tray) tray.classList.remove('expanded');
+  if (goBtn) goBtn.textContent = 'Compare';
+  syncCompareButtons();
+  updateCompareTray();
+}
+
+function toggleCompareTable() {
+  var tray  = document.getElementById('compare-tray');
+  var goBtn = document.getElementById('compare-go-btn');
+  if (!tray || !goBtn) return;
+  var isExpanded = tray.classList.contains('expanded');
+  if (isExpanded) {
+    tray.classList.remove('expanded');
+    goBtn.textContent = 'Compare';
+  } else {
+    buildCompareTable();
+    tray.classList.add('expanded');
+    goBtn.textContent = 'Close';
+  }
+}
+
+function buildCompareTable() {
+  var wrap = document.getElementById('compare-table-wrap');
+  if (!wrap) return;
+  var cards = compareList.map(function(id) {
+    return allCards.filter(function(x) { return x.id === id; })[0];
+  }).filter(Boolean);
+  if (cards.length < 2) return;
+
+  var rows = [
+    { label: 'FanScore (30d avg)', fn: function(c) { return !!c.sup30 ? '--' : fmt(c.s30, 1); }, size: 'lg' },
+    { label: '30-day trend',       fn: function(c) { return c.t30 != null ? arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '/d' : '--'; }, color: function(c) { return c.t30 != null ? arrC(c.t30) : null; } },
+    { label: 'Confidence',         fn: function(c) { return c.conf30 || '--'; } },
+    { label: 'Followers',          fn: function(c) { return (c.followers && c.followers > 0) ? fmtFollowers(c.followers) : '--'; }, signal: true },
+    { label: 'Engagement rate',    fn: function(c) { return c.engRate30d != null ? c.engRate30d.toFixed(2) + '%' : '--'; }, signal: true },
+    { label: 'Interactions (30d)', fn: function(c) { return (c.interactions30d && c.interactions30d > 0) ? fmtFollowers(c.interactions30d) : '--'; } },
+    { label: 'Platforms',          fn: function(c) { return (c.platforms && c.platforms.length) ? c.platforms.map(function(p) { return PLATFORM_LABELS[p] || p; }).join(' \u00B7 ') : '--'; } }
+  ];
+
+  /* Header */
+  var h = '<table class="compare-table"><thead><tr>';
+  h += '<th class="compare-th-label"></th>';
+  cards.forEach(function(c) {
+    var cfg = TYPE[c.type] || { label: c.type, fgVar: 'var(--text-3)' };
+    h += '<th class="compare-th-prop">';
+    h += '<span class="compare-th-name">' + escHtml(c.name) + '</span>';
+    h += '<span class="compare-th-type" style="color:' + cfg.fgVar + '">' + (cfg.label || c.type) + '</span>';
+    h += '</th>';
+  });
+  h += '</tr></thead><tbody>';
+
+  /* Sparkline row */
+  var hasSparks = cards.some(function(c) { return !c.sup30 && c.sparks && c.sparks.length >= 2; });
+  if (hasSparks) {
+    /* POLISH: spark label uses text-3 explicitly — subordinate to value rows */
+    h += '<tr class="compare-tr"><td class="compare-td-label" style="color:var(--text-3)">Score history</td>';
+    cards.forEach(function(c) {
+      var cfg = TYPE[c.type] || {};
+      var sup = !!c.sup30;
+      h += '<td class="compare-td-val">';
+      if (!sup && c.sparks && c.sparks.length >= 2) {
+        h += '<div class="compare-spark">' + renderSpark(c.sparks, cfg.scoreVar || 'var(--text-3)', 120, 32) + '</div>';
+      } else {
+        h += '<span style="color:var(--text-3)">--</span>';
+      }
+      h += '</td>';
+    });
+    h += '</tr>';
+  }
+
+  /* Signal rows */
+  rows.forEach(function(row) {
+    h += '<tr class="compare-tr"><td class="compare-td-label">' + row.label + '</td>';
+    cards.forEach(function(c) {
+      var val   = row.fn(c);
+      var color = row.color ? row.color(c) : null;
+      var style = color ? ' style="color:' + color + '"' : '';
+      /* POLISH: compare-highlight for FanScore, compare-signal for key audience metrics */
+      var cls = row.size === 'lg' ? ' compare-highlight' : (row.signal ? ' compare-signal' : '');
+      h += '<td class="compare-td-val' + cls + '"' + style + '>' + val + '</td>';
+    });
+    h += '</tr>';
+  });
+
+  h += '</tbody></table>';
+  wrap.innerHTML = h;
+}
+
+/* ── Card hero-btn action handler (event delegation) ─────────────────── */
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.hero-btn[data-action]');
+  if (!btn) return;
+  e.stopPropagation();
+  var action = btn.dataset.action;
+  var id     = btn.dataset.id;
+  var slug   = btn.dataset.slug || null;
+  /* Fallback: resolve slug from allCards if not on element */
+  if (!slug && id) {
+    var _c = allCards.filter(function(c) { return c.id === id; })[0];
+    slug = _c ? _c.slug : null;
+  }
+  if (action === 'watchlist') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.watchlist.toggle(slug);
+    syncWatchlistButtons(slug, nowIn);
+    /* If the panel is open for this card, keep its Watch button in sync too */
+    if (detailCardId === id) _dpRefreshBtn('dp-btn-watch', 'Watching', 'Watch', nowIn);
+  } else if (action === 'portfolio') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.portfolio.toggle(slug);
+    syncPortfolioButtons(slug, nowIn);
+    /* If the panel is open for this card, keep its Portfolio button in sync too */
+    if (detailCardId === id) _dpRefreshBtn('dp-btn-portfolio', 'In portfolio', 'Portfolio', nowIn);
+  } else if (action === 'compare') {
+    compareToggle(id); /* calls syncCompareButtons() which updates all hero-btn states */
+  } else if (action === 'board') {
+    if (!slug) return;
+    var wasIn = SAI_STORAGE.board.isOnBoard(slug);
+    if (wasIn) {
+      SAI_STORAGE.board.removeFromBoard(slug);
+    } else {
+      SAI_STORAGE.board.addToStage(slug, 'watching');
+    }
+    var nowIn = !wasIn;
+    syncBoardButtons(slug, nowIn);
+    /* If the overlay is open for this card, keep its Board button in sync too */
+    if (detailCardId === id) {
+      var _lbl = nowIn ? 'Watching' : 'Add to Board';
+      _dpRefreshBtn('dp-btn-board', _lbl, _lbl, nowIn);
+    }
+  }
+});
+
+/* ── Close menus on outside click ────────────────────────────────────── */
+document.addEventListener('click', function(e) {
+  var navMenu     = document.getElementById('nav-menu');
+  var menuBtn     = document.getElementById('menu-btn');
+  var profMenu    = document.getElementById('profile-menu');
+  var profBtn     = document.getElementById('profile-btn');
+  var sortMenu    = document.getElementById('sort-menu');
+  var sortTrigger = document.getElementById('sort-trigger');
+  var sportMenu   = document.getElementById('sport-menu');
+  var sportBtn    = document.getElementById('sport-btn');
+  var geoMenu     = document.getElementById('geo-menu');
+  var geoBtn      = document.getElementById('geo-btn');
+  var confMenu    = document.getElementById('conf-menu');
+  var confBtn     = document.getElementById('conf-btn');
+  var audMenu     = document.getElementById('aud-menu');
+  var audBtn      = document.getElementById('aud-btn');
+
+  if (navMenuOpen && !navMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+    closeNavMenu();
+  }
+  if (profileMenuOpen && !profMenu.contains(e.target) && !profBtn.contains(e.target)) {
+    closeProfileMenu();
+  }
+  if (sortMenuOpen && sortMenu && !sortMenu.contains(e.target) && sortTrigger && !sortTrigger.contains(e.target)) {
+    closeSortMenu();
+  }
+  if (_sportMenuOpen && sportMenu && !sportMenu.contains(e.target) && sportBtn && !sportBtn.contains(e.target)) {
+    closeSportMenu();
+  }
+  if (_geoMenuOpen && geoMenu && !geoMenu.contains(e.target) && geoBtn && !geoBtn.contains(e.target)) {
+    closeGeoMenu();
+  }
+  if (_confMenuOpen && confMenu && !confMenu.contains(e.target) && confBtn && !confBtn.contains(e.target)) {
+    closeConfMenu();
+  }
+  if (_audMenuOpen && audMenu && !audMenu.contains(e.target) && audBtn && !audBtn.contains(e.target)) {
+    closeAudMenu();
+  }
+});
+
+/* ── Escape key closes all panels ───────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (detailOpen)      closeDetail();
+  if (chatOpen)        closeChat();
+  if (navMenuOpen)     closeNavMenu();
+  if (profileMenuOpen) closeProfileMenu();
+  if (sortMenuOpen)    closeSortMenu();
+  if (_sportMenuOpen)  closeSportMenu();
+  if (_geoMenuOpen)    closeGeoMenu();
+  if (_confMenuOpen)   closeConfMenu();
+  if (_audMenuOpen)    closeAudMenu();
+});
+
+/* ── / shortcut — focus search field ────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== '/') return;
+  var tag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
+  var editable = document.activeElement && document.activeElement.isContentEditable;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || editable) return;
+  e.preventDefault();
+  var si = document.getElementById('search-input');
+  if (si) { si.focus(); si.select(); }
+});
+
+/* ── Init ─────────────────────────────────────────────────────────────── */
+(function init(){
+  loadGrid()
+    .then(function(cards){
+      allCards = cards;
+      /* Restore compareList from SAI_STORAGE so tray and active states are consistent */
+      var _savedCmp = SAI_STORAGE.compare.get();
+      compareList = allCards
+        .filter(function(c) { return c.slug && _savedCmp.indexOf(c.slug) >= 0; })
+        .map(function(c) { return c.id; });
+      renderGrid(activeFilter);
+      if (compareList.length > 0) updateCompareTray();
+    })
+    .catch(function(err){
+      document.getElementById('card-grid').innerHTML=
+        '<div class="state-msg" style="color:var(--negative)"><strong>Error loading data</strong><br>'+err.message+'</div>';
+      var el = document.getElementById('page-meta');
+      if (el) el.textContent = 'Connection error';
+    });
+
+  /* Card action buttons — watchlist / compare / portfolio */
+  document.getElementById('card-grid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.card-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    if (btn.dataset.action === 'compare') {
+      compareToggle(btn.dataset.id);
+    } else {
+      btn.classList.toggle('active');
+    }
+  });
+
+  /* Chat bottom fade — show only when content is hidden below */
+  var cpMsgs = document.getElementById('cp-msgs');
+  var cpFade = document.getElementById('cp-fade-bottom');
+  function updateBottomFade() {
+    var atBottom = cpMsgs.scrollHeight - cpMsgs.scrollTop - cpMsgs.clientHeight < 8;
+    cpFade.classList.toggle('visible', !atBottom);
+  }
+  cpMsgs.addEventListener('scroll', updateBottomFade);
+
+  /* Search input — debounced so rapid typing doesn't thrash the card animation */
+  var _searchInput = document.getElementById('search-input');
+  var _searchClearBtn = document.getElementById('search-clear');
+  if (_searchInput) {
+    _searchInput.addEventListener('input', function() {
+      var val = _searchInput.value;
+      if (_searchClearBtn) _searchClearBtn.style.display = val ? '' : 'none';
+      clearTimeout(_searchDebounce);
+      _searchDebounce = setTimeout(function() { applySearch(val); }, 140);
+    });
+  }
+
+  /* Grid bottom fade — visible until user reaches the footer */
+  var _gridFade = document.getElementById('grid-fade-bottom');
+  if (_gridFade) _gridFade.classList.add('visible');
+
+  /* ── Sticky bar + scroll-to-top ─────────────────────────────────────── */
+  var _scrollBtn   = document.getElementById('scroll-top-btn');
+  var _stickyBar   = document.getElementById('eh-sticky-bar');
+  var _pageHeader  = document.getElementById('page-header');
+
+  /* Threshold: show sticky bar once the search bar has scrolled above the viewport.
+     Recalculated lazily on first scroll and reset on window resize. */
+  var _stickyThreshold = 0;
+  function getStickyThreshold() {
+    /* Use the bottom of the search wrap — sticky appears once search is no longer visible */
+    var searchWrap = document.querySelector('.eh-search-wrap');
+    if (searchWrap) {
+      var wrapBottom = searchWrap.getBoundingClientRect().bottom + window.scrollY;
+      return Math.max(120, wrapBottom - 64); /* 64 = nav bottom */
+    }
+    if (_pageHeader) return Math.max(160, _pageHeader.offsetHeight - 40);
+    return 200;
+  }
+
+  window.addEventListener('scroll', function() {
+    var sy = window.scrollY;
+    /* Scroll-to-top button */
+    if (_scrollBtn) _scrollBtn.classList.toggle('visible', sy > 320);
+    /* Grid fade */
+    var nearBottom = (window.innerHeight + sy) >= (document.body.scrollHeight - 160);
+    if (_gridFade) _gridFade.classList.toggle('visible', !nearBottom);
+    /* Sticky bar — show once search bar has scrolled out of view */
+    if (_stickyBar) {
+      if (!_stickyThreshold) _stickyThreshold = getStickyThreshold();
+      var stickyVisible = sy > _stickyThreshold;
+      _stickyBar.classList.toggle('visible', stickyVisible);
+      _stickyBar.setAttribute('aria-hidden', stickyVisible ? 'false' : 'true');
+      /* Offset content to prevent the sticky bar obscuring grid cards */
+      document.body.classList.toggle('eh-sticky-visible', stickyVisible);
+    }
+  }, { passive: true });
+
+  /* Reset threshold on resize so it recalculates on next scroll */
+  window.addEventListener('resize', function() {
+    _stickyThreshold = 0;
+  }, { passive: true });
+
+  /* ── Sticky search proxy ─────────────────────────────────────────────── */
+  /* The sticky bar has its own input that mirrors the main search field.    */
+  var _stickyInput     = document.getElementById('sticky-search-input');
+  var _stickySearchClear = document.getElementById('sticky-search-clear');
+  var _mainInput       = document.getElementById('search-input');
+
+  if (_stickyInput && _mainInput) {
+    /* Typing in sticky input → delegates to main search logic */
+    _stickyInput.addEventListener('input', function() {
+      var val = _stickyInput.value;
+      if (_stickySearchClear) _stickySearchClear.style.display = val ? '' : 'none';
+      if (_mainInput) _mainInput.value = val;
+      clearTimeout(_searchDebounce);
+      _searchDebounce = setTimeout(function() { applySearch(val); }, 140);
+    });
+    /* Typing in main input → keep sticky in sync */
+    _mainInput.addEventListener('input', function() {
+      if (_stickyInput) _stickyInput.value = _mainInput.value;
+      if (_stickySearchClear) _stickySearchClear.style.display = _mainInput.value ? '' : 'none';
+    });
+  }
+})();
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+</script>
+</body>
+</html>

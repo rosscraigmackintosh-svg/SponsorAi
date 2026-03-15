@@ -40,11 +40,13 @@ function renderCard(c, idx) {
                 : _cmpFull  ? 'Compare queue full (3/3)'
                 : _cmpCount > 0 ? 'Add to compare (' + _cmpCount + '/3 selected)'
                 : 'Add to compare';
+  var _inBoard  = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.board.isOnBoard(_slug);
   heroHtml += '<div class="card-hero-actions">'
-    +'<button class="hero-btn'+(_inWL   ? ' active' : '')+'" data-action="watchlist" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inWL   ? 'Remove from watchlist' : 'Add to watchlist')+'"><i data-lucide="bookmark"></i></button>'
-    +'<button class="hero-btn'+(_inCmp  ? ' active' : '')+(_cmpFull ? ' disabled' : '')+'" data-action="compare" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+_cmpTitle+'"'
+    +'<button class="hero-btn'+(_inWL    ? ' active' : '')+'" data-action="watchlist" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inWL    ? 'Remove from watchlist' : 'Add to watchlist')+'"><i data-lucide="bookmark"></i></button>'
+    +'<button class="hero-btn'+(_inCmp   ? ' active' : '')+(_cmpFull ? ' disabled' : '')+'" data-action="compare" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+_cmpTitle+'"'
     +(_cmpFull ? ' aria-disabled="true"' : '')+'><i data-lucide="check-check"></i></button>'
-    +'<button class="hero-btn'+(_inPF   ? ' active' : '')+'" data-action="portfolio" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inPF   ? 'Remove from portfolio'  : 'Add to portfolio'  )+'"><i data-lucide="briefcase"></i></button>'
+    +'<button class="hero-btn'+(_inPF    ? ' active' : '')+'" data-action="portfolio" data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inPF    ? 'Remove from portfolio'  : 'Add to portfolio'  )+'"><i data-lucide="briefcase"></i></button>'
+    +'<button class="hero-btn'+(_inBoard ? ' active' : '')+'" data-action="board"     data-id="'+c.id+'" data-slug="'+_slug+'" title="'+(_inBoard  ? 'Remove from Board'     : 'Add to Board'      )+'"><i data-lucide="layout-dashboard"></i></button>'
     +'</div>';
   heroHtml += '</div>';
 

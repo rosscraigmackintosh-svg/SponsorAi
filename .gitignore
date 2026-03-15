@@ -22,9 +22,15 @@ npm-debug.log*
 # OS
 Thumbs.db
 
-# API keys — keep explore.html and config.js local only
-app/explore.html
+# API keys — config files contain live credentials, never commit
+# app/explore.html was previously gitignored (contained inline keys before 2026-03-13 refactor)
+# Keys are now in config.js only; explore.html is safe to track
 app/config.js
+website/config.js
+
+# Internal — old prototype archives and working documents
+# These files may contain historical config values from before the refactor
+_internal/
 
 # Supabase CLI — local state and temp files (not project config)
 supabase/.branches

@@ -91,15 +91,19 @@ function populateDetail(c) {
     h += '<div style="font-size:var(--text-sm);color:var(--text-2);line-height:1.6;margin-top:var(--spacing-md)">' + escHtml(shortDesc) + '</div>';
   }
   /* Actions — reflect current saved state from SAI_STORAGE */
-  var _slug     = c.slug || null;
-  var _inWL     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.watchlist.has(_slug);
-  var _inPF     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.portfolio.has(_slug);
-  var _inCmp    = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.compare.has(_slug);
-  var _cmpCount = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
-  var _cmpFull  = !_inCmp && _cmpCount >= 3;
-  var _cmpLabel = _inCmp   ? 'Comparing'
-                : _cmpFull ? 'Compare (full)'
-                : _cmpCount > 0 ? 'Compare (' + _cmpCount + '/3)' : 'Compare';
+  var _slug      = c.slug || null;
+  var _inWL      = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.watchlist.has(_slug);
+  var _inPF      = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.portfolio.has(_slug);
+  var _inCmp     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.compare.has(_slug);
+  var _inBoard   = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.board.isOnBoard(_slug);
+  var _boardStage = _inBoard ? SAI_STORAGE.board.getSlugStage(_slug) : null;
+  var _boardStageLbls = { watching:'Watching', shortlist:'Shortlist', evaluation:'Evaluating', confirmed:'Confirmed' };
+  var _boardLabel = _inBoard ? (_boardStageLbls[_boardStage] || 'On board') : 'Add to Board';
+  var _cmpCount  = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
+  var _cmpFull   = !_inCmp && _cmpCount >= 3;
+  var _cmpLabel  = _inCmp   ? 'Comparing'
+                 : _cmpFull ? 'Compare (full)'
+                 : _cmpCount > 0 ? 'Compare (' + _cmpCount + '/3)' : 'Compare';
   h += '<div class="dp-actions">';
   h += '<button class="dp-action-btn' + (_inWL  ? ' active' : '') + '" id="dp-btn-watch"'
      + ' onclick="dpAction(\'watch\',\'' + c.id + '\')">'
@@ -110,7 +114,10 @@ function populateDetail(c) {
   h += '<button class="dp-action-btn' + (_inCmp ? ' active' : '') + '" id="dp-btn-compare"'
      + ' onclick="dpAction(\'compare\',\'' + c.id + '\')" data-slug="' + (_slug || '') + '">'
      + _cmpLabel + '</button>';
-  if (c.slug) h += '<a class="dp-action-btn" href="property.html?slug=' + encodeURIComponent(c.slug) + '" style="text-decoration:none">Full profile</a>';
+  h += '<button class="dp-action-btn' + (_inBoard ? ' active' : '') + '" id="dp-btn-board"'
+     + ' onclick="dpAction(\'board\',\'' + c.id + '\')">'
+     + _boardLabel + '</button>';
+  if (c.slug) h += '<a class="dp-action-btn" href="property.html?slug=' + encodeURIComponent(c.slug) + '&ref=explore" style="text-decoration:none">Full profile</a>';
   h += '</div>';
   h += '</div>'; /* /section */
 
@@ -271,6 +278,15 @@ function populateDetail(c) {
   h += '<div class="dp-section-label">Recent posts</div>';
   h += '<div id="dp-posts-container"><span class="dp-posts-loading">Loading\u2026</span></div>';
   h += '</div>';
+
+  /* ───────────────────────────────────────────────────────────────
+     11. FULL PROFILE CTA — navigate to property.html
+  ─────────────────────────────────────────────────────────────── */
+  if (c.slug) {
+    h += '<div class="dp-section dp-profile-cta">';
+    h += '<a class="dp-profile-cta-link" href="property.html?slug=' + encodeURIComponent(c.slug) + '&ref=explore">Open full property profile &#x2192;</a>';
+    h += '</div>';
+  }
 
   document.getElementById('dp-content').innerHTML = h;
 
@@ -527,6 +543,20 @@ function dpAction(action, id) {
                   : _cmpFull  ? 'Compare (full)'
                   : _newCount > 0 ? 'Compare (' + _newCount + '/3)' : 'Compare';
     _dpRefreshBtn('dp-btn-compare', _newLabel, _newLabel, nowIn);
+
+  } else if (action === 'board') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.board.isOnBoard(slug);
+    if (nowIn) {
+      /* Clicking again when already on board removes it */
+      SAI_STORAGE.board.removeFromBoard(slug);
+      _dpRefreshBtn('dp-btn-board', 'Add to Board', 'Add to Board', false);
+    } else {
+      SAI_STORAGE.board.addToStage(slug, 'watching');
+      _dpRefreshBtn('dp-btn-board', 'Watching', 'Watching', true);
+    }
+    /* Sync card hero-btn board buttons (nowIn was state before toggle, so flip it) */
+    if (typeof syncBoardButtons === 'function') syncBoardButtons(slug, !nowIn);
 
   } else if (action === 'report') {
     console.log('[SponsorAI] data issue report for property:', id);

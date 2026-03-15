@@ -1003,14 +1003,96 @@ body {
 ───────────────────────────────────────────────────────────────── */
 .bar-left {
   left: 24px;
+  right: 88px;        /* leaves room for bar-right (≈48px) + 24px edge + 16px buffer */
+  overflow: hidden;   /* clip chip backgrounds to bar border-radius */
   padding: 0 var(--spacing-xl) 0 var(--spacing-md);
   gap: var(--spacing-xs);
+}
+/* Property page has a wider right bar (back + watchlist + divider-v + profile ≈ 167px).
+   Standard right: 88px would leave bar-left overlapping it by ~103px.
+   Override to clear the wider bar with the same 24px visual gap used throughout. */
+body.page-property .bar-left {
+  right: 216px;       /* 24px edge + 167px bar-right + 25px gap */
 }
 .bar-page-title {
   font-size: 15px; font-weight: 600; color: var(--text-1);
   letter-spacing: -0.2px; white-space: nowrap;
   margin-left: var(--spacing-md);
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   APP HEADER — unified full-width fixed bar for inner app pages
+   Replaces the two floating pills (.bar-left + .bar-right).
+   Calm, chrome-free, edge-to-edge — aligned with the Explore
+   editorial direction. No border-radius, no gradient, no shadow pill.
+───────────────────────────────────────────────────────────────── */
+.app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xl);
+  gap: var(--spacing-lg);
+  z-index: 200;
+}
+
+/* Logo: match Explore editorial scale (was 18px in floating bar) */
+.app-header .brand-logo {
+  height: 28px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+/* Nav container inside app-header: strip pill box styling, fill height */
+.app-header .btn-group {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  height: 100%;
+}
+
+/* Hamburger and icon buttons: lighter, neutral colour (not purple-tinted) */
+.app-header .bar-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-3);
+}
+.app-header .bar-btn:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+/* Make SVG paths in the hamburger inherit button colour, not hardcoded purple */
+.app-header .bar-btn svg path { stroke: currentColor; }
+
+/* Right-side controls: profile (+ back/watchlist on property page) */
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   EXPLORE PAGE — chrome and layout overrides
+   Explore now uses the shared .app-header (fixed, full-width).
+   The .eh-brand in-flow nav has been removed.
+   The sticky control bar sits at top: 56px (below app-header).
+───────────────────────────────────────────────────────────────── */
+body.page-explore .bar-bottom-meta      { display: none; }
+/* Sort menu: reanchor to viewport bottom now that the meta bar is gone */
+body.page-explore .sort-menu            { bottom: 16px; }
+/* Type tabs: remove the full-width track border — it reads as a stray line in
+   the clean editorial layout. The active tab accent is sufficient as a selection
+   indicator. Remove the -1px overlap offset from tabs as well. */
+body.page-explore .eh-type-tabs         { border-bottom: none; }
+body.page-explore .eh-tab               { margin-bottom: 0; }
+
 .bar-meta {
   margin-left: auto;
   padding-left: var(--spacing-xl); /* 16px gap from page title */
@@ -1208,7 +1290,7 @@ body {
 ───────────────────────────────────────────────────────────────── */
 .nav-menu {
   position: fixed;
-  top: 73px; /* 24px bar top + 44px bar height + 5px gap */
+  top: 65px; /* 56px app-header height + 9px gap */
   left: 24px;
   z-index: 201;
   background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
@@ -1308,7 +1390,7 @@ body {
 ───────────────────────────────────────────────────────────────── */
 .profile-menu {
   position: fixed;
-  top: 78px;
+  top: 65px;
   right: 24px;
   z-index: 201;
   background: var(--surface);
@@ -1774,6 +1856,34 @@ body.detail-open {
 }
 .dp-post-metrics { font-size: var(--text-xs); color: var(--text-3); }
 
+/* Full profile CTA — bottom of overlay panel */
+.dp-profile-cta {
+  text-align: center;
+  padding: var(--spacing-3xl) var(--spacing-xl) var(--spacing-xl);
+}
+.dp-profile-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-3xl);
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.dp-profile-cta-link:hover {
+  background: var(--accent-border);
+  color: var(--accent-hover);
+}
+.dp-profile-cta-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Messages — vertical rhythm creates structure, not borders */
 .cp-msgs {
   flex: 1; overflow-y: auto; padding: 28px var(--spacing-3xl) var(--spacing-lg) var(--spacing-6xl);
@@ -1885,42 +1995,704 @@ body.detail-open {
 .main { width: 100%; }
 
 .content {
-  /* Top padding doubled for grid/masonry breathing room */
-  padding: 184px var(--spacing-6xl) var(--spacing-5xl);
-  transition: padding-left 0.22s ease, padding-right 0.22s ease;
+  /* Top padding clears the app-header (56px) with breathing room. */
+  padding: 72px var(--spacing-6xl) var(--spacing-5xl);
+  transition: padding-left 0.22s ease, padding-right 0.22s ease, padding-top 0.2s ease;
 }
-/* List view keeps original top padding */
-.content:has(.card-grid.list) { padding-top: 92px; }
+/* When sticky explore bar is visible, shift content down to clear it.
+   app-header: top 0, height 56px. Sticky bar: top 56px + 44px height = ends at 100px. */
+body.eh-sticky-visible .content {
+  padding-top: 104px;  /* 100px bar bottom + 4px breathing gap */
+}
+
+/* ── Explore page content padding overrides ──────────────────────
+   Explore uses the shared app-header (fixed, 56px). Content needs
+   the standard 72px top clearance — no override needed for padding-top.
+   Horizontal padding is wider on Explore to suit the grid layout. */
+body.page-explore .content {
+  padding-left: 64px;
+  padding-right: 64px;
+}
 
 /* ─────────────────────────────────────────────────────────────────
    PAGE HEADER
 ───────────────────────────────────────────────────────────────── */
-.page-header  { display: none; }
+.page-header  { display: block; }
 .page-title   { font-size: 20px; font-weight: 600; color: var(--text-1); letter-spacing: -0.3px; margin-bottom: 3px; }
 .page-meta    { font-size: 12px; color: var(--text-3); }
 
 /* ─────────────────────────────────────────────────────────────────
-   FILTER BAR
+   EXPLORE HEADER — editorial discovery header above the card grid
+───────────────────────────────────────────────────────────────── */
+.explore-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: var(--spacing-6xl);  /* 48px: generous separation from grid */
+}
+
+/* ── Brand frame — lightweight top row: menu button + wordmark ── */
+.eh-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);             /* 12px: menu icon → logo */
+  margin-bottom: var(--spacing-4xl);  /* 32px: frame → editorial title (default state) */
+  order: 1;                           /* always first in both default and result states */
+}
+.eh-brand .brand-logo {
+  height: 32px;   /* ~2× editorial scale — generous brand presence in the page header */
+  width: auto;
+  display: block;
+}
+
+/* ── Brand frame menu button ──────────────────── */
+.eh-brand-menu {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-3);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.1s ease, color 0.12s ease;
+}
+.eh-brand-menu:hover        { background: var(--surface-muted); color: var(--text-1); }
+.eh-brand-menu.active       { color: var(--text-1); }
+.eh-brand-menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
+
+/* ── Intro block ──────────────────────────────── */
+.eh-intro {
+  margin-bottom: 56px;   /* editorial gap: title block → search field */
+  order: 3;              /* sits below search-wrap in result state */
+}
+
+/* ── Section kicker — small label above the main heading ─────── */
+/* Modelled on Bloomberg/Stripe section labels: quiet, uppercase,
+   tracked. Hidden when result state is active.                    */
+.eh-kicker {
+  font-size: var(--text-xs);    /* 11px — very small, non-competing */
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.12em;       /* generous tracking for all-caps feel */
+  text-transform: uppercase;
+  margin: 0 0 var(--spacing-3xl) 0;  /* 24px: kicker → heading */
+  line-height: 1;
+}
+.eh-intro.is-result .eh-kicker { display: none; }  /* not relevant in result state */
+
+.eh-title {
+  font-size: var(--text-xl);          /* 24px — base; Explore page overrides below */
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.4px;
+  margin: 0 0 var(--spacing-md) 0;    /* 8px: title → subtitle */
+  line-height: 1.2;
+}
+/* ── Explore page editorial heading ─────────────────────────────
+   white-space: pre-line kept for forward compat; not needed for
+   the current single-line title but harmless.                     */
+body.page-explore .eh-title {
+  font-size: 44px;
+  letter-spacing: -1.5px;
+  white-space: pre-line;
+  line-height: 1.05;
+}
+.eh-subtitle {
+  font-size: 22px;  /* increased from --text-sm (14px) — clearer supporting line under heading */
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Search wrap — contains the search bar ───── */
+.eh-search-wrap {
+  margin-bottom: var(--spacing-3xl);  /* 24px: search → type tabs (default) */
+  order: 4;                           /* default: after intro; in result state moves to order 2 */
+}
+
+/* ── Type tabs — segmented tab strip ──────────── */
+.eh-type-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: var(--spacing-xl);   /* 16px: type tabs → filter row */
+  order: 5;
+}
+.eh-type-tabs::-webkit-scrollbar { display: none; }
+.eh-tab {
+  flex-shrink: 0;
+  padding: var(--spacing-md) var(--spacing-xl);  /* 8px 16px */
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;                /* overlap parent border-bottom */
+  cursor: pointer;
+  font-family: var(--font);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.eh-tab:hover  { color: var(--text-2); }
+.eh-tab.active { color: var(--text-1); border-bottom-color: var(--accent); }
+.eh-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 3px; }
+
+/* ── Analytical filter row ────────────────────── */
+.eh-filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);             /* 4px between filter buttons */
+  flex-wrap: wrap;
+  order: 6;
+}
+.eh-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: 28px;
+  padding: 0 var(--spacing-md) 0 var(--spacing-lg);
+  font-size: var(--text-xs);
+  font-family: var(--font);
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.eh-filter-btn svg { color: var(--text-3); flex-shrink: 0; }
+.eh-filter-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+.eh-filter-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* Active state — used by sport filter (and future filters) when a value is selected */
+.eh-filter-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.eh-filter-btn.active svg { color: var(--accent); }
+/* Sort button — active accent when menu is open */
+.eh-filter-sort.open { color: var(--accent); border-color: var(--accent-border); }
+
+/* ── Sport filter dropdown ────────────────────── */
+.sport-filter-wrap {
+  position: relative;
+}
+.sport-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 148px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: var(--spacing-xs) 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.sport-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.sport-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px var(--spacing-lg);
+  font-size: var(--text-sm);
+  font-family: var(--font);
+  color: var(--text-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sport-item:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+.sport-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-xs) 0;
+}
+
+/* ── Geography filter dropdown ────────────────── */
+.geo-filter-wrap {
+  position: relative;
+}
+.geo-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 172px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: var(--spacing-xs) 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.geo-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.geo-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px var(--spacing-lg);
+  font-size: var(--text-sm);
+  font-family: var(--font);
+  color: var(--text-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.geo-item:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+.geo-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-xs) 0;
+}
+
+/* ── Confidence filter dropdown ───────────────── */
+.conf-filter-wrap {
+  position: relative;
+}
+.conf-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 168px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: var(--spacing-xs) 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.conf-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.conf-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px var(--spacing-lg);
+  font-size: var(--text-sm);
+  font-family: var(--font);
+  color: var(--text-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.conf-item:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+/* "No score" row — visually secondary, data exists but scores absent */
+.conf-item--muted {
+  color: var(--text-3);
+}
+.conf-item--muted:hover {
+  color: var(--text-2);
+}
+.conf-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-xs) 0;
+}
+
+/* ── Audience filter dropdown ─────────────────── */
+.aud-filter-wrap {
+  position: relative;
+}
+.aud-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 164px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xs) 0;
+  z-index: 120;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.aud-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.aud-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.aud-item:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+.aud-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-xs) 0;
+}
+
+/* Separator between stub filters and Sort */
+.eh-filter-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 var(--spacing-xs);
+  flex-shrink: 0;
+}
+/* Count label — pushed to far right */
+.eh-filter-count {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Contextual result state ─────────────────── */
+/* Applied to .eh-intro when a search query or non-'all' filter is active.
+   The search-wrap reorders to position 2 (above the intro), so the result
+   heading appears immediately below the search bar — Dribbble-style result
+   page structure: frame → search → query heading → count → tabs → filters. */
+.eh-intro.is-result .eh-title {
+  font-size: 28px;           /* step above --text-xl (24px) — a clear result heading */
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-1);
+}
+.eh-intro.is-result .eh-subtitle {
+  font-size: var(--text-sm);   /* 14px — count line sits comfortably beneath heading */
+  color: var(--text-3);
+  letter-spacing: 0;
+  margin-top: var(--spacing-xs);
+}
+
+/* ── Result-state spacing overrides ──────────── */
+/* Search moves above intro (order:2), so brand-to-search gap should be tighter */
+/* Search-wrap in result state: search → result heading */
+body.has-active-filter .eh-search-wrap {
+  order: 2;                           /* jump above intro (order:3) */
+  margin-bottom: var(--spacing-3xl);  /* 24px: search → result heading */
+}
+/* Result intro in result state: result heading → tabs */
+body.has-active-filter .eh-intro {
+  margin-bottom: var(--spacing-3xl);  /* 24px: result heading → type tabs (was 32px) */
+}
+
+/* ── Reset / Clear button — inline in the intro block ──────────── */
+/* Hidden by default; surfaced only inside .is-result state.
+   Sits below the subtitle / count line — small, muted, link-like. */
+.eh-reset-btn {
+  display: none;  /* shown via .is-result rule below */
+  align-items: center;
+  margin-top: var(--spacing-xs);
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: var(--text-xs);
+  font-family: var(--font);
+  color: var(--text-3);
+  cursor: pointer;
+  line-height: 1.5;
+  transition: color 0.12s ease;
+}
+.eh-reset-btn:hover       { color: var(--text-1); }
+.eh-reset-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.eh-intro.is-result .eh-reset-btn { display: inline-flex; }
+
+/* ── Filter count — slightly stronger when state is narrowed ────── */
+/* Default state: var(--text-3). Narrowed state: step up to text-2.  */
+body.has-active-filter .eh-filter-count {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ── Dark mode overrides ─────────────────────── */
+[data-theme="dark"] .eh-type-tabs  { border-bottom-color: var(--border); }
+[data-theme="dark"] .eh-filter-btn { background: var(--surface-muted); }
+
+/* ─────────────────────────────────────────────────────────────────
+   EXPLORE STICKY BAR — compact control bar, shown when scrolled
+───────────────────────────────────────────────────────────────── */
+.eh-sticky-bar {
+  position: fixed;
+  top: 56px;                          /* floats just below app-header (height 56px) */
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.18s ease;
+  pointer-events: none;
+}
+.eh-sticky-bar.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.eh-sticky-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-3xl);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+/* ── Sticky brand anchor — logo in the compact scrolled bar ───── */
+.eh-sticky-brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-right: var(--spacing-lg);     /* 12px gap between logo and search */
+  border-right: 1px solid var(--border);/* thin separator: brand / controls */
+  margin-right: var(--spacing-sm);      /* 6px breathing room after separator */
+}
+.eh-stk-logo {
+  height: 25px;   /* increased from 13px — clearly visible brand anchor in sticky bar */
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+/* Dark mode: letterform paths use a hardcoded dark fill; invert to remain legible */
+[data-theme="dark"] .eh-stk-logo path[fill="#494F4D"] { fill: var(--text-2); }
+
+/* Mini search — compact, scoped override replaces !important */
+.eh-sticky-bar .search-bar {
+  height: 32px;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+.eh-sticky-bar .search-bar-input { font-size: var(--text-xs); }
+/* Mini type tabs inside sticky bar */
+.eh-sticky-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.eh-sticky-tabs::-webkit-scrollbar { display: none; }
+.eh-stab {
+  flex-shrink: 0;
+  padding: 0 var(--spacing-lg);
+  height: 32px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: color 0.1s ease;
+}
+.eh-stab:hover  { color: var(--text-2); }
+.eh-stab.active { color: var(--accent); font-weight: 600; }
+.eh-stab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 3px; }
+/* Sort in sticky bar */
+.eh-sticky-sort {
+  height: 28px !important;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+/* Clear/reset button in sticky bar — mirrors compact sticky scale */
+.eh-stclear {
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 var(--spacing-md);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: var(--font);
+  color: var(--text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.eh-stclear:hover       { color: var(--text-1); border-color: var(--border-strong); }
+.eh-stclear:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+/* Dark mode */
+[data-theme="dark"] .eh-sticky-bar {
+  background: var(--bg);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.22);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SEARCH BAR — in-page, part of explore header
+───────────────────────────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  height: 44px;
+  width: 100%;
+  max-width: 640px;
+  padding: 0 var(--spacing-md) 0 var(--spacing-lg);
+  background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
+  border: 1px solid var(--color-base-white);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 3px 1px rgba(0,0,0,0.08);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+[data-theme="dark"] .search-bar {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border), 0 2px 3px 1px rgba(0,0,0,0.28);
+}
+.search-bar:focus-within {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 1px var(--color-gray-200), 0 0 0 3px var(--accent-soft), 0 1px 2px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .search-bar:focus-within {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 1px var(--border), 0 0 0 3px rgba(197,107,124,0.12), 0 1px 2px rgba(0,0,0,0.2);
+}
+.search-bar-icon {
+  flex-shrink: 0;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.search-bar-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: var(--text-md);
+  font-family: var(--font);
+  color: var(--text-1);
+  outline: none;
+}
+.search-bar-input::placeholder {
+  color: var(--text-3);
+}
+/* Remove native browser clear button — we provide our own */
+.search-bar-input::-webkit-search-cancel-button { display: none; }
+.search-bar-input::-webkit-search-decoration      { display: none; }
+
+.search-bar-clear {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-3);
+  border-radius: 3px;
+  transition: color 0.12s ease;
+}
+.search-bar-clear:hover { color: var(--text-1); }
+
+/* ─────────────────────────────────────────────────────────────────
+   NAV BAR + FILTER BAR
+   .btn-group: pill container used for standalone filter bars.
+   .bar-centre: nav lives inside .bar-left or .eh-brand as a flex child —
+     no independent positioning. Class retained for chip styling and
+     responsive visibility rule (@media max-width 640px).
+   .chip: individual nav/filter link inside the container.
 ───────────────────────────────────────────────────────────────── */
 .btn-group {
   display: inline-flex;
   height: 40px;
-  border: 1px solid var(--color-base-white);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--color-base-white) 0%, var(--color-gray-100) 100%);
-  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 3px 1px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--border), 0 2px 3px 1px rgba(0, 0, 0, 0.08);
+}
+/* When nav is a flex child of bar-left, strip the pill box */
+.bar-left .btn-group {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  height: 100%;       /* 100% of bar-left = 40px fixed height */
+}
+/* When nav is a flex child of eh-brand (Explore page), strip the pill box.
+   eh-brand has auto height so use explicit 32px to match the brand logo scale. */
+.eh-brand .btn-group {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  height: 32px;
 }
 .bar-centre {
-  position: fixed;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
+  /* positioning removed — nav is a flex child of .bar-left / .eh-brand */
+  display: flex;
+  align-items: stretch;   /* chips fill container height (40px in bar-left, 32px in eh-brand) */
+  height: 100%;
 }
 .chip {
   font-size: 12px; padding: 0 var(--spacing-xl); cursor: pointer;
-  border: none; border-right: 1px solid var(--color-gray-300);
+  border: none; border-right: 1px solid var(--border);
   background: transparent; color: var(--text-2);
   transition: background 0.1s, color 0.1s; white-space: nowrap;
   font-family: var(--font); display: flex; align-items: center;
@@ -2232,6 +3004,7 @@ body.detail-open {
   border-radius: 4px; padding: 5px var(--spacing-md); margin-top: var(--spacing-lg); line-height: 1.45;  /* rhythm: was 10px raw */
 }
 
+
 .card-bio {
   font-size: 12px;
   line-height: 1.55;
@@ -2444,7 +3217,37 @@ body.compare-open .content { padding-bottom: 80px; }
 @media (max-width: 640px) {
   .brand-logo { height: 14px; }
   .bar-left { padding: 0 var(--spacing-sm); }
-  .content  { padding: 88px var(--spacing-xl) 60px; }
+  .content  { padding: 68px var(--spacing-xl) 60px; }
+  .app-header { padding: 0 var(--spacing-md); }
+  /* Explore header — tighter on mobile */
+  .explore-header { margin-bottom: var(--spacing-4xl); }
+  .eh-intro       { margin-bottom: var(--spacing-2xl); }
+  .eh-title       { font-size: var(--text-lg); }
+  .eh-search-wrap { margin-bottom: var(--spacing-xl); }
+  .search-bar     { max-width: 100%; height: 40px; }
+  .search-bar-input { font-size: var(--text-sm); }
+  /* Type tabs scroll horizontally */
+  .eh-type-tabs   { gap: 0; }
+  /* Filter row — hide disabled stub buttons and separator; keep only Sort */
+  .eh-filter-btn:disabled { display: none; }
+  .eh-filter-sep  { display: none; }
+  .eh-filter-count { display: none; }  /* count shown in bottom bar */
+  /* Result heading — cap size on mobile */
+  .eh-intro.is-result .eh-title { font-size: var(--text-xl); }  /* 24px — manageable on narrow screen */
+  /* Explore content: restore natural mobile padding (overrides the 64px desktop value) */
+  body.page-explore .content { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+  /* Three-line heading: scale down for narrow screens */
+  body.page-explore .eh-title { font-size: 28px; letter-spacing: -0.8px; }
+  /* Default page logo — scale down slightly on mobile */
+  .eh-brand .brand-logo { height: 22px; }
+  /* Sticky logo — keep visible but slim on narrow screens */
+  .eh-stk-logo { height: 11px; }
+  /* Sticky brand container — reduce padding so search gets more room */
+  .eh-sticky-brand { padding-right: var(--spacing-md); margin-right: 0; }
+  /* Sticky bar — hide type tabs (too wide), give search more room */
+  .eh-sticky-tabs { display: none; }
+  .eh-sticky-bar .search-bar { max-width: none; flex: 1; }
+  /* Global body.eh-sticky-visible rule covers mobile too — no override needed here */
   .card-grid { grid-template-columns: 1fr; }
   .card-grid.list .card-hero { width: 56px; min-width: 56px; }
   /* On mobile the panel goes full-width, no push */
@@ -2452,7 +3255,7 @@ body.compare-open .content { padding-bottom: 80px; }
     left: -100vw;
     right: 0;
     width: 100%;
-    top: 88px;
+    top: 72px;
     bottom: 0;
     border-right: none;
     border-top: 1px solid var(--border);
@@ -2463,9 +3266,28 @@ body.compare-open .content { padding-bottom: 80px; }
   body.chat-open .content { padding-left: var(--spacing-xl); }
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   NAV BAR — responsive visibility
+   Desktop (≥641px): nav chips are the primary navigation.
+     Dropdown nav columns become redundant — hide them.
+     The divider directly following menu-cols is also hidden.
+   Mobile (≤640px): nav chips are too wide — hide them.
+     bar-left still shows (logo + hamburger). Dropdown nav columns
+     remain visible as the primary mobile nav.
+───────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .bar-centre { display: none; }
+}
+@media (min-width: 641px) {
+  /* Nav columns in dropdown are redundant on desktop — bar-centre handles nav.
+     Keep dropdown open for theme toggle and model label only. */
+  .menu-cols { display: none; }
+  .menu-cols + .menu-divider { display: none; }
+}
+
 @media (min-width: 641px) and (max-width: 1024px) {
   .card-grid { grid-template-columns: repeat(2, 1fr); }
-  .content   { padding: 92px var(--spacing-4xl) var(--spacing-5xl); }
+  .content   { padding: 72px var(--spacing-4xl) var(--spacing-5xl); }
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -2505,6 +3327,30 @@ body.compare-open .content { padding-bottom: 80px; }
   background: var(--accent-soft);
 }
 .ef-load-more:active { opacity: 0.8; }
+
+/* ─────────────────────────────────────────────────────────────────
+   SITE FOOTER — always reachable, below explore-footer
+───────────────────────────────────────────────────────────────── */
+.site-footer {
+  padding: var(--spacing-3xl) var(--spacing-xl) var(--spacing-5xl);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.sf-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  letter-spacing: 0.03em;
+}
+.sf-brand {
+  color: var(--text-2);
+  font-weight: 500;
+}
+.sf-dot {
+  opacity: 0.4;
+}
 
 /* ─────────────────────────────────────────────────────────────────
    SCROLL-TO-TOP BUTTON

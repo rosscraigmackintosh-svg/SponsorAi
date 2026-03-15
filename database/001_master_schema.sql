@@ -21,9 +21,21 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- NOTE: live DB extended this enum via ALTER TYPE ADD VALUE in later migrations
+-- (universal_property_model_phase1 + subsequent ingestion migrations).
+-- On a clean rebuild the full 7-value set is created here in one pass.
+-- On an existing DB these values already exist; the DO block is a no-op.
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_type_enum') THEN
-    CREATE TYPE property_type_enum AS ENUM ('driver','team','series','event');
+    CREATE TYPE property_type_enum AS ENUM (
+      'driver',
+      'team',
+      'athlete',
+      'series',
+      'event',
+      'venue',
+      'governing_body'
+    );
   END IF;
 END $$;
 
@@ -46,15 +58,32 @@ END $$;
 
 -- 2a  Properties --------------------------------------------------
 
+-- NOTE: columns from sport downward were added by later migrations
+-- (universal_property_model_phase1, add_metadata_jsonb_to_properties,
+--  add_visibility_to_properties, populate_country_codes, etc.).
+-- Consolidated here so a clean rebuild produces the correct shape.
 CREATE TABLE IF NOT EXISTS properties (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  name            text        NOT NULL,
-  property_type   property_type_enum NOT NULL,
-  country         text,
-  bio             text,
-  event_start_date date,                     -- only for type = event
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now()
+  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name             text        NOT NULL,
+  property_type    property_type_enum NOT NULL,
+  country          text,
+  bio              text,
+  event_start_date date,                       -- only for type = event
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now(),
+
+  -- Extended property fields (added by migrations after initial schema)
+  sport            text,
+  slug             text,                        -- unique; see idx below
+  country_code     char(2),
+  city             text,
+  region           text,
+  latitude         numeric,
+  longitude        numeric,
+  event_end_date   date,                        -- only for type = event
+  metadata         jsonb       DEFAULT '{}',
+  visible_in_ui    boolean     NOT NULL DEFAULT false,
+  hidden_reason    text
 );
 
 -- 2b  Accounts ----------------------------------------------------
@@ -69,21 +98,23 @@ CREATE TABLE IF NOT EXISTS accounts (
   is_verified       boolean     NOT NULL DEFAULT false,
   is_suspect_bot    boolean     NOT NULL DEFAULT false,
   created_at        timestamptz NOT NULL DEFAULT now(),
+  platform_user_id  text,                       -- added by add_platform_user_id_to_accounts
   UNIQUE (property_id, platform, handle)
 );
 
 -- 2c  Raw posts ---------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS raw_posts (
-  id              uuid             PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id      uuid             NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-  platform        platform_enum    NOT NULL,
-  posted_at       timestamptz      NOT NULL,
-  content_type    content_type_enum NOT NULL DEFAULT 'image',
-  caption         text,
-  url             text,
-  is_viral        boolean          NOT NULL DEFAULT false,
-  created_at      timestamptz      NOT NULL DEFAULT now()
+  id               uuid             PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id       uuid             NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  platform         platform_enum    NOT NULL,
+  posted_at        timestamptz      NOT NULL,
+  content_type     content_type_enum NOT NULL DEFAULT 'image',
+  caption          text,
+  url              text,
+  is_viral         boolean          NOT NULL DEFAULT false,
+  created_at       timestamptz      NOT NULL DEFAULT now(),
+  platform_post_id text                         -- added by add_platform_post_id_to_raw_posts
 );
 
 -- 2d  Raw daily post metrics (high-volume, use bigserial) ---------
@@ -113,6 +144,8 @@ CREATE TABLE IF NOT EXISTS raw_account_followers (
   followers_count bigint      NOT NULL DEFAULT 0 CHECK (followers_count >= 0),
   followers_delta bigint      NOT NULL DEFAULT 0,
   collected_at    timestamptz NOT NULL DEFAULT now(),
+  is_estimated    boolean     NOT NULL DEFAULT false,  -- added by add_data_provenance_to_raw_account_followers
+  data_source     text        NOT NULL DEFAULT 'api',  -- added by add_data_provenance_to_raw_account_followers
   UNIQUE (account_id, metric_date)
 );
 
@@ -186,6 +219,7 @@ CREATE TABLE IF NOT EXISTS fanscore_windows (
   confidence_band     text        CHECK (confidence_band IN ('High','Medium','Low')),
   confidence_value    numeric(5,4) CHECK (confidence_value BETWEEN 0 AND 1),
   computed_at         timestamptz NOT NULL DEFAULT now(),
+  suppression_reason  text,                    -- added by migration 008_fix_fanscore_windows_suppression
   UNIQUE (property_id, as_of_day, window_days, model_version)
 );
 
@@ -194,24 +228,42 @@ CREATE TABLE IF NOT EXISTS fanscore_windows (
 -- SECTION 3 : INDEXES
 -- ============================================================
 
-CREATE INDEX IF NOT EXISTS idx_accounts_property     ON accounts (property_id);
-CREATE INDEX IF NOT EXISTS idx_accounts_platform     ON accounts (platform);
+-- properties
+CREATE UNIQUE INDEX IF NOT EXISTS properties_slug_unique       ON properties (slug);
+CREATE INDEX IF NOT EXISTS idx_properties_property_type        ON properties (property_type);
+CREATE INDEX IF NOT EXISTS idx_properties_slug                 ON properties (slug);
+CREATE INDEX IF NOT EXISTS idx_properties_sport                ON properties (sport);
+CREATE INDEX IF NOT EXISTS idx_properties_visible_in_ui        ON properties (visible_in_ui) WHERE visible_in_ui = true;
 
-CREATE INDEX IF NOT EXISTS idx_raw_posts_account     ON raw_posts (account_id);
-CREATE INDEX IF NOT EXISTS idx_raw_posts_posted_at   ON raw_posts (posted_at);
+-- accounts
+CREATE INDEX IF NOT EXISTS idx_accounts_property               ON accounts (property_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_platform               ON accounts (platform);
+CREATE INDEX IF NOT EXISTS idx_accounts_platform_user_id       ON accounts (platform, platform_user_id) WHERE platform_user_id IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_rpdm_post_date        ON raw_post_daily_metrics (post_id, metric_date);
-CREATE INDEX IF NOT EXISTS idx_rpdm_date             ON raw_post_daily_metrics (metric_date);
+-- raw_posts
+CREATE INDEX IF NOT EXISTS idx_raw_posts_account               ON raw_posts (account_id);
+CREATE INDEX IF NOT EXISTS idx_raw_posts_posted_at             ON raw_posts (posted_at);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_raw_posts_account_platform_post
+  ON raw_posts (account_id, platform_post_id) WHERE platform_post_id IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_raf_account_date      ON raw_account_followers (account_id, metric_date);
+-- raw_post_daily_metrics
+CREATE INDEX IF NOT EXISTS idx_rpdm_post_date                  ON raw_post_daily_metrics (post_id, metric_date);
+CREATE INDEX IF NOT EXISTS idx_rpdm_date                       ON raw_post_daily_metrics (metric_date);
 
-CREATE INDEX IF NOT EXISTS idx_ppdm_prop_plat_date   ON property_platform_daily_metrics (property_id, platform, metric_date);
-CREATE INDEX IF NOT EXISTS idx_ppdm_date             ON property_platform_daily_metrics (metric_date);
+-- raw_account_followers
+CREATE INDEX IF NOT EXISTS idx_raf_account_date                ON raw_account_followers (account_id, metric_date);
+CREATE INDEX IF NOT EXISTS idx_raf_is_estimated                ON raw_account_followers (account_id, metric_date) WHERE is_estimated = true;
 
-CREATE INDEX IF NOT EXISTS idx_fsd_prop_date_model   ON fanscore_daily (property_id, metric_date, model_version);
-CREATE INDEX IF NOT EXISTS idx_fsd_date              ON fanscore_daily (metric_date);
+-- property_platform_daily_metrics
+CREATE INDEX IF NOT EXISTS idx_ppdm_prop_plat_date             ON property_platform_daily_metrics (property_id, platform, metric_date);
+CREATE INDEX IF NOT EXISTS idx_ppdm_date                       ON property_platform_daily_metrics (metric_date);
 
-CREATE INDEX IF NOT EXISTS idx_fsw_prop_day_win      ON fanscore_windows (property_id, as_of_day, window_days, model_version);
+-- fanscore_daily
+CREATE INDEX IF NOT EXISTS idx_fsd_prop_date_model             ON fanscore_daily (property_id, metric_date, model_version);
+CREATE INDEX IF NOT EXISTS idx_fsd_date                        ON fanscore_daily (metric_date);
+
+-- fanscore_windows
+CREATE INDEX IF NOT EXISTS idx_fsw_prop_day_win                ON fanscore_windows (property_id, as_of_day, window_days, model_version);
 
 
 -- ============================================================
@@ -488,6 +540,13 @@ $$;
 
 -- 4c  compute_fanscore_windows  (as_of_day, model) ----------------
 --     Reads fanscore_daily and writes 30/60/90-day windows.
+--     NOTE: this definition reflects migration 008 (008_fix_fanscore_windows_suppression).
+--     Key differences from the original (pre-008) definition:
+--       1. suppression_reason column added to INSERT / SELECT / ON CONFLICT UPDATE.
+--       2. WHERE clause no longer excludes fd.fanscore_value IS NOT NULL -- suppressed
+--          rows must be included so anomaly_days_count counts them correctly.
+--       3. confidence_band CASE gains a leading < 0.6 -> 'Low' guard.
+--       4. REGR_SLOPE casts changed to ::float8 on both sides.
 
 CREATE OR REPLACE FUNCTION compute_fanscore_windows(
   p_as_of_day     date,
@@ -499,35 +558,55 @@ BEGIN
     property_id, as_of_day, window_days, model_version,
     avg_score, median_score, trend_value, volatility_value,
     anomaly_days_count, completeness_pct,
-    confidence_band, confidence_value, computed_at
+    confidence_band, confidence_value,
+    suppression_reason,
+    computed_at
   )
   SELECT
     fd.property_id,
     p_as_of_day,
     w.win,
     p_model_version,
+
+    -- averages use only non-suppressed (non-null) scores
     AVG(fd.fanscore_value),
     PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fd.fanscore_value),
-    REGR_SLOPE(fd.fanscore_value, EXTRACT(EPOCH FROM fd.metric_date - (p_as_of_day - w.win))),
+    REGR_SLOPE(fd.fanscore_value::float8,
+               (fd.metric_date - (p_as_of_day - w.win))::float8),
     STDDEV(fd.fanscore_value),
+
+    -- anomaly count: rows that were suppressed during the window
     COUNT(*) FILTER (WHERE fd.suppression_reason IS NOT NULL),
+
+    -- completeness: fraction of window days that had a non-suppressed score
     COUNT(fd.fanscore_value)::numeric / w.win::numeric,
+
+    -- confidence_band
     CASE
+      WHEN (COUNT(fd.fanscore_value)::numeric / w.win::numeric) < 0.6  THEN 'Low'
       WHEN (COUNT(fd.fanscore_value)::numeric / w.win::numeric) >= 0.8
-       AND COALESCE(STDDEV(fd.fanscore_value), 0) < 15 THEN 'High'
+       AND COALESCE(STDDEV(fd.fanscore_value),0) < 15                  THEN 'High'
       WHEN (COUNT(fd.fanscore_value)::numeric / w.win::numeric) >= 0.55 THEN 'Medium'
       ELSE 'Low'
     END,
+
+    -- confidence_value
     LEAST(1.0, GREATEST(0.0,
       (COUNT(fd.fanscore_value)::numeric / w.win::numeric)
-      * (1.0 - LEAST(1.0, COALESCE(STDDEV(fd.fanscore_value),0) / 50.0))
-    )),
+      * (1.0 - LEAST(1.0, COALESCE(STDDEV(fd.fanscore_value),0) / 50.0)))),
+
+    -- suppression_reason (written at window level when coverage is too low)
+    CASE
+      WHEN (COUNT(fd.fanscore_value)::numeric / w.win::numeric) < 0.6
+      THEN 'Low data coverage in window (< 60% of days scored)'
+      ELSE NULL
+    END,
+
     now()
   FROM fanscore_daily fd
   CROSS JOIN (SELECT unnest(ARRAY[30,60,90]) AS win) w
   WHERE fd.model_version = p_model_version
     AND fd.metric_date BETWEEN (p_as_of_day - w.win + 1) AND p_as_of_day
-    AND fd.fanscore_value IS NOT NULL
   GROUP BY fd.property_id, w.win
   ON CONFLICT (property_id, as_of_day, window_days, model_version) DO UPDATE SET
     avg_score          = EXCLUDED.avg_score,
@@ -538,6 +617,7 @@ BEGIN
     completeness_pct   = EXCLUDED.completeness_pct,
     confidence_band    = EXCLUDED.confidence_band,
     confidence_value   = EXCLUDED.confidence_value,
+    suppression_reason = EXCLUDED.suppression_reason,
     computed_at        = now();
 END;
 $$;
@@ -571,47 +651,178 @@ FROM fanscore_windows fw
 WHERE fw.model_version = (SELECT model_version FROM v_active_model);
 
 -- Property summary for UI cards -----------------------------------
+-- NOTE: This view definition reflects the live database state as of 2026-03-14.
+-- It supersedes the original definition (which used old column aliases such as
+-- p.name (not aliased), latest_fanscore, latest_score_date, avg_30d, trend_30d,
+-- and the now-removed helper views v_fanscore_daily_current /
+-- v_fanscore_windows_current). Column names here match ui_data_layer.ts exactly.
+-- Requires: fanscore_daily.suppression_reason column (migration 008).
 
 CREATE OR REPLACE VIEW v_property_summary_current AS
 SELECT
   p.id              AS property_id,
-  p.name,
+  p.name            AS property_name,
   p.property_type,
   p.country,
-  fd.fanscore_value AS latest_fanscore,
-  fd.confidence_band AS latest_confidence_band,
-  fd.confidence_value AS latest_confidence_value,
-  fd.metric_date    AS latest_score_date,
-  fd.components_json,
-  fd.reasons,
-  fd.suppression_reason,
-  w30.avg_score     AS avg_30d,
-  w30.trend_value   AS trend_30d,
-  w30.volatility_value AS volatility_30d,
-  w60.avg_score     AS avg_60d,
-  w90.avg_score     AS avg_90d,
-  w90.trend_value   AS trend_90d
+  p.event_start_date,
+
+  -- Latest scored day for this property under the active model
+  fd.metric_date    AS as_of_day,
+  fd.model_version,
+
+  -- 30-day window — full detail
+  w30.avg_score         AS avg_score_30d,
+  w30.median_score      AS median_score_30d,
+  w30.trend_value       AS trend_value_30d,
+  w30.volatility_value  AS volatility_value_30d,
+  w30.completeness_pct  AS completeness_pct_30d,
+  w30.confidence_band   AS confidence_band_30d,
+  w30.confidence_value  AS confidence_value_30d,
+  CASE
+    WHEN w30.confidence_band IS NULL THEN 'Insufficient data'::text
+    ELSE NULL::text
+  END                   AS suppression_reason_30d,
+
+  -- 60-day and 90-day windows — avg + 90d trend only (by design)
+  w60.avg_score         AS avg_score_60d,
+  w90.avg_score         AS avg_score_90d,
+  w90.trend_value       AS trend_value_90d,
+
+  -- Relationship arrays (driver/athlete → teams; team → drivers/athletes)
+  team_rel.team_ids,
+  team_rel.team_names,
+  driver_rel.driver_ids,
+  driver_rel.driver_names,
+
+  -- Core property fields
+  p.bio,
+  p.slug,
+
+  -- Social aggregations
+  soc_foll.total_followers_latest,
+  soc_30d.followers_net_30d,
+  soc_30d.posts_30d,
+  soc_30d.total_interactions_30d,
+  soc_30d.engagement_rate_30d_pct,
+  soc_plat.platforms_active,
+
+  -- Enrichment (populated via populate_region_from_country migration)
+  p.sport,
+  p.region,
+  p.city,
+  p.visible_in_ui
+
 FROM properties p
+
+-- Latest daily score record under the active model
 LEFT JOIN LATERAL (
-  SELECT * FROM v_fanscore_daily_current vfd
-  WHERE vfd.property_id = p.id
-  ORDER BY vfd.metric_date DESC LIMIT 1
+  SELECT fd2.metric_date, fd2.model_version
+  FROM fanscore_daily fd2
+  WHERE fd2.property_id = p.id
+    AND fd2.model_version = (SELECT v_active_model.model_version FROM v_active_model)
+  ORDER BY fd2.metric_date DESC
+  LIMIT 1
 ) fd ON true
+
+-- 30-day window snapshot
 LEFT JOIN LATERAL (
-  SELECT * FROM v_fanscore_windows_current vfw
-  WHERE vfw.property_id = p.id AND vfw.window_days = 30
-  ORDER BY vfw.as_of_day DESC LIMIT 1
+  SELECT fw.avg_score, fw.median_score, fw.trend_value,
+         fw.volatility_value, fw.completeness_pct,
+         fw.confidence_band, fw.confidence_value
+  FROM fanscore_windows fw
+  WHERE fw.property_id = p.id
+    AND fw.window_days = 30
+    AND fw.model_version = (SELECT v_active_model.model_version FROM v_active_model)
+  ORDER BY fw.as_of_day DESC
+  LIMIT 1
 ) w30 ON true
+
+-- 60-day window snapshot (avg only — used for trend comparison, not full detail)
 LEFT JOIN LATERAL (
-  SELECT * FROM v_fanscore_windows_current vfw
-  WHERE vfw.property_id = p.id AND vfw.window_days = 60
-  ORDER BY vfw.as_of_day DESC LIMIT 1
+  SELECT fw.avg_score
+  FROM fanscore_windows fw
+  WHERE fw.property_id = p.id
+    AND fw.window_days = 60
+    AND fw.model_version = (SELECT v_active_model.model_version FROM v_active_model)
+  ORDER BY fw.as_of_day DESC
+  LIMIT 1
 ) w60 ON true
+
+-- 90-day window snapshot (avg + trend)
 LEFT JOIN LATERAL (
-  SELECT * FROM v_fanscore_windows_current vfw
-  WHERE vfw.property_id = p.id AND vfw.window_days = 90
-  ORDER BY vfw.as_of_day DESC LIMIT 1
-) w90 ON true;
+  SELECT fw.avg_score, fw.trend_value
+  FROM fanscore_windows fw
+  WHERE fw.property_id = p.id
+    AND fw.window_days = 90
+    AND fw.model_version = (SELECT v_active_model.model_version FROM v_active_model)
+  ORDER BY fw.as_of_day DESC
+  LIMIT 1
+) w90 ON true
+
+-- Team associations (for driver/athlete property types)
+LEFT JOIN LATERAL (
+  SELECT array_agg(pt.id   ORDER BY pr.valid_from DESC NULLS LAST, pt.name) AS team_ids,
+         array_agg(pt.name ORDER BY pr.valid_from DESC NULLS LAST, pt.name) AS team_names
+  FROM property_relationships pr
+  JOIN properties pt ON pt.id = pr.to_id
+  WHERE pr.from_id = p.id
+    AND pr.relationship_type = ANY (ARRAY['driver_team', 'athlete_belongs_to_team'])
+    AND p.property_type = ANY (ARRAY['driver'::property_type_enum, 'athlete'::property_type_enum])
+) team_rel ON true
+
+-- Driver/athlete associations (for team property type)
+LEFT JOIN LATERAL (
+  SELECT array_agg(pd.id   ORDER BY pd.name) AS driver_ids,
+         array_agg(pd.name ORDER BY pd.name) AS driver_names
+  FROM property_relationships pr
+  JOIN properties pd ON pd.id = pr.from_id
+  WHERE pr.to_id = p.id
+    AND pr.relationship_type = ANY (ARRAY['driver_team', 'athlete_belongs_to_team'])
+    AND p.property_type = 'team'::property_type_enum
+) driver_rel ON true
+
+-- Latest follower count per platform, summed
+LEFT JOIN LATERAL (
+  SELECT COALESCE(SUM(lf.followers_end_of_day), 0) AS total_followers_latest
+  FROM (
+    SELECT DISTINCT ON (ppdm.platform) ppdm.followers_end_of_day
+    FROM property_platform_daily_metrics ppdm
+    WHERE ppdm.property_id = p.id
+    ORDER BY ppdm.platform, ppdm.metric_date DESC
+  ) lf
+) soc_foll ON true
+
+-- 30-day social aggregations
+LEFT JOIN LATERAL (
+  SELECT
+    SUM(ppdm.posts_count)                                          AS posts_30d,
+    SUM(ppdm.likes + ppdm.comments + ppdm.shares + ppdm.saves)    AS total_interactions_30d,
+    SUM(ppdm.followers_delta)                                      AS followers_net_30d,
+    CASE
+      WHEN SUM(ppdm.impressions) > 0
+      THEN ROUND(SUM(ppdm.likes + ppdm.comments + ppdm.shares + ppdm.saves)
+                 * 100.0 / SUM(ppdm.impressions), 2)
+      ELSE NULL
+    END                                                            AS engagement_rate_30d_pct
+  FROM property_platform_daily_metrics ppdm
+  WHERE ppdm.property_id = p.id
+    AND ppdm.metric_date >= CURRENT_DATE - INTERVAL '30 days'
+) soc_30d ON true
+
+-- Active platforms in the last 30 days
+LEFT JOIN LATERAL (
+  SELECT array_agg(DISTINCT ppdm.platform::text) AS platforms_active
+  FROM property_platform_daily_metrics ppdm
+  WHERE ppdm.property_id = p.id
+    AND ppdm.metric_date >= CURRENT_DATE - INTERVAL '30 days'
+    AND ppdm.posts_count > 0
+) soc_plat ON true
+
+-- Exclude sub-event occurrence rows (structural events only)
+WHERE NOT (
+  p.property_type = 'event'::property_type_enum
+  AND (p.metadata ->> 'event_role') = 'occurrence'
+);
 
 
 -- ============================================================
@@ -959,17 +1170,17 @@ SELECT compute_fanscore_windows('2026-02-28'::date, 'v1.0');
   USEFUL QUERIES:
 
   -- Top 10 properties by current FanScore:
-  SELECT name, property_type, latest_fanscore, latest_confidence_band, trend_30d
+  SELECT property_name, property_type, avg_score_30d, confidence_band_30d
   FROM v_property_summary_current
-  WHERE latest_fanscore IS NOT NULL
-  ORDER BY latest_fanscore DESC
+  WHERE suppression_reason_30d IS NULL
+  ORDER BY avg_score_30d DESC
   LIMIT 10;
 
   -- Properties with declining trend:
-  SELECT name, property_type, avg_30d, trend_30d
+  SELECT property_name, property_type, avg_score_30d, trend_value_30d
   FROM v_property_summary_current
-  WHERE trend_30d < 0
-  ORDER BY trend_30d ASC;
+  WHERE trend_value_30d < 0
+  ORDER BY trend_value_30d ASC;
 
   -- Engagement breakdown for a property:
   SELECT metric_date, platform, likes, comments, shares, impressions

@@ -13,8 +13,8 @@
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
-<div class="float-bar bar-left" role="banner">
+<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<header class="app-header" role="banner">
 
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
@@ -63,11 +63,26 @@
     </svg>
 
   <div class="bar-divider"></div>
-  <span class="bar-page-title" id="page-view-title">Opportunities</span>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="navigateTo('explore.html')">Explore</button>
+    <button class="chip" onclick="navigateTo('portfolio.html')">Portfolio</button>
+    <button class="chip" onclick="navigateTo('compare.html')">Compare</button>
+    <button class="chip" onclick="navigateTo('watchlist.html')">Watchlist</button>
+    <button class="chip" onclick="navigateTo('board.html')">Board</button>
+    <button class="chip active" onclick="navigateTo('opportunities.html')" aria-current="page">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RS
+    </button>
+  </div>
+</header>
 
-</div>
-
-<!-- Nav dropdown (opens below left bar) -->
+<!-- Nav dropdown -->
 <nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
 
   <div class="menu-cols">
@@ -83,6 +98,8 @@
       <div class="menu-col-divider"></div>
 
       <button class="menu-item" data-nav="Watchlist" onclick="closeNavMenu(); window.location.href='watchlist.html'">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="closeNavMenu(); window.location.href='board.html'">Board</button>
+      <button class="menu-item active" data-nav="Opportunities" onclick="closeNavMenu()" aria-current="page">Opportunities</button>
     </div>
 
   </div>
@@ -115,19 +132,6 @@
 
 </nav>
 
-<!-- ────────────────── RIGHT FLOATING BAR — profile ───────────────── -->
-<div class="float-bar bar-right">
-
-  <!-- Profile -->
-  <button class="bar-btn-profile" id="profile-btn"
-    onclick="toggleProfileMenu()"
-    aria-label="Account menu"
-    aria-expanded="false"
-    aria-controls="profile-menu">
-    RS
-  </button>
-
-</div>
 
 <!-- Profile dropdown -->
 <div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
@@ -239,7 +243,7 @@ function loadBridgeContent() {
 }
 
 function navigateToProp(slug) {
-  window.location.href = 'property.html?slug=' + slug;
+  window.location.href = 'property.html?slug=' + slug + '&ref=opportunities';
 }
 
 /* ── Menu listeners ────────────────────────────────────────────── */

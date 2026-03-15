@@ -32,7 +32,8 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY)
 // Shared types
 // ---------------------------------------------------------------------------
 
-export type PropertyType = 'driver' | 'team' | 'series' | 'event'
+// Matches the live property_type_enum (extended beyond the original 4-value schema)
+export type PropertyType = 'driver' | 'team' | 'athlete' | 'series' | 'event' | 'venue' | 'governing_body'
 export type ConfidenceBand = 'High' | 'Medium' | 'Low'
 
 export interface WindowSnapshot {

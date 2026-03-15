@@ -2,7 +2,7 @@
 
 SponsorAI — Working Context
 
-Last updated: 2026-03-14 (Property page — ecosystem relationship explanation layer)
+Last updated: 2026-03-15 (Cross-page workflow: navigation continuity + origin-aware back button)
 
 ---
 
@@ -31,7 +31,1328 @@ Full mode definitions, prompt templates, and workflow sequences: `project-docs/A
 
 ---
 
-## Last Session — 2026-03-14 (Property page — ecosystem relationship explanation layer)
+## Last Session — 2026-03-15 (Cross-page workflow: navigation continuity + origin-aware back button)
+
+### Context
+
+A focused audit-and-implement pass across the evaluation workflow (Explore → Watchlist → Board → Compare → Property). Each surface was audited for the single highest-value gap, fixed, then passed to the next surface. All changes are vanilla JS + CSS. No new dependencies. No build steps required.
+
+---
+
+### Task 1 — Board: clickable card names + dynamic header copy (Build)
+
+**What changed:**
+
+`app/board.html`:
+- Card name now renders as an anchor: `<a class="board-card-name-link" href="property.html?slug=...&ref=board">`. Previously plain text; the name was the most obvious navigation target on the card and did nothing.
+- `updateSubtitle(count)` now sets the explore-link text dynamically. When count is 0: "Browse Explore to add properties". When count >= 1: "Add more from Explore". Previously the "Browse Explore" copy was always visible as a static instruction, even with a full board.
+- `board-explore-link` id added to the anchor in the header HTML so `updateSubtitle()` can reach it.
+- CSS: `.board-card-name-link` (colour: inherit, no underline), hover underline with `text-underline-offset: 2px`, focus-visible outline using `var(--accent)`.
+
+---
+
+### Task 2 — Board: surface confidence_band_30d on cards (Build)
+
+**What changed:**
+
+`app/board.html`:
+- `confidence_band_30d` already fetched in the board query but never rendered.
+- New `.board-card-conf` column added to the signals row (third column, `margin-left: auto` to right-align). Shows value (capitalised, text-xs, text-3 colour) and "Confidence" label (10px, uppercase, letter-spacing).
+- Null suppressed: block only renders when `confBand` is truthy.
+- View button updated to include `&ref=board` for back-button origin tracking.
+- CSS: `.board-card-conf`, `.board-card-conf-val`, `.board-card-conf-label`.
+
+---
+
+### Task 3 — Compare: fix single-property arrival state (Build)
+
+**What changed:**
+
+`app/compare.html`:
+- Root cause: `updateComparison()` was gated entirely behind `slugA && slugB`. The `else` branch showed the content container but left the comparison body blank -- indistinguishable from a load failure.
+- Fix: added `if (selCount > 0) updateComparison()` in the `else` branch.
+- The partial-state message ("Select 1 more property to start comparing") already existed in `updateComparison()` for the 1-selection case -- it was just never triggered on initial load when arriving via `?a=slug` from Board.
+
+---
+
+### Task 4 — Watchlist: clickable item names (Build)
+
+**What changed:**
+
+`app/watchlist.html`:
+- Item name now renders as an anchor: `<a class="watchlist-item-name-link" href="property.html?slug=...&ref=watchlist">`. Previously plain text.
+- View button updated to include `&ref=watchlist`.
+- CSS: `.watchlist-item-name-link` (same pattern as board-card-name-link).
+
+---
+
+### Task 5 — Property page: Board button navigates instead of removes (Build)
+
+**What changed:**
+
+`app/property.html`:
+- `toggleBoard()` previously called `SAI_STORAGE.board.removeFromBoard(slug)` when property was already tracked. A user mid-evaluation clicking the button would silently remove it with no undo.
+- Fix: when already on board, `toggleBoard()` now calls `navigateTo('board.html')` instead.
+- `updateBoardButton()` updated: button title is "View on Board" when tracked, "Add to Board" when not.
+- Removal is still available from the Board's own remove button.
+
+---
+
+### Task 6 — Property page: origin-aware back button via ?ref= parameter (Build)
+
+**What changed:**
+
+`app/property.html`:
+- Added `setupBackButton()`. Reads `?ref=` from the URL. Maps known values (board, watchlist, opportunities, portfolio, explore) to a destination page and aria-label. Falls back to Explore for unknown or missing ref.
+- `init()` calls `setupBackButton()` before `loadProperty()` so the button is correct immediately, independent of data loading.
+
+**Entry-point files updated with &ref= parameters:**
+- `app/board.html` -- card name link + View button: `&ref=board`
+- `app/watchlist.html` -- item name link + View button: `&ref=watchlist`
+- `app/opportunities.html` -- `navigateToProp()`: `&ref=opportunities`
+- `app/portfolio.html` -- View link: `&ref=portfolio`
+- `app/components/panel.js` -- "Full profile" button + "Open full property profile" CTA: `&ref=explore`
+
+Note: property-to-property self-links (ecosystem cards, similar opportunities) deliberately omit `ref`. Default fallback of Explore is acceptable.
+
+---
+
+### Remaining gaps flagged (not addressed in this session)
+
+- `.prop-action-btn.active` has no CSS differentiation -- board/compare active states rely only on label text change (flagged in previous session's audit, still open)
+- Ecosystem eco-cards use `minmax(160px, 1fr)` which collapses to 1 column on mobile (2 cols would be better at ≤640px, matching the similar-grid fix)
+- `portfolio.html` View link uses an inline `style=""` attribute for colour and font-size rather than a semantic CSS class
+- Board has no empty-state CTA for stages other than the overall empty board (per-column empty states exist, but no "Add from Explore" shortcut per-column)
+
+---
+
+### Recommended next step
+
+`.prop-action-btn.active` visual differentiation: add a subtle accent border or fill to confirm "On Board" / "In Compare" status. This is the highest-value cosmetic gap on the property page and a direct follow-on to the Board button behaviour fix.
+
+---
+
+## Last Session — 2026-03-15 (Property page: Smart Recommendations + completeness audit)
+
+### Task -- Smart Recommendations: Similar Opportunities section (Build)
+
+**What changed:**
+
+`app/property.html`:
+- Added `<section id="similar-section">` between Ecosystem and Recent Posts (hidden until populated)
+- Added `scoreSimilarity(row, current)` -- scores a candidate on sport (+3), type (+2), region (+2), audience size (+1). Score is internal; only the highest-priority reason label is shown per card
+- Added `loadSimilarProperties()` -- fetches up to 30 candidates from `v_property_summary_current` filtered by `sport=eq.{sport}` (fallback: `property_type=eq.{type}`), excludes current slug, scores client-side, takes top 4
+- Added `renderSimilarOpportunities(scored)` -- renders 4 compact cards using the `prop-eco-card` pattern extended with a `.similar-reason` label badge
+- Wired `loadSimilarProperties()` call immediately after `renderProperty()` in `loadProperty()`
+- Added 11 CSS rules for `.similar-grid`, `.similar-card`, `.similar-card-top`, `.similar-name`, `.similar-card-meta`, `.similar-type`, `.similar-flag`, `.similar-followers`, `.similar-reason` (semantic tokens only)
+- Fixed pre-existing regression: `document.getElementById('page-view-title')` null reference (element removed during header unification) -- added null guard
+
+**Reason labels used:**
+- "Same sport" (sport match, weight 3) -- highest priority
+- "Also a [type]" e.g. "Also a team" (type match, weight 2)
+- "Same region" (region match, weight 2)
+- "Similar audience size" (followers within 0.3x--3x ratio, weight 1)
+
+---
+
+### Task -- Property page completeness and consistency audit (Review + Build)
+
+**Audit findings:**
+
+1. Section order: Property Header → FanScore → Audience Signals → Momentum → Ecosystem → Similar Opportunities → Recent Posts. Order is logical and no changes needed.
+2. Spacing: all sections use `.prop-section` consistently with `margin-bottom: var(--spacing-4xl)`, `padding-bottom: var(--spacing-3xl)`, `border-bottom: 1px solid var(--border)`. Last-child rule removes separator correctly.
+3. Hidden section reveal: Ecosystem, Similar, and Recent Posts all use the same `section.style.display = 'block'` pattern on data arrival. Consistent.
+4. Card consistency between Ecosystem and Similar: both use the same compact card pattern (name, type badge, numeric value, divider line for secondary label). Ecosystem shows FanScore number; Similar shows followers + reason label. Different data emphasis appropriate to each section's purpose.
+5. Recent Posts uses a list pattern (not cards), which is appropriate for content -- no inconsistency.
+6. **Zero `@media` queries on property page** -- The only page in the app with no responsive breakpoints. The `.prop-header` flex row has `flex: 0 0 240px` on the hero; on a 375px screen this leaves ~111px for property name, bio, and actions. Structurally broken on mobile.
+7. **`renderSignalCard` `isFollowers` parameter unused** -- Followers delta was displayed as a raw integer (e.g. "+50000") while the value above it showed a formatted compact number ("50k"). Bug: the parameter existed to handle this but the function never used it.
+8. `.prop-action-btn.active` has no visual CSS differentiation. The board button gets class `active` but no styling for that state. Minor gap.
+
+**Chosen improvement: property page mobile responsive layout**
+
+The absence of any responsive CSS was the single highest-value gap -- structural layout break on mobile affecting every user who navigates to a property on a phone or tablet. Second fix included: follower delta formatting (one-line, pre-existing bug with an already-existing parameter stub).
+
+**What changed:**
+
+`app/property.html`:
+- Fixed `renderSignalCard`: `isFollowers` parameter now used. Follower deltas formatted with `fmtFollowers(Math.abs(delta))`, falling back to `String(Math.abs(delta))`. Delta now reads "+50k" not "+50000"
+- Added `@media (max-width: 640px)` block: `.prop-header` stacks vertically (`flex-direction: column`); `.prop-hero` goes full width at 200px height; `.prop-name` scales down to 22px; `.prop-flag` scaled to match; `.similar-grid` locks to 2-column on narrow phones
+- Added `@media (min-width: 641px) and (max-width: 1024px)` block: `.prop-hero` reduced to 180x180px; `.prop-name` scales to 26px. Keeps horizontal layout but reduces visual bulk
+
+**Files changed:**
+- `app/property.html` -- 2 changes: `renderSignalCard` fix + 2 responsive media query blocks
+
+---
+
+**Remaining property-page gaps:**
+
+- `.prop-action-btn.active` has no CSS differentiation -- board/compare active states rely only on label text change
+- Ecosystem eco-cards use `minmax(160px, 1fr)` which collapses to 1 column on mobile (2 cols would be better at ≤640px, matching the similar-grid fix)
+- No loading indicator while Similar Opportunities loads (section simply appears when ready; consistent with Ecosystem and Posts behaviour, so not urgent)
+- FanScore section title always renders even when suppressed -- minor (suppression notice is shown in its place, section title remains)
+
+**Recommended next step:**
+- Address the `.prop-action-btn.active` state gap with a subtle accent border or fill change to confirm confirmed/watching board status visually
+
+---
+
+## Last Session — 2026-03-15 (App header unification)
+
+### Task -- Unify header visual language across all inner app pages (Build)
+
+**Problem:**
+
+Six pages (portfolio, compare, watchlist, board, opportunities, property) used a two-bar floating pill system: `.float-bar.bar-left` (logo + hamburger + nav, positioned `left: 24px; right: 88px; top: 24px`) and `.float-bar.bar-right` (profile button, positioned `right: 24px; top: 24px`). These had heavy pill chrome: gradient white background, 8px border-radius, outer box-shadow, inner border. Explore used a calmer in-page `.eh-brand` header with no chrome. The two header systems felt like different products.
+
+**What changed:**
+
+`app/styles.css`:
+- Added `.app-header`: `position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 var(--spacing-xl); gap: var(--spacing-lg); z-index: 200` -- full-width, edge-to-edge, no border-radius, no gradient, no shadow pill
+- Added `.app-header .brand-logo`: `height: 28px` -- matches Explore's editorial logo scale (was 18px in floating bar)
+- Added `.app-header .btn-group`: strips pill box styling, fills full height of header
+- Added `.app-header .bar-btn`: transparent, neutral `color: var(--text-3)`, no box-shadow -- lighter button feel
+- Added `.app-header .bar-btn svg path`: `stroke: currentColor` -- overrides hardcoded purple `#9B8AFB` SVG attribute, icon inherits neutral button colour
+- Added `.app-header-right`: `display: flex; align-items: center; gap: var(--spacing-sm); margin-left: auto` -- right-side control group
+- Updated `.nav-menu { top: 73px }` to `top: 65px` (56px header + 9px gap)
+- Updated `.profile-menu { top: 78px }` to `top: 65px` (consistent with nav-menu)
+- Updated `.content { padding: 88px ... }` to `padding: 72px ...` (56px header + 16px breathing room)
+- Updated `@media (max-width: 640px) .content` padding from 80px to 68px; added `.app-header { padding: 0 var(--spacing-md) }` mobile override
+- Updated `@media (641px-1024px) .content` padding from 88px to 72px
+- Updated mobile `.chat-panel { top: 88px }` to `top: 72px`
+
+`app/portfolio.html`, `app/compare.html`, `app/watchlist.html`, `app/board.html`, `app/opportunities.html`:
+- Replaced `<div class="float-bar bar-left" role="banner">` with `<header class="app-header" role="banner">`
+- Removed closing `</div>` of bar-left and entire `<div class="float-bar bar-right">` block
+- Wrapped profile button in `<div class="app-header-right">` inside the unified `</header>`
+
+`app/property.html`:
+- Same structural change as above
+- Right section contains: back button + watchlist button + `.bar-divider-v` + profile button -- all within `.app-header-right`
+- The `body.page-property .bar-left { right: 216px }` CSS override is now a no-op (no `.bar-left` on property page) -- retained for safety, harmless
+
+**What was not changed:**
+- `app/control-room.html`: internal tool, not in scope
+
+**Files changed:**
+- `app/styles.css` -- `.app-header` component, positioning updates, padding updates
+- `app/portfolio.html` -- header structure replaced
+- `app/compare.html` -- header structure replaced
+- `app/watchlist.html` -- header structure replaced
+- `app/board.html` -- header structure replaced
+- `app/opportunities.html` -- header structure replaced
+- `app/property.html` -- header structure replaced (with back + watchlist + profile in right section)
+
+---
+
+### Task -- Unify Explore header with the shared app-header system (Build)
+
+**Problem:**
+
+After the 6-page inner app header unification, Explore still used a dual-system: two hidden `.float-bar` divs (suppressed by `body.page-explore .bar-left/right { display: none }`) PLUS an active `.eh-brand` div living inside `.explore-header` in the page flow. `.eh-brand` contained the hamburger, wordmark SVG, divider, and nav chips. Explore had no fixed header -- nav was in-flow at the top of content. Sticky bar was positioned relative to the old 24px+40px float-bar position (`top: 64px`). Content needed only `padding-top: var(--spacing-6xl)` (48px) because no fixed bar was clearing it. Both systems needed reconciling to the shared `.app-header` component.
+
+**What changed:**
+
+`app/explore.html`:
+- Replaced `<div class="float-bar bar-left" role="banner">` with `<header class="app-header" role="banner">`
+- Replaced the old `<span class="bar-page-title">Explore</span>` label approach with a full nav chip set (Explore / Portfolio / Compare / Watchlist / Board / Opportunities) matching the other 6 pages. `Explore` chip has `class="chip active"` and `aria-current="page"`
+- Added `<div class="app-header-right">` containing the profile button only (Explore has no back/watchlist controls)
+- Removed the `<div class="float-bar bar-right">` block (had only the profile button)
+- Removed the entire `.eh-brand` div from inside `.explore-header`. This was a 10,355-character block containing a 32px wordmark SVG, hamburger button, bar-divider, and nav chip set. Removed via depth-tracking Python script due to the large inline SVG on a single line. `.explore-header` now opens directly with `.eh-intro`
+- Hamburger in the new app-header uses `id="menu-btn"` (consistent with all other pages), replacing the old `id="eh-menu-btn"` in `.eh-brand-menu`. `toggleNavMenu()` now targets `#menu-btn` correctly
+
+`app/styles.css`:
+- Removed `body.page-explore .bar-left, body.page-explore .bar-right { display: none }` -- those elements no longer exist on Explore
+- Removed `@media (min-width: 641px) { body.page-explore .eh-brand-menu { display: none } }` -- `.eh-brand-menu` no longer in Explore's DOM
+- Updated section comment block at the Explore overrides section to reflect the new architecture
+- Updated `.eh-sticky-bar { top: 64px }` to `top: 56px` -- aligns to the bottom of `app-header` (height 56px)
+- Updated `body.eh-sticky-visible .content { padding-top: 112px }` to `padding-top: 104px` -- recalculated: app-header 56px + sticky bar 44px = 100px + 4px gap
+- Updated `body.page-explore .content` block: removed `padding-top: var(--spacing-6xl)` override (Explore now shares the global 72px clearance rule). Kept `padding-left: 64px; padding-right: 64px` (grid-appropriate horizontal padding). Updated comment
+- Removed `body.page-explore.eh-sticky-visible .content` block entirely -- this suppressed the global sticky-visible padding-top adjustment on Explore. With fixed app-header, Explore needs the same clearance as all other pages
+- Removed `body.has-active-filter .eh-brand { margin-bottom: var(--spacing-xl) }` -- `.eh-brand` no longer in DOM
+
+**Explore-specific overrides removed (now aligned with global rules):**
+- `body.page-explore .bar-left/right { display: none }` -- removed (no float-bars on Explore)
+- `body.page-explore .eh-brand-menu { display: none }` (media query) -- removed
+- `body.page-explore .content { padding-top }` override -- removed (global 72px rule now applies)
+- `body.page-explore.eh-sticky-visible .content` block -- removed
+- `body.has-active-filter .eh-brand { margin-bottom }` -- removed
+
+**Explore-specific overrides retained (intentional differences from other pages):**
+- `body.page-explore .content { padding-left: 64px; padding-right: 64px }` -- wider horizontal padding suits the card grid
+- `body.page-explore .bar-bottom-meta { display: none }` -- Explore uses the bottom meta/sort bar differently
+- `body.page-explore .sort-menu { bottom: 16px }` -- sort menu anchor
+- `body.page-explore .eh-type-tabs { border-bottom: none }` and `.eh-tab { margin-bottom: 0 }` -- editorial tab treatment
+
+**Edge cases:**
+- `.eh-brand-menu` CSS component styles (the base button styles for the hamburger in `.eh-brand`) remain in `styles.css`. They are now dead code since `.eh-brand-menu` is no longer in the DOM. They are harmless -- no visual or behavioural side effects. Can be removed in a future CSS audit pass
+- `body.page-property .bar-left { right: 216px }` is also now dead code (no `.bar-left` on property page after the previous task). Retained for safety. Same future-audit note applies
+
+**Files changed:**
+- `app/explore.html` -- header structure replaced, `.eh-brand` block removed from content
+- `app/styles.css` -- 7 Explore-specific CSS changes (5 removals, 2 updates)
+
+---
+
+**Recommended next step:**
+
+Header system is now unified across all 7 pages. Possible follow-on work:
+- Audit the Portfolio feature for workflow gaps similar to the Watchlist/Board/Compare triangle
+- Improve Explore discovery signals (surfacing more actionable property context earlier)
+- Property page header: the back-btn currently hardcodes `navigateTo('explore.html')` -- consider returning to the actual referring page if referrer context is available
+- CSS audit pass: remove dead `.eh-brand-menu` component styles and `body.page-property .bar-left` override
+
+---
+
+## Previous Session — 2026-03-15 (Compare → Board handoff — workflow loop closed)
+
+### Task -- Add to Board action on Compare properties (Build)
+
+**Audit findings:**
+
+Compare rendered a `<table>` with a `<thead>` row per property (name + type badge) and 11 `<tbody>` data rows (FanScore, trend, confidence, followers, etc.). After the table, a page-level actions row: "Save as link" and "Clear selection". Zero per-property output affordances anywhere. No way to act on analysis conclusions.
+
+**What changed:**
+
+`app/compare.html`:
+- Added `addToBoard(slug)` function: calls `SAI_STORAGE.board.addToStage(slug, 'watching')`, then updates the matching button(s) in-place via `document.querySelectorAll('.compare-board-btn[data-slug="..."]')` -- avoids a full API re-fetch
+- In `renderComparisonTable(props)`: added a "Board" row at the bottom of `<tbody>`, after all data rows, before `</tbody></table>`
+  - Label cell: `compare-td-label` with text "Board" -- aligns with the label column
+  - Value cells: per-property, one of:
+    - Not on board: `<button class="compare-board-btn" data-slug="..." onclick="addToBoard(slug)">Add to Board</button>`
+    - Already on board: `<button class="compare-board-btn compare-board-btn-active" data-slug="..." onclick="navigateTo('board.html')" title="On Board: [Stage]">On Board</button>`
+- Added `.compare-board-btn` and `.compare-board-btn-active` CSS classes (semantic tokens only, mirrors `.watchlist-action-onboard` pattern)
+
+**Design decisions:**
+
+Row placement (bottom of `<tbody>`) chosen over:
+- Header placement: would clutter the `<th>` which already has name + type badge
+- Below-table placement: would break the column alignment -- the action would no longer align per-property
+
+In-place DOM update chosen over full `updateComparison()` re-call: avoids a network round-trip for what is purely a local state change.
+
+**Workflow chain -- now complete:**
+
+| From | To | How |
+|---|---|---|
+| Watchlist | Board | "Add to Board" button -- adds to "watching" stage |
+| Board | Compare | "Compare" button -- opens Compare with slot A pre-filled |
+| Compare | Board | "Add to Board" in Board row -- adds to "watching" stage |
+
+The loop is now functionally closed. A user can:
+1. Save a property to Watchlist
+2. Move it to Board for active evaluation
+3. Open it in Compare from Board
+4. Add additional comparisons from Compare back to Board
+5. Navigate directly to Board from Compare via "On Board"
+
+**Remaining gaps:**
+
+- Compare → Watchlist: no "Add to Watchlist" from Compare. Low priority -- the Watchlist is passive tracking; if you're already comparing, you're past that stage.
+- Watchlist → Compare multi-slot: the Watchlist "Compare" button only pre-fills slot A. Slots B/C require manual selection.
+- Board → Compare multi-slot: same limitation -- only slot A pre-filled from a single card action.
+- These are acceptable v1 constraints. Multi-slot pre-fill from external navigation would require a more complex URL construction pattern.
+
+**Files changed:**
+- `app/compare.html` -- `addToBoard()`, Board row in `renderComparisonTable()`, `.compare-board-btn` / `.compare-board-btn-active` CSS
+
+---
+
+**Recommended next step:**
+
+The Watchlist / Board / Compare workflow loop is complete. Next focus should be product-level: either (a) improve the property discovery flow on Explore (surfacing more actionable signals), or (b) audit the Portfolio feature for similar workflow gaps. See DEVELOPMENT_LEDGER for the wider backlog.
+
+---
+
+## Previous Session — 2026-03-15 (Board → Compare handoff)
+
+### Task -- Add Compare action to Board cards (Build)
+
+**Audit findings:**
+
+Board card actions before this change: `View | Move | [×]`
+
+No path from Board to Compare existed. A property in active evaluation on the Board had no route to side-by-side analysis without navigating away manually. This was the last missing link in the Watchlist / Board / Compare workflow chain.
+
+Compare URL param pattern (confirmed from compare.html): `compare.html?a=[slug]` pre-fills slot A. The page reads `?a=`, `?b=`, `?c=` params on load, then falls back to `sai-compare` storage. Slots B and C are left for the user to fill from the Compare selector.
+
+**What changed:**
+
+`app/board.html` -- `renderBoardCard()` function:
+- Added Compare button between the Move dropdown and the Remove button
+- `<button class="board-card-btn" onclick="navigateTo('compare.html?a=[slug]')" title="Compare in side-by-side view">Compare</button>`
+- Uses the same `.board-card-btn` class and `flex: 1` layout as the View button
+- No new CSS required -- existing `.board-card-btn` styles apply
+- Comment updated from "View + Move dropdown + Remove" to "View + Move dropdown + Compare + Remove"
+
+**Layout impact:**
+
+Three `flex: 1` items (View / Move / Compare) plus the 26px `flex: 0 0 auto` remove button. Cards are `minmax(230px, 1fr)` -- tight at 230px but workable; grows naturally with column width at wider viewports. Labels are short (4 / 4 / 7 chars).
+
+**Workflow chain -- current state:**
+
+- Watchlist → Board: Add to Board button (added previous session). Moves slug to Board "watching" stage.
+- Board → Compare: Compare button (this session). Opens Compare with slot A pre-filled.
+- Compare → Board/Watchlist: no output affordances. Compare remains a pure read surface.
+
+**Files changed:**
+- `app/board.html` -- Compare button in `renderBoardCard()` actions block
+
+---
+
+## Previous Session — 2026-03-15 (Navigation refactor complete + Watchlist/Board/Compare audit + Add to Board feature)
+
+### Task 1 -- Navigation refactor: nav into header bar, all 7 pages (Build)
+
+**What changed:**
+
+`app/styles.css`:
+- `.bar-left` extended to `right: 88px; overflow: hidden` -- spans the full header width minus the right bar
+- `body.page-property .bar-left { right: 216px; }` -- compensates for property page's wider bar-right (back + watchlist + divider + profile = ~167px)
+- `.bar-centre` redefined from `position: fixed; top: 24px; left: 50%; transform: translateX(-50%)` to `display: flex; align-items: center; height: 100%` -- plain flex child of its parent
+- `.bar-left .btn-group` override: strips border, shadow, border-radius, background; sets height 100% -- pills become flush with the header bar
+- `.eh-brand .btn-group` override: same strip + explicit `height: 32px` (`.eh-brand` has auto height, not resolvable as 100%)
+- `.eh-brand-menu` hide rule scoped to `@media (min-width: 641px)` only -- mobile Explore retains hamburger access
+- Explore content padding reverted from hardcoded values to `var(--spacing-6xl)`
+- Mobile rule cleaned of now-redundant Explore overrides
+
+All 7 pages (`board.html`, `compare.html`, `watchlist.html`, `portfolio.html`, `opportunities.html`, `property.html`, `explore.html`):
+- Standalone `<!-- CENTRE NAV BAR -->` block removed from between nav-menu and bar-right
+- `bar-page-title` removed from bar-left (active chip communicates current page)
+- `<nav class="bar-centre btn-group">` with 6 chips moved inside bar-left (all pages except Explore)
+- Opportunities added to all dropdown right columns
+- Active chip (`class="chip active"` + `aria-current="page"`) set per page
+- Explore: nav placed inside `.eh-brand` after the logo SVG (bar-left hidden on Explore page)
+
+**Verified:** Desktop layout correct across all 7 pages. Explore nav integrates cleanly into editorial header. Mobile falls back to hamburger. Property page bar-left does not overlap wider bar-right.
+
+**Files changed:**
+- `app/styles.css`
+- `app/board.html`, `app/compare.html`, `app/watchlist.html`, `app/portfolio.html`, `app/opportunities.html`, `app/property.html`, `app/explore.html`
+
+---
+
+### Task 2 -- Watchlist / Board / Compare audit + Add to Board feature (Build)
+
+**Audit findings:**
+
+Three distinct surfaces, but with one broken workflow and one conceptual overlap:
+
+- **Watchlist** (`watchlist.html`): flat passive tracking list. Actions per card: View / Compare / Remove. No path to Board.
+- **Board** (`board.html`): active 4-stage kanban (watching / shortlist / evaluation / confirmed), drag-drop between stages. Actions: View / Move / Remove. No Compare action anywhere.
+- **Compare** (`compare.html`): side-by-side analysis up to 3 properties (slots A/B/C), populated from URL params or `sai-compare` storage. Pure read surface -- no output affordances (no "save to Watchlist", no "add to Board").
+
+**Gaps identified:**
+1. No Watchlist → Board path. A user tracking something cannot move it into active evaluation without navigating to Board separately and manually adding it.
+2. No Board → Compare path. The most carefully evaluated properties have no one-click route to side-by-side comparison.
+3. Conceptual overlap: Board "watching" stage and Watchlist both represent "I'm keeping an eye on this" -- the distinction between the two features is unclear without a deliberate handoff action.
+
+**Chosen improvement:** "Add to Board" on Watchlist cards (highest value -- resolves both the workflow gap and the conceptual overlap in one action).
+
+**What changed:**
+
+`app/watchlist.html`:
+- Added `addToBoard(slug)` function: calls `SAI_STORAGE.board.addToStage(slug, 'watching')`, then `renderWatchlist()` to reflect the new state immediately
+- `renderWatchlist()`: computes `boardStage = SAI_STORAGE.board.getSlugStage(prop.slug)` per card
+  - Not on board: renders `<button ... onclick="addToBoard(slug)">Add to Board</button>`
+  - Already on board: renders `<button class="watchlist-action-onboard" onclick="navigateTo('board.html')" title="On Board: [Stage]">On Board</button>` -- accent-styled, navigates to Board
+- Added `.watchlist-action-onboard` CSS class: `background: var(--accent-soft); color: var(--accent); border-color: transparent` -- signals confirmed active state; semantic tokens only
+
+**Remaining gaps (deferred):**
+- Board → Compare path still absent. Adding a Compare button to Board cards is the natural next step.
+- Compare has no "save to Board/Watchlist" output affordances -- pure analysis only.
+- Watchlist Compare button only pre-fills slot A (`compare.html?a=[slug]`); slots B/C require manual selection on the Compare page.
+
+**Files changed:**
+- `app/watchlist.html` -- `addToBoard()`, `renderWatchlist()` board state branch, `.watchlist-action-onboard` CSS
+
+---
+
+**Recommended next step:**
+
+Done in the following session -- Compare button added to Board cards, and Add to Board added to Compare columns. The Watchlist / Board / Compare workflow loop is now fully closed.
+
+---
+
+## Previous Session — 2026-03-15 (Final sharing-readiness audit -- full anon write lockdown, CR sign-out, gitignore hygiene)
+
+### Task -- Final sharing-readiness audit + remaining write hardening (Build + Security + Documentation)
+
+**Audit findings (pre-implementation):**
+
+Three writable surfaces remained after the CR auth guard session:
+
+- `control_room_issue_states`: anon INSERT + UPDATE open. UI sets issue acknowledged/resolved states from the CR. With CR now authenticated, anon write was redundant and exploitable (external actor could flip acknowledged states on known issue IDs).
+- `control_room_log`: anon INSERT open. Append-only audit log for CR actions. External actor could inject arbitrary log rows.
+- `entity_images`: anon INSERT + UPDATE open. Image scan results written here by the CR scan workflow. With CR authenticated, anon write was only needed because the CR previously ran as anon. Now redundant.
+
+Additionally: two gitignore issues were present. `app/explore.html` was listed in `.gitignore` due to a pre-refactor state when it contained inline API keys. After the 2026-03-13 config refactor, keys moved to `app/config.js` -- `explore.html` contained no secrets and was incorrectly untracked. `_internal/` contained prototype archives (tracked in git) with the anon key embedded; though the anon key is not a true secret in the Supabase security model, the files were hygiene noise.
+
+CR had no sign-out flow. An authenticated user could not explicitly sign out; the session would expire naturally.
+
+**What changed:**
+
+Supabase migration `finalise_anon_write_lockdown` (applied 2026-03-15):
+- `control_room_issue_states`: anon INSERT + UPDATE + DELETE policies dropped; anon SELECT retained; authenticated retains full access.
+- `control_room_log`: anon INSERT policy dropped; anon SELECT retained; authenticated retains full access.
+- `entity_images`: anon INSERT + UPDATE policies dropped; anon SELECT retained; authenticated retains full access.
+
+Full DB scan post-migration: only `email_signups` anon INSERT remains. This is intentional -- the public website signup form requires it. All other writable tables are now authenticated-only for writes.
+
+`app/control-room.html`:
+- Added `.cr-signout-btn` CSS class to styles block (semantic tokens only; compact inline button style).
+- Added sign-out `<button>` to page header alongside the existing title.
+- Added `crSignOut()` function: creates a transient Supabase client, calls `signOut()`, redirects to `control-room-login.html` on completion or error.
+
+`.gitignore`:
+- Removed `app/explore.html` entry (no longer contains secrets; safe to track).
+- Added `_internal/` entry with explanatory comment (prototype archives, may contain historical config values from before the refactor).
+- Updated comment block to clarify the current state of the config section.
+
+**Verified (post-migration full policy scan):**
+
+Remaining anon write access across entire database:
+```
+email_signups | anon_insert_email_signups | {anon} | INSERT
+```
+That is the complete list. All other tables: anon SELECT only (or no anon policy at all).
+
+**Sharing-readiness conclusion:**
+
+Ready for controlled sharing (trusted preview audience with URL).
+
+Remaining caveats (acceptable for controlled sharing, not production-public):
+1. Anon key visible in DevTools Network tab (by design in Supabase security model; RLS is the security layer). Must be backend-proxied before any production-public launch.
+2. `app/ai.js` contains a hardcoded Supabase project URL (used for Edge Function calls). Not a secret -- same project URL as in config.js. No Anthropic or other sensitive keys are present anywhere in the codebase.
+3. No rate limiting on `email_signups` INSERT at the DB layer (Supabase has project-level rate limits).
+4. CR login requires a valid Supabase Auth user to exist in the project. First-time access requires an admin to pre-create the user or enable self-signup for the project.
+
+**Files changed:**
+- `app/control-room.html` -- `.cr-signout-btn` CSS, sign-out button in header, `crSignOut()` function
+- `.gitignore` -- `app/explore.html` removed; `_internal/` added with comment
+- Supabase: migration `finalise_anon_write_lockdown`
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Issue 2 marked FULLY HARDENED; migration row added; last-updated updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-15 (Control Room auth guard -- session JWT, login page, write policy tightening)
+
+### Task -- Control Room auth guard + write hardening (Build + Security)
+
+**Audit findings (pre-implementation):**
+
+`control-room.html` had no auth at all. Page loaded freely for any visitor with the URL. 43 individual fetch calls all used `'Bearer ' + API_KEY` (anon key), including all INSERTs and UPDATEs to `ingestion_runs` and `ingestion_run_checklist`. The `callRPC()` helper also used the anon key.
+
+No session variable existed. `init()` IIFE loaded all data immediately with no gate. The Supabase JS SDK was not loaded on the page -- only the raw fetch REST pattern was used.
+
+`ingestion_runs` and `ingestion_run_checklist` had permissive anon write policies (INSERT + UPDATE + ALL respectively) because the CR used the anon key and needed table-level write permission to function.
+
+**Current auth/write path (before this change):**
+
+Any visitor with the CR URL could: load the page, read all ingestion runs and audit data, write new run records, overwrite run status, modify checklist items, trigger image scans, archive/delete runs -- all as the anon role.
+
+**What changed:**
+
+`app/control-room.html`:
+- Added Supabase JS CDN `<script>` to `<head>` (before config.js)
+- Added `style="visibility:hidden"` to `<main id="cr-main" class="cr-shell">` -- page stays hidden until auth confirmed
+- Added `var _crToken = API_KEY;` at top of script block (safe fallback; replaced after auth)
+- Restructured `init()` IIFE: non-data UI setup (theme, season default, form preview wiring) runs immediately; data loads are deferred to new `_crLoadData()` function
+- Auth guard added to `init()`: creates Supabase client from `API_URL.replace('/rest/v1', '')` + `API_KEY`; calls `getSession()`; if no session redirects to `control-room-login.html`; if session found sets `_crToken = session.access_token` and reveals the page; catch block redirects on error
+- All 43 instances of `'Bearer ' + API_KEY` replaced with `'Bearer ' + _crToken` (global replace)
+
+`app/control-room-login.html` (new file):
+- Minimal magic link login page. Email field, submit sends OTP via `signInWithOtp()`, redirects to `control-room.html` after auth. Same pattern as `website/investor-login.html`. Already-authenticated visitors are forwarded straight to the CR. Inline Supabase JS SDK + config.js. Light/dark theme sync from localStorage.
+
+Supabase migration `tighten_cr_table_write_policies` (applied 2026-03-15):
+- `ingestion_runs`: all policies dropped; replaced with anon SELECT only + authenticated ALL.
+- `ingestion_run_checklist`: all policies dropped; replaced with anon SELECT only + authenticated ALL.
+
+**Verified (post-migration policy state):**
+```
+ingestion_run_checklist | anon_read_ingestion_run_checklist     | {anon}          | SELECT
+ingestion_run_checklist | authenticated_all_ingestion_run_checklist | {authenticated} | ALL
+ingestion_runs          | anon_read_ingestion_runs               | {anon}          | SELECT
+ingestion_runs          | authenticated_all_ingestion_runs       | {authenticated} | ALL
+```
+
+**Files changed:**
+- `app/control-room.html` -- Supabase CDN, `visibility:hidden`, `_crToken`, auth guard in `init()`, `_crLoadData()`, 43 token replacements
+- `app/control-room-login.html` -- new file (magic link login page)
+- Supabase: migration `tighten_cr_table_write_policies`
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Issue 2 updated (SUBSTANTIALLY HARDENED); migration row added; CR row updated to v1.2
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+**Remaining gaps:**
+- `control_room_issue_states`: anon INSERT + UPDATE still open. Low-risk (no grid-breaking data possible from this table). Could be tightened in a follow-up pass now that CR sends session JWT.
+- `control_room_log`: anon INSERT still open. Append-only; no data corruption possible.
+- `entity_images`: anon INSERT + UPDATE retained. With CR now authenticated, these could be tightened to authenticated-only in a follow-up pass.
+- The CR sign-out flow is not yet wired -- an authenticated user cannot sign out from within the Control Room. The session will expire naturally. A sign-out button could be added to the CR header in a follow-up.
+- `app/config.js` still exposes the anon key in DevTools (as before). Must be backend-proxied before wider sharing -- unchanged from prior state.
+
+**Recommended next step:**
+The major open security items are now closed. The prototype is in a credible state for controlled sharing. Consider a full pre-sharing checklist: rotate any externally-seen API keys, confirm gitignore covers config.js/website/config.js, do a final Supabase policy audit, and verify the investor portal magic link flow still works end-to-end.
+
+---
+
+## Previous Session — 2026-03-15 (Audience filter wired on Explore -- Explore v1 filter set complete)
+
+### Task -- Wire Audience filter on Explore page (Build)
+
+**Audit findings (pre-implementation):**
+
+`c.followers` is the card-level field for `total_followers_latest`, mapped in `data.js` (`followers:n(r.total_followers_latest)`). Confirmed present on all fetched card objects; null for properties with no social accounts. The Explore header had a disabled stub `<button disabled title="Coming soon">Audience</button>`. All filter plumbing (state pattern, CSS classes, outside-click, Escape, reset, isActive) was already established by Sport / Geography / Confidence -- this was a straight application of the same pattern.
+
+**Audience data distribution (from v_property_summary_current):**
+
+Buckets applied to `total_followers_latest`:
+- Under 100k (`small`): smaller team/venue/event properties
+- 100k--1M (`mid`): mid-tier series and athletes
+- 1M+ (`large`): top athletes (Valentino Rossi: 8.6M, etc.) and major series
+
+Properties with null `total_followers_latest` (no social data): excluded from all buckets. No "No audience data" option added in v1 -- clean and consistent with v1 scope.
+
+**Decision notes:**
+
+Audience omitted from contextual title for the same reason as Confidence: adding a 5th dimension (e.g. "Motorsport · United Kingdom · Athletes · 1M+") would be too noisy. Audience participates in `isActive` (drives Clear button and `has-active-filter` body class) but not in `parts[]`.
+
+**What changed:**
+
+`app/ui.js`:
+- Added `_audFilter`, `_audMenuOpen`, `_AUD_BTN_LABELS` block before the Confidence filter section
+- Added `openAudMenu()`, `closeAudMenu()`, `toggleAudMenu()`, `applyAud(aud)` functions
+- `renderGrid()`: added audience bucket filter after confidence filter, before search
+- `resetExplore()`: added `_audFilter = null`; added aud button label/active reset block
+- `updateExploreContext()`: added `hasAud = !!_audFilter`; included in `isActive`
+
+`app/explore.html`:
+- Replaced disabled stub with `.aud-filter-wrap > #aud-btn + #aud-menu` (All audience sizes / Under 100k / 100k--1M / 1M+)
+- Outside-click handler: added `audMenu`/`audBtn` variables and null-safe guard
+- Escape handler: added `if (_audMenuOpen) closeAudMenu();`
+
+`app/styles.css`:
+- Added `.aud-filter-wrap`, `.aud-menu` (min-width: 164px), `.aud-item`, `.aud-divider` -- identical pattern to `.conf-*` and `.geo-*` blocks. No hard-coded colours; semantic tokens only.
+
+**Verified (code review):**
+- `_audFilter` initialised to null, reset in `resetExplore()`, cleared on `applyAud(null)`
+- Bucket logic: `small` = `f < 100000`, `mid` = `f >= 100000 && f < 1000000`, `large` = `f >= 1000000`
+- Null followers handled: `if (f == null) return false` -- null properties excluded from all buckets
+- Button active state set/cleared correctly in `applyAud()` and `resetExplore()`
+- `isActive` updated -- Clear button and `has-active-filter` body class both respond to audience filter state
+
+**Files changed:**
+- `app/ui.js` -- `_audFilter` state, functions, renderGrid, resetExplore, updateExploreContext
+- `app/explore.html` -- dropdown HTML, outside-click handler, Escape handler
+- `app/styles.css` -- `.aud-*` block
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Audience filter row added; last-updated bumped
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+**Remaining Explore filter gaps:**
+None for v1. All five filter categories now live: Type (tabs) / Sport / Geography / Confidence / Audience.
+
+**Recommended next step:**
+Control Room auth guard -- the remaining open security item. Add Supabase Auth session check to `control-room.html`, switch all CR REST fetch calls from `'Bearer ' + API_KEY` to `'Bearer ' + session.access_token`, then tighten `ingestion_runs` and `ingestion_run_checklist` to `authenticated` writes only. This closes the last known write-access exposure before wider sharing.
+
+---
+
+## Previous Session — 2026-03-15 (Compare page -- two new rows added)
+
+### Task -- Improve Compare page: Followers change (30d) + Total interactions (30d) (Build)
+
+**Audit findings (pre-implementation):**
+
+`compare.html` `updateComparison()` fetched the following `cols`: `property_id`, `property_name`, `property_type`, `country`, `slug`, `avg_score_30d`, `trend_value_30d`, `confidence_band_30d`, `suppression_reason_30d`, `total_followers_latest`, `engagement_rate_30d_pct`, `posts_30d`, `avg_score_90d`, `sport`, `region`.
+
+Missing from the fetch: `followers_net_30d` and `total_interactions_30d`. Both fields exist on `v_property_summary_current` and were verified populated (Valentino Rossi: followers_net_30d=10,514; total_interactions_30d=4,039,909. Gallagher Premiership Rugby: followers_net_30d=4,237; total_interactions_30d=574,369).
+
+The Compare table row ordering before this change: FanScore 30d, FanScore 60d, FanScore 90d, Trend 30d, Confidence, Followers, Posts (30d), Engagement rate, Sport, Region. Audience depth rows were absent despite data being available.
+
+**What changed:**
+
+`app/compare.html` -- `updateComparison()` function:
+
+1. `cols` query string updated to include `followers_net_30d` and `total_interactions_30d`.
+
+2. `rows` array extended with two new entries:
+   - "Followers change (30d)": signed delta with k/M shorthand (`+10.5k`, `-2.3k`), minus sign is Unicode `\u2212`, coloured via `arrC()` (positive/negative tokens). Inserted immediately after the "Followers" row.
+   - "Total interactions (30d)": k/M shorthand (unsigned). Inserted immediately after the "Posts (30d)" row.
+
+Formatting follows the same inline pattern as existing rows; no new helper functions created. `fmtFollowers` and `arrC` patterns from `data.js` replicated inline to match the compare table's local `fn`/`color` structure.
+
+**Verified (live data query against v_property_summary_current):**
+- `followers_net_30d` and `total_interactions_30d` are non-null for motorsport and rugby properties sampled.
+- Valentino Rossi: 8,645,180 followers; +10,514 net; 28 posts; 4,039,909 interactions.
+- Gallagher Premiership Rugby: +4,237 followers net; 574,369 interactions.
+
+**Files changed:**
+- `app/compare.html` -- `cols` query and `rows` array in `updateComparison()`
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Compare view row updated; last-updated line updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+**Remaining Compare gaps:**
+- No FitScore row (FitScore not yet implemented).
+- No "audience overlap" or "combined reach" cross-property metric.
+- No export / shareable snapshot (save-as-link covers URL state only).
+- Audience filter on Explore remains the last stub filter; needs follower-count bucket threshold decisions before implementation.
+
+**Recommended next step:**
+Audience filter on Explore -- the final remaining stub. Requires one threshold decision (e.g. Under 100k / 100k--1M / 1M+) before a clean client-side implementation. All filter plumbing (pattern, CSS, reset, title logic) is now established from Sport / Geography / Confidence.
+
+---
+
+## Previous Session — 2026-03-14 (Control Room write-access hardening -- partial)
+
+### Task -- Security audit + Control Room write-access hardening (Audit + Build)
+
+**Four-area audit findings:**
+
+Compare feature: Functional. Comparison table has FanScore 30d/90d, trend, confidence, followers, engagement, posts, sport, region. Missing `followers_net_30d` (growth delta) and `total_interactions_30d` from the fetched columns. Usable but not complete.
+
+Property page completeness: Sections for FanScore, Audience Signals, Momentum, Ecosystem, Recent Posts all active. Key Facts has sport/region/city. No obvious critical gaps identified in audit pass.
+
+Audience filter: Needs threshold decisions for follower-count buckets. Clean implementation once thresholds are set. Not urgent.
+
+Control Room write-access: Most critical. `series_visibility` had `anon_all` -- any anon visitor with DevTools could corrupt the Explore grid by setting `visible = false` on all properties. `entity_images` had anon DELETE. Key discovery: `set_series_ui_visibility()` and `build_series_structure()` are both SECURITY DEFINER RPCs -- they run as the function owner and bypass RLS entirely, so the `anon_all` policy on `series_visibility` was never needed for the CR visibility toggle. Safe to remove.
+
+**Why chosen:** `series_visibility` `anon_all` was the highest-risk gap -- directly exploitable by any visitor with DevTools, no skill required. The SECURITY DEFINER discovery made this safely implementable without breaking the CR.
+
+**What changed:**
+
+Migration `harden_control_room_anon_write_policies` applied:
+- `series_visibility`: `anon_all` dropped. `anon_read` (SELECT only) added. CR reads the table for display (SELECT needed); all writes go through SECURITY DEFINER RPCs (no table-level write policy needed). Closes the most critical exposure.
+- `entity_images`: `anon can delete entity_images` dropped. INSERT + UPDATE retained (ingestion workflow writes image mappings as anon). The CR "Dismiss suggestion" feature (deletes entity_images rows) is now broken for the admin. Acceptable trade-off; re-running image scans restores suggestions.
+
+**Verified post-migration:**
+- `series_visibility`: anon has SELECT only (anon_read policy)
+- `entity_images`: anon has SELECT + INSERT + UPDATE (no DELETE)
+- `ingestion_runs`: unchanged (SELECT + INSERT + UPDATE for anon)
+- `ingestion_run_checklist`: unchanged (anon_all -- needed by CR checklist management)
+
+**Remaining exposure:**
+- `ingestion_runs` anon INSERT/UPDATE -- CR writes run status directly via REST using anon key
+- `ingestion_run_checklist` anon ALL -- CR manages checklist items directly via REST
+- Full closure requires adding Supabase Auth to `control-room.html`: load Supabase JS client, check session on load (redirect to admin login if none), pass `session.access_token` as Bearer token in all CR fetch calls, then change these two tables to `authenticated` writes only.
+
+**Files changed:**
+- Supabase: migration `harden_control_room_anon_write_policies`
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Issue 2 updated with exact remaining exposure; migration row added
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (Confidence filter wired on Explore -- all four filter stubs now live)
+
+### Task -- Wire Confidence filter on Explore page (Build)
+
+**Audit findings (pre-implementation):**
+
+`confidence_band_30d` is a clean categorical field. Live values on visible properties:
+- High: 69 (not suppressed, conf30 = 'High')
+- Low: 20 (not suppressed, conf30 = 'Low')
+- null: 15 (suppressed -- suppression_reason_30d = 'Insufficient data', conf30 = null)
+- Medium: 5 (not suppressed, conf30 = 'Medium')
+
+No normalisation required. Direct equality match on `c.conf30`. Suppressed/no-score properties handled as a separate 'none' bucket (`!c.conf30`).
+
+**What changed:**
+
+`app/ui.js`:
+- Added `_confFilter = null`, `_confMenuOpen = false`, `_CONF_LABELS`, `_CONF_BTN_LABELS` (shorter labels for the button when active).
+- Added `openConfMenu()`, `closeConfMenu()`, `toggleConfMenu()`, `applyConf(conf)` -- same pattern as sport and geo.
+- `applyConf()`: sets `_confFilter`, updates button label and `.active` class, calls `updateExploreContext()` then `renderGrid()`.
+- `renderGrid()`: confidence filter applied after geo filter, before search. 'none' bucket matches `!c.conf30`; other buckets match `c.conf30.toLowerCase() === _confFilter`.
+- `resetExplore()`: added `_confFilter = null`, conf button DOM reset, `closeConfMenu()` guard.
+- `updateExploreContext()`: added `hasConf = !!_confFilter` to `isActive`. Confidence intentionally omitted from the title `parts[]` array -- four-dimension titles (Sport · Geography · Confidence · Type) would be too noisy. The Clear button and `has-active-filter` body class reflect its active state correctly.
+
+`app/explore.html`:
+- Stub `<button disabled>Confidence</button>` replaced with `.conf-filter-wrap > #conf-btn + #conf-menu`. Menu items: "All confidence levels" / divider / "High confidence" / "Medium confidence" / "Low confidence" / divider / "No score".
+- "No score" item uses `.conf-item--muted` modifier (dimmer text, signals secondary/edge status).
+- Outside-click handler and Escape handler updated.
+
+`app/styles.css`:
+- `.conf-filter-wrap`, `.conf-menu`, `.conf-item`, `.conf-item--muted`, `.conf-divider` added. Same structural pattern as sport and geo menus. `.conf-item--muted` colours "No score" with `var(--text-3)` to signal it as a secondary option.
+
+**Remaining filter gaps:** Audience is the only remaining stub. It requires defining follower-count buckets (thresholds not present in any existing constant). No schema changes needed.
+
+**Files changed:**
+- `app/ui.js` -- _confFilter state, menu helpers, applyConf(), renderGrid(), resetExplore(), updateExploreContext()
+- `app/explore.html` -- stub Confidence button replaced; outside-click and Escape handlers updated
+- `app/styles.css` -- .conf-filter-wrap, .conf-menu, .conf-item, .conf-item--muted, .conf-divider
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Confidence filter row added, last-updated bumped
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (Geography filter wired on Explore)
+
+### Task -- Wire Geography filter on Explore page (Build)
+
+**Audit findings (pre-implementation):**
+
+Both `country` and `region` fields in the dataset are inconsistent. `country` mixes ISO codes ('GB', 'BE', 'IT', 'HK') with full country names ('Italy', 'France', 'Germany', 'Belgium', 'Spain', 'Switzerland', 'Russia', 'United Kingdom'). `region` mixes high-level labels ('Europe', 'United Kingdom', 'Asia') with sub-national values ('Cheshire', 'Kent', 'Norfolk', 'Northamptonshire', 'Leicestershire', 'Liege'). Raw equality matching on either field would produce incomplete buckets.
+
+Decision: normalise client-side via `_getGeoBucket(c)` using `country` as primary signal, `region` as fallback. Three buckets: `'uk'` (~68 props), `'europe'` (~39 props), `'asia'` (1 prop). No schema changes required.
+
+**What changed:**
+
+`app/ui.js`:
+- Added `_geoFilter = null`, `_geoMenuOpen = false`, `_GEO_LABELS` map.
+- Added `_getGeoBucket(c)` -- normalises raw country/region into 'uk' | 'europe' | 'asia' | null. Handles ISO codes, full country names, and region-label fallbacks.
+- Added `openGeoMenu()`, `closeGeoMenu()`, `toggleGeoMenu()`, `applyGeo(geo)` functions.
+- `applyGeo()`: sets `_geoFilter`, updates button label and `.active` class, calls `updateExploreContext()` then `renderGrid()`.
+- `renderGrid()`: geo filter applied after sport filter, before search.
+- `resetExplore()`: added `_geoFilter = null`, geo button DOM reset (label + `.active`), `closeGeoMenu()` guard.
+- `updateExploreContext()`: added `hasGeo = !!_geoFilter` to `isActive`; refactored title logic from paired conditionals to a `parts[]` array joined by ' · '. Order: Sport · Geography · Type (broadest to narrowest). Handles all single and combined states cleanly.
+
+`app/explore.html`:
+- Replaced stub `<button disabled>Geography</button>` with `.geo-filter-wrap > #geo-btn + #geo-menu`. Menu items: "All geographies" / divider / "United Kingdom" / "Continental Europe" / "Asia".
+- Outside-click handler: added `_geoMenuOpen` + `geoMenu`/`geoBtn` guard.
+- Escape handler: added `if (_geoMenuOpen) closeGeoMenu()`.
+
+`app/styles.css`:
+- Added `.geo-filter-wrap { position: relative }`, `.geo-menu` (absolute, opens downward, opacity+transform animation), `.geo-item`, `.geo-divider` -- exact structural mirror of sport menu CSS.
+
+**Verification examples:**
+- "United Kingdom" filter returns ~68 properties; contextual title shows "United Kingdom".
+- "Continental Europe" + "Motorsport" sport filter: title "Motorsport · Continental Europe", ~35 properties.
+- "Athletes" type + "United Kingdom" geography: title "United Kingdom · Athletes".
+- Triple: Motorsport + United Kingdom + Athletes: "Motorsport · United Kingdom · Athletes".
+- Reset clears both sport and geo state and restores all button labels.
+
+**Remaining filter gaps:** Audience and Confidence remain as disabled stubs. Audience (follower count buckets) and Confidence (band buckets) both require defining cut-points on computed fields. Dataset values exist; no schema changes needed. Pure client-side filter work following the same pattern.
+
+**Files changed:**
+- `app/ui.js` -- _geoFilter state, _getGeoBucket(), menu helpers, applyGeo(), renderGrid(), resetExplore(), updateExploreContext() refactored
+- `app/explore.html` -- stub Geography button replaced with real dropdown; outside-click and Escape handlers updated
+- `app/styles.css` -- .geo-filter-wrap, .geo-menu, .geo-item, .geo-divider
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Geography filter row added to active features, last-updated bumped
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (Sport filter wired on Explore)
+
+### Task -- Wire Sport filter on Explore page (Build)
+
+**Audit findings (pre-implementation):**
+
+Live sport values: `motorsport` (99 visible properties), `rugby` (13 visible properties). All 112 visible properties have a non-null sport value. The `sport` field is already fetched in `loadGrid()` and mapped onto each card object.
+
+Existing UI: stub `<button disabled>Sport</button>` in `.eh-filter-row`. No `_sportFilter` state, no menu, no active styles.
+
+**What changed:**
+
+`app/ui.js`:
+- Added `_sportFilter = null` state var and `_sportMenuOpen = false` flag.
+- Added `_toTitleCase()` helper (capitalises each word).
+- Added `openSportMenu()`, `closeSportMenu()`, `toggleSportMenu()`, `applySport(sport)` functions.
+- `applySport()`: sets `_sportFilter`, updates button label and `.active` class, calls `updateExploreContext()` then `renderGrid()`.
+- `renderGrid()`: sport filter applied between type filter and search filter.
+- `resetExplore()`: added `_sportFilter = null`, sport button DOM reset (label + `.active` class), `closeSportMenu()` guard.
+- `updateExploreContext()`: added `hasSport = !!_sportFilter` to `isActive`; updated `else if (hasFilter || hasSport)` branch to build composite title (e.g. "Motorsport · Athletes" when both active, or just "Motorsport" when type is All).
+
+`app/explore.html`:
+- Replaced stub `<button disabled>Sport</button>` with `.sport-filter-wrap` div containing real `#sport-btn` + `#sport-menu` dropdown. Menu items: "All sports", divider, "Motorsport", "Rugby".
+- Outside-click handler: added `_sportMenuOpen` + `sportMenu`/`sportBtn` guard.
+- Escape handler: added `if (_sportMenuOpen) closeSportMenu()`.
+
+`app/styles.css`:
+- Added `.eh-filter-btn.active` rule (accent border + accent-soft background + accent text/icon).
+- Added `.sport-filter-wrap { position: relative }`, `.sport-menu` (absolute, opens downward, opacity+transform animation), `.sport-item` (matches sort-item pattern), `.sport-divider`.
+- Mobile: sport button is enabled so it is NOT hidden by `.eh-filter-btn:disabled { display:none }` -- it remains visible on mobile.
+
+**Verification:** Three overlapping filter modes all correctly compose:
+- Sport alone: "Motorsport" title, 99 cards.
+- Type alone: "Athletes" title, N athletes.
+- Sport + type: "Motorsport · Athletes" title, intersection.
+- Any combination + search: further narrows.
+- Clear/Escape/outside-click all close the menu.
+- Reset clears sport state and restores button label.
+
+**Remaining filter gaps:** Geography, Audience, Confidence remain as disabled stubs. Geography would require `region`/`country` multi-select. Audience and Confidence require computed bucketing. All dataset values exist; no schema changes needed.
+
+**Files changed:**
+- `app/ui.js` -- sport filter state, menu helpers, applySport(), renderGrid(), resetExplore(), updateExploreContext()
+- `app/explore.html` -- stub Sport button replaced with real dropdown; outside-click and Escape handlers updated
+- `app/styles.css` -- .eh-filter-btn.active, .sport-filter-wrap, .sport-menu, .sport-item, .sport-divider
+- `project-docs/DEVELOPMENT_LEDGER.md` -- Sport filter row added to active features table, last-updated bumped
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (social metrics unblocked -- anon_read on raw social tables)
+
+### Task -- Security/product audit: highest-value next task identification and implementation (Audit + Build)
+
+**Audit findings:**
+
+Security track: All tables have RLS enabled. Anthropic API key properly proxied through Edge Function. Core data tables (properties, fanscore_*, property_relationships) have correct anon_read policies. One residual gap: control room tables (ingestion_runs, entity_images, series_visibility, control_room_*, ingestion_run_checklist) have overly permissive anon policies (INSERT/UPDATE/DELETE). Acceptable for trusted-investor prototype; must tighten before broader sharing.
+
+Product track: `v_property_summary_current` and `v_property_posts` are SECURITY INVOKER views. Supabase uses this as default. When `anon` queries these views, all JOINs to the underlying raw tables execute as the `anon` role. Five tables -- `accounts`, `raw_account_followers`, `raw_posts`, `raw_post_daily_metrics`, `property_platform_daily_metrics` -- had RLS enabled but NO SELECT policies for anon. Result: every social field in the view (total_followers_latest, followers_net_30d, posts_30d, total_interactions_30d, engagement_rate_30d_pct, platforms_active) silently returned null for all properties. Downstream effects: `computeMomentumScore()` returned [] everywhere (no momentum badges), AI system prompt showed 0 for all social context, no audience numbers on cards.
+
+This was the highest-value issue on both tracks -- a silent data loss affecting the entire social signal layer, not a feature gap.
+
+**What changed:**
+
+Migration `anon_read_social_tables` applied. Added `FOR SELECT TO anon USING (true)` policies on: `accounts`, `raw_account_followers`, `raw_posts`, `raw_post_daily_metrics`, `property_platform_daily_metrics`. No view or app code changes required.
+
+**Verification:** v_property_summary_current now returns real data for all sampled properties. Valentino Rossi: 8.6M followers, 30.5k net 30d, 13.4% engagement, platforms [instagram, x, youtube]. Premiership Rugby: 804k followers, 56.6% engagement. British GT: 544k followers. Platform arrays and follower deltas all populated correctly.
+
+**Remaining gaps:** Control room table write access (anon can INSERT/UPDATE on operational tables -- acceptable for prototype, tighten before public sharing). Issues 7 (MODEL_VERSION hardcoded in ui_data_layer.ts) and 8 (isSupressed typo) remain; TypeScript layer inactive.
+
+**Next recommendation:** With social data now live, the most visible remaining product gap is the stub Sport/Geography/Audience filter buttons in Explore. The dataset has real sport and region values on every property. Wiring at least the Sport filter would make multi-sport positioning immediately demonstrable.
+
+**Files changed:**
+- Supabase: migration `anon_read_social_tables` -- 5 anon SELECT policies applied
+- `project-docs/DEVELOPMENT_LEDGER.md` -- issue 2 scope narrowed, issue 9a added (RESOLVED), security next-steps updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (master schema full consolidation -- issue 20 closed)
+
+### Task -- Rebuild correctness: fold all remaining table shape drift into 001_master_schema.sql (Audit + Build)
+
+The master schema still had significant drift from the live DB across the base tables. Six tables had missing columns, the enum had 3 missing values, and 8 indexes were absent. Running the schema from scratch would produce a database with incorrect shapes for all core tables.
+
+**Audit findings:**
+
+Drift identified across 6 tables and the `property_type_enum`. All drift confirmed by direct column-count query against live DB.
+
+`property_type_enum`: master had 4 values (`driver, team, series, event`). Live DB has 7. Missing: `athlete`, `venue`, `governing_body`.
+
+`properties`: master had 8 columns. Live DB has 19. Missing 11: `sport`, `slug`, `country_code`, `city`, `region`, `latitude`, `longitude`, `event_end_date`, `metadata` (jsonb DEFAULT '{}'), `visible_in_ui` (boolean NOT NULL DEFAULT false), `hidden_reason`.
+
+`fanscore_windows`: missing `suppression_reason text` (added by migration 008; function body was fixed in previous task but CREATE TABLE definition had not been updated).
+
+`accounts`: missing `platform_user_id text`.
+
+`raw_posts`: missing `platform_post_id text`.
+
+`raw_account_followers`: missing `is_estimated boolean NOT NULL DEFAULT false` and `data_source text NOT NULL DEFAULT 'api'`.
+
+`fanscore_daily`: already correct (had `suppression_reason`; no changes needed).
+
+Indexes missing from Section 3: `properties_slug_unique` (unique), `idx_properties_property_type`, `idx_properties_slug`, `idx_properties_sport`, `idx_properties_visible_in_ui`, `idx_accounts_platform_user_id`, `uq_raw_posts_account_platform_post`, `idx_raf_is_estimated`.
+
+**What changed:**
+
+`database/001_master_schema.sql`:
+- `property_type_enum` DO block: expanded to 7 values. Comment added explaining that on existing DB the IF NOT EXISTS makes it a no-op; on clean rebuild all 7 values created in one pass.
+- `properties` CREATE TABLE: 11 columns added in a labelled "Extended property fields" block with per-column migration attribution.
+- `accounts` CREATE TABLE: `platform_user_id text` added.
+- `raw_posts` CREATE TABLE: `platform_post_id text` added.
+- `raw_account_followers` CREATE TABLE: `is_estimated boolean NOT NULL DEFAULT false` and `data_source text NOT NULL DEFAULT 'api'` added.
+- `fanscore_windows` CREATE TABLE: `suppression_reason text` added.
+- Section 3 indexes: reorganised by table group; 8 new indexes added.
+
+**Verification:** Column counts queried against live DB and matched exactly -- properties: 19, accounts: 10, raw_posts: 10, raw_account_followers: 8, fanscore_daily: 12, fanscore_windows: 15.
+
+**Remaining gaps:** Tables added entirely by architectural migrations after the base schema (property_relationships, series_visibility, entity_images, ingestion_runs, control_room_log, control_room_issue_states, ingestion_run_checklist, email_signups, investor_allowlist, v_property_posts) are not in 001_master_schema.sql. This is intentional -- they are architectural additions, not base table corrections. A full rebuild still requires those migrations after the base schema.
+
+Open issues: 7 (`MODEL_VERSION` hardcoded in `ui_data_layer.ts`) and 8 (`isSupressed` typo) remain; TypeScript layer is inactive.
+
+**Files changed:**
+- `database/001_master_schema.sql` -- enum, 6 table definitions, indexes section
+- `project-docs/DEVELOPMENT_LEDGER.md` -- issue 20 RESOLVED; next-steps updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (compute_fanscore_windows suppression_reason gap -- master schema sync)
+
+### Task -- Rebuild correctness: compute_fanscore_windows missing suppression logic (Audit + Build)
+
+The master schema (`001_master_schema.sql`) held the pre-migration-008 definition of `compute_fanscore_windows`. The live DB was already correct (migration `008_fix_fanscore_windows_suppression` had been applied). A schema rebuild from repo would produce a function that never writes `suppression_reason` to `fanscore_windows`, breaking the UI suppression signal for the window layer.
+
+**Audit findings:**
+
+Six differences between the repo and live function definitions:
+
+1. `suppression_reason` missing from INSERT column list.
+2. `suppression_reason` CASE expression (`< 60% days scored → 'Low data coverage...'`) absent from SELECT.
+3. `suppression_reason = EXCLUDED.suppression_reason` absent from ON CONFLICT DO UPDATE.
+4. WHERE clause included `AND fd.fanscore_value IS NOT NULL` -- incorrect because suppressed rows (where `fanscore_value IS NULL`) must be included so `anomaly_days_count` counts them.
+5. `REGR_SLOPE` used `EXTRACT(EPOCH FROM fd.metric_date - ...)` instead of `::float8` casts on both args.
+6. `confidence_band` CASE lacked a leading `WHEN completeness < 0.6 THEN 'Low'` guard (without this, a 50%-coverage property could fall through to `Medium`).
+
+**What changed:**
+
+`database/001_master_schema.sql` -- `compute_fanscore_windows` function body replaced with the live migration 008 version. All six differences corrected. A comment block above the function lists the four key changes for future readers.
+
+No new Supabase migration was needed. The live DB is already correct.
+
+**Verification:** Live function body from `pg_get_functiondef` matches the repo function body after edit. `suppression_reason` present in INSERT, SELECT, and ON CONFLICT UPDATE in both. WHERE clause no longer filters `fanscore_value IS NOT NULL`. `REGR_SLOPE` uses `::float8` casts. Confidence band CASE has leading `< 0.6` guard.
+
+**Remaining gaps:** None new. Previously known open items: issue 7 (`MODEL_VERSION` hardcoded in `ui_data_layer.ts`), issue 8 (`isSupressed` typo), issue 20 (migrations 006-007 not consolidated into master schema -- enum + column additions).
+
+**Files changed:**
+- `database/001_master_schema.sql` -- `compute_fanscore_windows` function body replaced
+- `project-docs/DEVELOPMENT_LEDGER.md` -- issue 6 marked RESOLVED; issue 20 scope narrowed; next-steps bullets updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (v_property_summary_current schema aligned; PropertyType corrected)
+
+### Task — Schema/interface correctness: v_property_summary_current divergence (Audit + Build)
+
+The master schema (`001_master_schema.sql`) contained the pre-migration definition of `v_property_summary_current` using old column aliases. The TypeScript layer (`ui_data_layer.ts`) was correctly written against the live view. This created a documentation and rebuild correctness gap: anyone building from the master schema would get a view with different column names from what the TypeScript expects.
+
+**Audit findings:**
+
+Master schema view used: `p.name` (unaliased), `latest_fanscore`, `latest_confidence_band`, `latest_confidence_value`, `latest_score_date`, `components_json`, `reasons`, `suppression_reason`, `avg_30d`, `trend_30d`, `volatility_30d`, `avg_60d`, `avg_90d`, `trend_90d`. Also referenced removed helper views `v_fanscore_daily_current` / `v_fanscore_windows_current` that no longer exist.
+
+Live view uses: `property_name`, `as_of_day`, `model_version`, `avg_score_30d`, `median_score_30d`, `trend_value_30d`, `volatility_value_30d`, `completeness_pct_30d`, `confidence_band_30d`, `confidence_value_30d`, `suppression_reason_30d`, `avg_score_60d`, `avg_score_90d`, `trend_value_90d` -- plus social aggregations, relationship arrays, bio, slug, sport/region/city, visible_in_ui, and a WHERE clause filtering event occurrences.
+
+TypeScript `PropertyType` was `'driver' | 'team' | 'series' | 'event'` -- missing `'athlete' | 'venue' | 'governing_body'` which exist in the live `property_type_enum`.
+
+**What changed:**
+
+`database/001_master_schema.sql` -- view definition replaced with the live state. Old helper view references removed. All column aliases now match the live DB and the TypeScript layer exactly. Two example queries in the comment block updated (`name` → `property_name`, `latest_fanscore` → `avg_score_30d + suppression_reason_30d IS NULL`, `trend_30d` → `trend_value_30d`).
+
+`database/ui_data_layer.ts` -- `PropertyType` union expanded with `'athlete' | 'venue' | 'governing_body'` and a comment noting the live enum extension.
+
+**Remaining gaps:** `toWin(v, '60d')` and `toWin(v, '90d')` in `getPropertyDetail` reference 13 columns the view intentionally doesn't expose for those windows (the view provides only `avg_score_60d` and `avg_score_90d` + `trend_value_90d`). At runtime this silently produces null for those fields -- no crash, but `PropertyDetail.win60d` and `.win90d` are partially-populated. This is a design gap in the view, not a naming error. Resolving it would require either expanding the view or narrowing the `PropertyDetail` types. Neither is urgent while the TypeScript layer is inactive.
+
+Also still open: `MODEL_VERSION = 'v1.0'` hardcoded in `ui_data_layer.ts` (issue 7), and `isSupressed` typo in both interfaces (issue 8).
+
+**Files changed:**
+- `database/001_master_schema.sql` -- view definition + example queries updated
+- `database/ui_data_layer.ts` -- `PropertyType` expanded
+
+---
+
+## Previous Session — 2026-03-14 (FanScore fully model-driven -- active model version selection in recompute flow)
+
+### Task — FanScore model version hardcoding in recompute flow (Audit + Build)
+
+After the previous session fixed weight hardcoding inside `compute_fanscore_daily`, the remaining gap was that `build_series_structure` still passed the literal `'v1.0'` to both `compute_fanscore_daily` and `compute_fanscore_windows`. The scoring pipeline was therefore dynamic on weights but still static on version selection.
+
+**Audit findings:**
+
+`build_series_structure` has one scoring block, in the premiership-rugby template path under `IF p_synthetic_signals THEN`. Two hardcoded literals found: `PERFORM compute_fanscore_daily(v_data_start, v_data_end, 'v1.0')` and `PERFORM compute_fanscore_windows(v_data_end, 'v1.0')`. The GTWCE template path has no scoring pipeline calls. No other hardcoded version literals found in any other function.
+
+**What changed:**
+
+Migration `fanscore_active_model_version_in_recompute` applied. Two objects created/modified:
+
+`get_active_fanscore_model_version() RETURNS text STABLE` -- new helper function. Reads `model_version FROM fanscore_models WHERE is_active = true LIMIT 1`. RAISE EXCEPTION with clear message if no active model found. Granted to anon and authenticated. This function is the single point of truth for active model selection and can be reused by any future functions.
+
+`build_series_structure` -- patched via DO block using `pg_get_functiondef` + string replacement + `EXECUTE`. Target strings verified present before replacement (guard: RAISE EXCEPTION if not found). Changes: `v_model_version text` added to DECLARE section. Scoring block now reads: `v_model_version := get_active_fanscore_model_version();` then passes `v_model_version` to both PERFORM calls. No other logic touched. GRANTs preserved (CREATE OR REPLACE does not revoke existing grants).
+
+**Verification:** `get_active_fanscore_model_version()` returns `v1.0`. Structural checks: `still_has_daily_hardcode: false`, `still_has_windows_hardcode: false`, `has_model_version_var: true`, `calls_helper: true`. Score check: re-ran `compute_fanscore_daily` and `compute_fanscore_windows` for 2026-03-13. All 5 sampled properties (bath-rugby, gt-world-challenge-europe, harlequins, manthey-ema, premiership-rugby) showed identical `fanscore_value` and `inputs_hash` to pre-run snapshot.
+
+**Remaining gaps:** `MODEL_VERSION = 'v1.0'` in `database/ui_data_layer.ts` (issue 7 in ledger) is still hardcoded, but the TypeScript data layer is not in active use. No other hardcoded model version references remain in the active scoring pipeline.
+
+**Files changed:**
+- Supabase: migration `fanscore_active_model_version_in_recompute` -- `get_active_fanscore_model_version()` created; `build_series_structure` patched
+- `project-docs/DEVELOPMENT_LEDGER.md` -- issue 4 marked FULLY RESOLVED; migration table updated
+- `docs/WORKING_CONTEXT.md` -- this entry
+
+---
+
+## Previous Session — 2026-03-14 (FanScore model-driven weights)
+
+### Task — FanScore model correctness (Audit + Build)
+
+`compute_fanscore_daily` was computing scores using literals `0.65`, `0.15`, `0.20` hardcoded directly into the SQL. The `fanscore_models` table existed with a `weights_json` column and a correctly populated v1.0 record, but the function never read from it. Changing the stored weights had no effect on computed scores.
+
+**Audit findings:**
+
+`compute_fanscore_daily(p_start_date, p_end_date, p_model_version)` -- the `p_model_version` parameter was used only to tag output rows. The weight literals appeared in two places: the score formula (`0.65*norm + 0.15*growth + 0.20*consistency`) and the `components_json` explainability output (`'weight', 0.65` etc). `fanscore_models` table: one active record, version `v1.0`, `weights_json: { norm_weight: 0.65, growth_weight: 0.15, consistency_weight: 0.20 }` -- exact match to the hardcoded literals, meaning no historical score divergence.
+
+`build_series_structure` RPC: calls `compute_fanscore_daily(..., 'v1.0')` and `compute_fanscore_windows(..., 'v1.0')` with the version as a string literal. Separate gap; not addressed in this task (see remaining gaps).
+
+`MODEL_VERSION = 'v1.0'` in `database/ui_data_layer.ts`: TypeScript data layer not yet in active use; logged as issue 7 in the ledger.
+
+**What changed:**
+
+Migration `fanscore_model_driven_weights` applied. `compute_fanscore_daily` rewritten via `CREATE OR REPLACE FUNCTION`. Three declared variables `v_norm_w`, `v_growth_w`, `v_consistency_w` (numeric). At start of BEGIN: `SELECT weights_json INTO v_weights FROM fanscore_models WHERE model_version = p_model_version`. Two guards: RAISE EXCEPTION if model not found (NULL weights_json), RAISE EXCEPTION if any weight key is missing. Variables used in score formula and in `components_json` weight fields. All other logic (daily_agg, windowed CTEs, confidence band/value, reasons, suppression, inputs_hash, ON CONFLICT) preserved identically.
+
+**Verification:** Re-ran `compute_fanscore_daily('2026-03-13', '2026-03-13', 'v1.0')`. Spot-checked 4 properties (gt-world-challenge-europe, manthey-ema, team-wrt, valentino-rossi). All `fanscore_value` and `inputs_hash` values identical to pre-run snapshot. `components_json` weight fields confirmed populated from model. Error guard confirmed: calling with `'v99.0'` wrote zero rows.
+
+**Remaining gaps:** `build_series_structure` still passes the literal `'v1.0'` to both compute functions. When a second model version is activated, the Control Room recompute flow will still use v1.0 weights unless that RPC is updated. Recommended fix when needed: replace `'v1.0'` literals in `build_series_structure` with `(SELECT model_version FROM fanscore_models WHERE is_active = true LIMIT 1)`.
+
+**Files changed:**
+- Supabase: migration `fanscore_model_driven_weights` -- `compute_fanscore_daily` function replaced
+- `project-docs/DEVELOPMENT_LEDGER.md` -- issue 4 marked RESOLVED; migration table updated
+
+---
+
+## Previous Session — 2026-03-14 (GTWCE data resilience -- full creation seed added)
+
+### Task — GTWCE data resilience (Audit + Build)
+
+Seven GTWCE migrations were applied directly to the live database during 2026-03-13 without corresponding SQL files tracked in the repo. The existing `database/seeds/gtwce_2024.sql` was a repair-only script (corrects country/region fields) and contained no INSERT statements. If the database were dropped and rebuilt, the entire GTWCE dataset would be lost.
+
+**Audit findings:**
+
+- 7 migrations tracked in Supabase migration log with no SQL bodies in repo: `gtwce_core_properties`, `gtwce_relationships`, `gtwce_social_accounts_and_followers`, `gtwce_posts_and_metrics`, `gtwce_x_posts_for_completeness`, `gtwce_missing_athlete_posts`, `gtwce_presentation_data_repair`
+- `database/seeds/gtwce_2024.sql` confirmed as repair-only (UPDATE statements only; will EXCEPTION if run on an empty DB)
+- Live DB verified as complete and healthy: 1 series + 1 governing body + 7 teams + 10 events + 8 venues + all athlete relationships + 43 social accounts + 91-day follower history on all accounts + posts and metrics
+
+**What changed:**
+
+`database/seeds/gtwce_2024_full.sql` -- New file. Complete, idempotent creation seed. Three PL/pgSQL DO blocks:
+
+Block 1 (`$gtwce_core$`): All property INSERTs (series, governing body, 7 teams, 10 GTWCE-only athletes, 10 events, 8 venues). All relationship INSERTs (governing_body_oversees_series, series_has_team, team_competes_in_series, team_has_athlete, athlete_belongs_to_team, athlete_competes_in_series, series_contains_event, event_at_venue). All 43 social account INSERTs. series_visibility INSERT. All use ON CONFLICT DO NOTHING.
+
+Block 2 (`$gtwce_followers$`): PL/pgSQL loop over all GTWCE-linked accounts. Generates 91-day synthetic follower history (2025-12-13 to 2026-03-13). Deterministic daily deltas via `hashtext()`. Accounts with 0-baseline started at 12,000-30,000 to ensure FanScore pipeline can score them. ON CONFLICT (account_id, metric_date) DO NOTHING.
+
+Block 3 (`$gtwce_posts$`): PL/pgSQL generating synthetic posts with deterministic `platform_post_id` pattern. Posts spread evenly across 91-day window. Engagement metrics scaled by property type. Per-post `raw_post_daily_metrics` row. CONTINUE WHEN EXISTS guard for idempotency.
+
+**Verified against live DB:** All entities, relationships, accounts, follower rows, and posts confirmed present. Schema mismatches (enum names, column names) resolved during build. series_visibility table is currently empty on live DB -- the seed will populate it on next run. This is a pre-existing gap from the original migrations, not introduced by this work.
+
+**Remaining gaps:** Real post content is synthetic (captions are template strings). Exact engagement figures from the original migrations are not recoverable -- the seed regenerates them deterministically. This is acceptable for rebuild purposes; the FanScore pipeline will re-derive scores from the regenerated signals.
+
+**Follow-up applied (same session):** `series_visibility` row for `gt-world-challenge-europe` (`ready_for_ui: true, visible_in_ui: true`) inserted directly to live DB 2026-03-14. Verified present. No remaining GTWCE data gaps.
+
+**Files changed:**
+- `database/seeds/gtwce_2024_full.sql` (new)
+- `project-docs/DEVELOPMENT_LEDGER.md` (issue 21 marked RESOLVED, migration table updated)
+
+---
+
+## Previous Session — 2026-03-14 (Investor portal auth -- magic link flow replaces hardcoded credentials)
+
+### Task — Investor portal authentication (Build)
+
+The investor portal login was protected only by hardcoded credentials (`investor / SponsorAI2026`) checked entirely in client-side JS. The session was set via `localStorage.setItem('sponsorai_investor', '1')`, trivially bypassed from DevTools. The portal email signup form was also a `simulateSuccess()` stub.
+
+**Root cause:** Placeholder auth shim used for early prototype sharing, never replaced.
+
+**What changed:**
+
+Supabase — Applied migration `create_investor_allowlist`. New table `public.investor_allowlist` with columns: `id` (uuid PK), `email` (text, unique on `lower(email)`), `created_at` (timestamptz). RLS enabled. Policy `auth_select_own_row`: authenticated users can SELECT only the row matching their own email (`lower(email) = lower((auth.jwt() ->> 'email'))`). Anon role explicitly revoked.
+
+`website/config.js` (gitignored) -- Added `WEBSITE_SUPABASE_URL` (base URL without `/rest/v1`). Required by the Supabase JS Auth client.
+
+`website/config.example.js` (tracked) -- Added `WEBSITE_SUPABASE_URL` placeholder with documentation comment. Updated `WEBSITE_API_KEY` comment to reflect investor portal usage.
+
+`website/investor-auth.js` -- Completely rewritten. Hardcoded credentials and localStorage session flag removed entirely. New flow: initialises `window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)`. Portal guard: calls `getSession()` -- if no session, redirects to login. If session exists, queries `investor_allowlist` (RLS-enforced, returns own row or nothing) -- if no row, signs out and redirects to login with `?reason=not_authorised`. If row found, sets `body.style.visibility = 'visible'` and wires portal signup form. Login page: email-only form, validates email, calls `signInWithOtp({ email, options: { emailRedirectTo: investor-portal.html } })`, shows "Check your inbox" state on success. Sign-out: `supabase.auth.signOut()` then redirect. Portal signup form: real Supabase REST POST to `email_signups` with `source: 'investor-portal'`, matching behaviour of `website/script.js`.
+
+`website/investor-login.html` -- Username + password form replaced with single email field. Button label: "Send sign-in link". New `#loginSent` div (hidden by default) shows "Check your inbox" and expiry note after magic link is dispatched. Supabase CDN + config.js loaded before `investor-auth.js`.
+
+`website/investor-portal.html` -- Added `style="visibility:hidden"` to `<body>`. Supabase CDN + config.js loaded before `investor-auth.js`.
+
+**To add an investor:** Insert a row manually via Supabase dashboard → Table Editor → `investor_allowlist`. The email must exactly match the address the investor will use to request the magic link (case-insensitive via the unique index).
+
+**To view portal signups:** `SELECT * FROM email_signups WHERE source = 'investor-portal' ORDER BY created_at DESC;`
+
+**Files changed:**
+- `website/investor-auth.js`
+- `website/investor-login.html`
+- `website/investor-portal.html`
+- `website/config.js` (updated, gitignored)
+- `website/config.example.js` (updated, tracked)
+- Supabase: `investor_allowlist` table + RLS policy
+
+---
+
+## Previous Session — 2026-03-14 (Email capture fix -- website signups now stored in Supabase)
+
+### Task — Email capture (Build)
+
+Every website signup was being silently discarded. `simulateSuccess()` showed a success message and logged to the console but sent no data anywhere.
+
+**Root cause:** `website/script.js` had a `TODO` comment where the backend call should go, with a `simulateSuccess()` shim in its place. No table existed in the database to receive signups.
+
+**What changed:**
+
+Supabase — Applied migration `create_email_signups`. New table `public.email_signups` with columns: `id` (uuid PK), `email` (text, unique on `lower(email)`), `source` (text, default `'website'`), `created_at` (timestamptz). RLS enabled. Two policies: `anon_insert_only` (anon role, INSERT, no restrictions) and `auth_select_all` (authenticated role, SELECT). Anon users can add rows but cannot read them. Admin can view all signups via Supabase dashboard or authenticated queries.
+
+`website/config.example.js` (new, tracked) -- Template for website credentials. Exposes `WEBSITE_API_URL` and `WEBSITE_API_KEY`. Documents where to find values in Supabase dashboard.
+
+`website/config.js` (new, gitignored) -- Live credentials. Loaded before `script.js`.
+
+`website/index.html` -- Added `<script src="config.js"></script>` before `script.js`.
+
+`website/script.js` -- Replaced `simulateSuccess()` shim with a real `submitSignup(email)` function that POSTs `{ email, source: 'website' }` to Supabase REST `/email_signups`. Handles: 200 success, 409/23505 duplicate (treated as silent success -- user is already on the list), network offline, missing config (dev fallback with console warning). No silent failures.
+
+`.gitignore` -- Added `website/config.js`.
+
+**Verified:** Test insert confirmed rows write correctly. RLS policies confirmed via `pg_policies` query. Test row deleted after verification.
+
+**To view signups:** Supabase dashboard → Table Editor → email_signups. Or via SQL: `SELECT * FROM email_signups ORDER BY created_at DESC;` (requires authenticated session).
+
+**Files changed:**
+- `website/script.js`
+- `website/index.html`
+- `website/config.js` (new, gitignored)
+- `website/config.example.js` (new, tracked)
+- `.gitignore`
+- Supabase: `email_signups` table + RLS policies
+
+---
+
+## Previous Session — 2026-03-14 (Market Board -- Kanban opportunity tracking workspace)
+
+### Task — Market Board (Build)
+
+Built the Market Board: a Kanban-style workspace where users can collect, organise, and evaluate sponsorship opportunities across four stages.
+
+**What changed:**
+
+`app/storage.js` — Added `makeBoard('sai-board')` factory inside the SAI_STORAGE IIFE. Returns a `board` module with: `getBoard()`, `getAllSlugs()`, `getStage(stage)`, `getSlugStage(slug)`, `isOnBoard(slug)`, `addToStage(slug, stage)` (auto-removes from previous stage), `moveToStage()` (alias), `removeFromBoard(slug)`. Stages: `watching | shortlist | evaluation | confirmed`. SAI_STORAGE.board now exported alongside watchlist/portfolio/compare.
+
+`app/board.html` — New page. Four-column Kanban layout. Fetches all board slugs across stages in a single API call. Cards show: drag handle, name, flag, type badge, sport, FanScore (type-coloured), trend arrow, audience. Drag-and-drop via HTML5 native drag events (dragstart/dragover/drop/dragend). Move dropdown on each card for non-drag stage changes. Remove button. Empty column state: "Drop a card here". Board state persisted in localStorage. Follows standard SponsorAI chrome (float bars, nav, profile dropdown).
+
+`app/components/panel.js` — Added `dp-btn-board` button to the dpActions section. Reads `SAI_STORAGE.board.isOnBoard(slug)` + `getSlugStage()` to set initial state and label. `dpAction('board', id)` handler: adds to 'watching' stage if not on board; removes if already on board.
+
+`app/property.html` — Added "Add to Board" button to `prop-actions` row with board/column icon. `toggleBoard()` / `updateBoardButton()` functions wired. `updateBoardButton()` called at page load alongside `updateWatchlistButton()`. Shows stage label when on board (e.g. "Watching", "Shortlist").
+
+Nav updated on: `explore.html`, `watchlist.html`, `portfolio.html`, `compare.html`, `property.html` -- Board button added to menu col 2 below Watchlist.
+
+**Files changed:**
+- `app/storage.js`
+- `app/board.html` (new)
+- `app/components/panel.js`
+- `app/property.html`
+- `app/explore.html` (nav)
+- `app/watchlist.html` (nav)
+- `app/portfolio.html` (nav)
+- `app/compare.html` (nav)
+
+---
+
+## Previous Session — 2026-03-14 (Build audit + sparklines on Explore cards)
+
+### Build audit (Audit mode)
+
+Full audit of data completeness, FanScore pipeline, Watchlist/Compare/Portfolio, property page, and search/filter quality. Key findings:
+
+- Data completeness: In good shape for the ingested series. Suppressed properties are intentional. GTWCE dataset is live-DB-only (no seed file -- rebuild risk). Athlete portraits pending (11 properties). No urgent user-facing data completeness fix required.
+- FanScore recompute: Works via Control Room "Run again". Critical issue: weights hardcoded in SQL, not read from `fanscore_models.weights_json`. Not user-visible yet. Backend fix deferred.
+- Watchlist/Compare/Portfolio: All three pages functional and wired to SAI_STORAGE. No broken behaviour. Enhancement opportunities (sparkline on watchlist items, image on watchlist rows) deferred -- not the highest-value next step.
+- Property page: Active with FanScore card, sparkline, audience signals, momentum chart, ecosystem, recent posts. No critical gaps identified.
+- Search/filter: Debounced keyword search, type filters, sort options all active. No urgent improvements needed.
+
+Chosen build target: sparklines on Explore cards. Highest ROI -- data already in memory, renderer already exists, zero API calls, directly adds momentum signal to the primary discovery surface.
+
+### Task — Sparklines on Explore cards (Build)
+
+Added 30-day FanScore history sparkline to the bottom of each non-suppressed card in the Explore grid.
+
+**What changed:**
+
+`app/components/card.js` — In `renderCard()`, after the `sup-notice`, an IIFE checks `sup`, `c.sparks`, and `c.sparks.length`. If at least 2 data points exist and the card is not suppressed, calls `renderSpark(c.sparks, cfg.scoreVar, 120, 28)` and wraps the result in `<div class="card-spark">`. The sparkline is coloured using the card type's `scoreVar` token (matches the score number above it), making each type visually consistent.
+
+`app/styles.css` — Added `.card-spark { margin-top: auto; padding-top: var(--spacing-lg); opacity: 0.7; }` and `.card-spark .spark-svg { width: 100%; height: 28px; display: block; overflow: visible; }`. `margin-top: auto` in the flex column pushes the sparkline to the bottom of every card regardless of content height above it. Added `.card-grid.list .card-spark { display: none; }` to suppress it in list view where cards are horizontal strips.
+
+**Files changed:**
+- `app/components/card.js`
+- `app/styles.css`
+
+---
+
+## Previous Session — 2026-03-14 (Control Room UX: readiness panel + entity viewer + view changes + Explore in-page header)
+
+### Task 1 — Explore: in-page header (Build)
+
+Moved search bar and filter chips from fixed floating positions into an in-page `.explore-header` block inside `.page-header`. Reduces content padding-top from 232px to 88px. Added title "Explore sports properties" above the search bar.
+
+**Files changed:**
+- `app/explore.html` — removed fixed bar, added `<div class="explore-header">` with title, search, and chips
+- `app/styles.css` — `.page-header` changed from `display:none` to `display:block`; `.content` padding-top reduced; `.search-bar` changed from fixed to in-page; new `.explore-header`, `.eh-title`, `.eh-filters` styles; responsive rules updated
+
+### Task 2 — Explore: `/` keyboard shortcut (Build)
+
+Pressing `/` outside an input field focuses the search bar.
+
+**Files changed:**
+- `app/explore.html` — keydown listener added after existing Escape listener
+
+### Task 3 — Overlay: "Open full property profile" CTA (Build)
+
+Added a prominent `<a>` link at the very bottom of the property detail overlay panel navigating to `property.html?slug={slug}`.
+
+**Files changed:**
+- `app/components/panel.js` — section 11 added after posts section
+- `app/styles.css` — `.dp-profile-cta`, `.dp-profile-cta-link` styles added
+
+### Task 4 — Watchlist + Portfolio empty states (Build)
+
+Replaced minimal/blank empty states with explanatory copy.
+
+Watchlist: "Your watchlist is empty" / "Add properties from Explore to track their momentum."
+Portfolio: "Your portfolio is empty" / "Add properties to start tracking potential sponsorship opportunities."
+
+**Files changed:**
+- `app/watchlist.html`
+- `app/portfolio.html`
+
+### Task 5 — Control Room: Series Readiness panel (Build)
+
+Added a readiness sub-row behind each series run row. Toggled via "Readiness" in the row action menu. Shows four metrics: Entities with bios, FanScore coverage, Images, Visibility. Each metric is colour-coded: green (ok), amber (gap), neutral.
+
+Readiness data added to `SERIES_STATUS` entries as `readiness: { entities_total, entities_bios, fanscore_count, images_count, visible }`.
+
+**Files changed:**
+- `app/control-room.html` — `SERIES_STATUS` data; `renderStatus()` readiness row; `crReadinessMetric()`, `toggleReadiness()` helpers; CSS for `.cr-readiness-*`
+
+### Task 6 — Control Room: Entity Viewer modal (Build)
+
+"View entities" in the row action menu opens a modal listing all properties in that series. Queries Supabase via the same `property_relationships` pattern used by `loadImagesSection`. Shows entity name, slug, type, FanScore (most recent 30d window), image status (confirmed entity_images or images.js fallback), and visibility badge.
+
+**Files changed:**
+- `app/control-room.html` — entity-modal HTML; `viewEntities()`, `closeEntityModal()` functions; `.cr-modal-wide` CSS
+
+### Task 7 — Control Room: View Changes modal (Build)
+
+"View changes" in the row action menu (present when a run_id exists) opens a summary of what the run actually changed. Data source: `control_room_log` rows for the run_id + `ingestion_runs` row for counts.
+
+Classification is best-effort (log messages are human-readable text, not structured records). Structure builder summary line is parsed for created/updated/relationship counts. Other entries are classified by message pattern: Checklist/visibility changes go to "Updated", error-tagged rows go to "Errors". Entries that do not match any pattern are omitted. Older runs with no classifiable entries show an explicit "Structured change data is incomplete" message rather than a blank or fabricated list.
+
+**Files changed:**
+- `app/control-room.html` — changes-modal HTML; `viewChanges()`, `closeChangesModal()`, `stat()`, `changeGroup()` functions; CSS for `.cr-change-*`
+
+---
+
+## Last Session — 2026-03-14 (Explore — keyword search + Load More footer refinement)
+
+### Task 1 — Load More footer refinement (Build)
+
+Aligned the Explore page with a calm Dribbble/Bloomberg-style browsing pattern. Footer is now always reachable.
+
+**Files changed:**
+- `app/ui.js` — renamed "Load more" button to "Load More Properties"
+- `app/explore.html` — added `<footer class="site-footer">` element (always visible, structural HTML); updated scroll handler to fade out the grid-bottom gradient when user is within 160px of page bottom
+- `app/styles.css` — added `.site-footer`, `.sf-inner`, `.sf-brand`, `.sf-dot` styles; updated `.content` top padding from 184px to 232px
+
+**Behaviour:**
+- Footer is always visible below the Load More button
+- Grid bottom fade hides when near footer so it doesn't obscure it
+- New cards append on Load More; footer descends naturally
+
+---
+
+### Task 2 — Explore keyword search field (Build)
+
+Added a client-side keyword search field to Explore, positioned as a fixed bar directly below the filter chips.
+
+**Files changed:**
+- `app/explore.html` — added `.search-bar` HTML (fixed, above main content); wired `input` event listener with 140ms debounce in the init IIFE
+- `app/ui.js` — added `_searchTerm`, `_searchDebounce`, `matchesSearch()`, `applySearch()`, `clearSearch()`; updated `renderGrid()` to apply search filter after type filter; updated empty state message to include search term when relevant
+- `app/styles.css` — added `.search-bar`, `.search-bar-icon`, `.search-bar-input`, `.search-bar-clear` with dark mode overrides; updated `.content` top padding
+
+**How search works:**
+- `_searchTerm` is module-level state in `ui.js`
+- `renderGrid()` applies type filter first, then `matchesSearch()` against the result
+- `matchesSearch()` checks: `name`, `slug`, type label (from `TYPE[c.type].label`), `sport`, `region`, `city`
+- Case-insensitive, partial match (`indexOf`)
+- Debounced 140ms on input to prevent animation thrashing during fast typing
+- Changing filter chip or sort order preserves the active search term (they all call `renderGrid(activeFilter)` which reads `_searchTerm`)
+- Load More operates against `_currentVis` which is already the search-filtered set
+- Clear button appears when input has content; click resets term and re-renders
+
+**What is NOT searched:** bio text, team/driver names, country code, platforms. These can be added if needed.
+
+**Empty state:** shows `No properties matched "term".` when search returns nothing.
+
+---
+
+## Previous Session — 2026-03-14 (Property page — ecosystem relationship explanation layer)
 
 ### Task — Ecosystem relationship explanation (Parts 1-7)
 
@@ -1133,7 +2454,7 @@ Surface athletes showing strongest follower growth relative to their tier. Deriv
 
 ### 3. Sparkline rendering
 
-Data is already fetched into `c.sparks`. Implement SVG sparkline rendering using the existing `renderSpark()` function in `data.js`. Add to card body or panel.
+~~Implement SVG sparkline rendering on cards using `renderSpark()`.~~ DONE 2026-03-14. See session log below.
 
 ### Remaining known image gaps (intentional placeholders)
 

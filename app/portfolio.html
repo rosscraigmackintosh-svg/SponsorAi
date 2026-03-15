@@ -13,8 +13,8 @@
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
-<div class="float-bar bar-left" role="banner">
+<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<header class="app-header" role="banner">
 
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
@@ -63,11 +63,26 @@
     </svg>
 
   <div class="bar-divider"></div>
-  <span class="bar-page-title" id="page-view-title">Portfolio</span>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="navigateTo('explore.html')">Explore</button>
+    <button class="chip active" onclick="navigateTo('portfolio.html')" aria-current="page">Portfolio</button>
+    <button class="chip" onclick="navigateTo('compare.html')">Compare</button>
+    <button class="chip" onclick="navigateTo('watchlist.html')">Watchlist</button>
+    <button class="chip" onclick="navigateTo('board.html')">Board</button>
+    <button class="chip" onclick="navigateTo('opportunities.html')">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RS
+    </button>
+  </div>
+</header>
 
-</div>
-
-<!-- Nav dropdown (opens below left bar) -->
+<!-- Nav dropdown -->
 <nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
 
   <div class="menu-cols">
@@ -83,6 +98,8 @@
       <div class="menu-col-divider"></div>
 
       <button class="menu-item" data-nav="Watchlist" onclick="closeNavMenu(); window.location.href='watchlist.html'">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="closeNavMenu(); window.location.href='board.html'">Board</button>
+      <button class="menu-item" data-nav="Opportunities" onclick="closeNavMenu(); window.location.href='opportunities.html'">Opportunities</button>
     </div>
 
   </div>
@@ -114,20 +131,6 @@
   <div class="menu-model-label" id="nav-model-label">model v1.0</div>
 
 </nav>
-
-<!-- ────────────────── RIGHT FLOATING BAR — profile ───────────────── -->
-<div class="float-bar bar-right">
-
-  <!-- Profile -->
-  <button class="bar-btn-profile" id="profile-btn"
-    onclick="toggleProfileMenu()"
-    aria-label="Account menu"
-    aria-expanded="false"
-    aria-controls="profile-menu">
-    RS
-  </button>
-
-</div>
 
 <!-- Profile dropdown -->
 <div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
@@ -170,11 +173,11 @@
     <!-- Empty state -->
     <div id="empty-state" style="display:none;">
       <div class="state-msg" style="color:var(--text-3)">
-        <strong>No properties in your portfolio yet</strong>
+        <strong style="color:var(--text-2)">Your portfolio is empty</strong>
         <br style="margin:var(--spacing-sm) 0;">
-        Browse Explore to add properties to your portfolio and track them here.
+        Add properties to start tracking potential sponsorship opportunities.
         <br style="margin:var(--spacing-lg) 0;">
-        <a href="explore.html" style="color:var(--accent);text-decoration:underline">Go to Explore</a>
+        <a href="explore.html" style="color:var(--accent);text-decoration:underline">Browse Explore</a>
       </div>
     </div>
 
@@ -302,7 +305,7 @@ function renderPortfolio() {
       '<td>' + followersVal + '</td>' +
       '<td>' + engVal + '</td>' +
       '<td>' +
-        '<a href="property.html?slug=' + encodeURIComponent(row.slug) + '" style="color:var(--accent);font-size:12px;text-decoration:none;margin-right:var(--spacing-md)">View</a>' +
+        '<a href="property.html?slug=' + encodeURIComponent(row.slug) + '&ref=portfolio" style="color:var(--accent);font-size:12px;text-decoration:none;margin-right:var(--spacing-md)">View</a>' +
         '<a href="compare.html?a=' + encodeURIComponent(row.slug) + '" style="color:var(--accent);font-size:12px;text-decoration:none;margin-right:var(--spacing-md)">Compare</a>' +
         '<button onclick="removeFromPortfolio(' + idx + ')" style="background:none;border:none;color:var(--negative);font-size:12px;cursor:pointer">Remove</button>' +
       '</td>';

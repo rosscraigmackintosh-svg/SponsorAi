@@ -13,8 +13,8 @@
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ────────────────── LEFT FLOATING BAR — logo + menu ────────────────── -->
-<div class="float-bar bar-left" role="banner">
+<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<header class="app-header" role="banner">
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
     aria-label="Open navigation menu"
@@ -62,9 +62,24 @@
     </svg>
 
   <div class="bar-divider"></div>
-  <span class="bar-page-title" id="page-view-title">Compare</span>
-
-</div>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="navigateTo('explore.html')">Explore</button>
+    <button class="chip" onclick="navigateTo('portfolio.html')">Portfolio</button>
+    <button class="chip active" onclick="navigateTo('compare.html')" aria-current="page">Compare</button>
+    <button class="chip" onclick="navigateTo('watchlist.html')">Watchlist</button>
+    <button class="chip" onclick="navigateTo('board.html')">Board</button>
+    <button class="chip" onclick="navigateTo('opportunities.html')">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RS
+    </button>
+  </div>
+</header>
 
 <!-- Nav dropdown -->
 <nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
@@ -77,6 +92,8 @@
     <div class="menu-col">
       <div class="menu-col-divider"></div>
       <button class="menu-item" data-nav="Watchlist" onclick="navigateTo('watchlist.html'); closeNavMenu()">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="navigateTo('board.html'); closeNavMenu()">Board</button>
+      <button class="menu-item" data-nav="Opportunities" onclick="navigateTo('opportunities.html'); closeNavMenu()">Opportunities</button>
     </div>
   </div>
   <div class="menu-divider"></div>
@@ -103,16 +120,6 @@
   <div class="menu-model-label" id="nav-model-label">model v1.0</div>
 </nav>
 
-<!-- ────────────────── RIGHT FLOATING BAR — profile ───────────────── -->
-<div class="float-bar bar-right">
-  <button class="bar-btn-profile" id="profile-btn"
-    onclick="toggleProfileMenu()"
-    aria-label="Account menu"
-    aria-expanded="false"
-    aria-controls="profile-menu">
-    RS
-  </button>
-</div>
 
 <!-- Profile dropdown -->
 <div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
@@ -228,6 +235,19 @@ function saveComparisonLink() {
   });
 }
 
+/* ── Board action ──────────────────────────────────────────────────── */
+function addToBoard(slug) {
+  if (!slug) return;
+  SAI_STORAGE.board.addToStage(slug, 'watching');
+  /* Update button(s) in-place — avoids a full API re-fetch */
+  document.querySelectorAll('.compare-board-btn[data-slug="' + slug + '"]').forEach(function(btn) {
+    btn.className = 'compare-board-btn compare-board-btn-active';
+    btn.textContent = 'On Board';
+    btn.title = 'On Board: Watching';
+    btn.onclick = function() { navigateTo('board.html'); };
+  });
+}
+
 function clearCompareSelection() {
   selectedA = null;
   selectedB = null;
@@ -291,6 +311,9 @@ function loadProperties() {
       } else {
         document.getElementById('state-loading').style.display = 'none';
         document.getElementById('state-content').style.display = 'block';
+        /* If one property is pre-selected (e.g. arrived via ?a= from Board),
+           render the partial-state guidance so the container isn't blank */
+        if (selCount > 0) updateComparison();
       }
     })
     .catch(function(err) {
@@ -337,7 +360,7 @@ function updateComparison() {
   }
 
   /* Fetch data for each selected property */
-  var cols = 'property_id,property_name,property_type,country,slug,avg_score_30d,trend_value_30d,confidence_band_30d,suppression_reason_30d,total_followers_latest,engagement_rate_30d_pct,posts_30d,avg_score_90d,sport,region';
+  var cols = 'property_id,property_name,property_type,country,slug,avg_score_30d,trend_value_30d,confidence_band_30d,suppression_reason_30d,total_followers_latest,followers_net_30d,engagement_rate_30d_pct,posts_30d,total_interactions_30d,avg_score_90d,sport,region';
   var slugsToFetch = [selectedA, selectedB];
   if (selectedC) slugsToFetch.push(selectedC);
 
@@ -398,11 +421,35 @@ function renderComparisonTable(props) {
     { label: 'Followers',
       fn: function(p) { return p.total_followers_latest ? fmtFollowers(p.total_followers_latest) : '--'; }
     },
+    { label: 'Followers change (30d)',
+      fn: function(p) {
+        if (p.followers_net_30d == null) return '--';
+        var v = p.followers_net_30d;
+        var abs = Math.abs(v);
+        var s;
+        if      (abs >= 1000000) s = (abs / 1000000).toFixed(1) + 'M';
+        else if (abs >= 100000)  s = Math.round(abs / 1000) + 'k';
+        else if (abs >= 1000)    s = (abs / 1000).toFixed(1) + 'k';
+        else                     s = String(Math.round(abs));
+        return (v >= 0 ? '+' : '\u2212') + s;
+      },
+      color: function(p) { return p.followers_net_30d != null ? arrC(p.followers_net_30d) : null; }
+    },
     { label: 'Engagement rate (30d)',
       fn: function(p) { return p.engagement_rate_30d_pct != null ? p.engagement_rate_30d_pct.toFixed(2) + '%' : '--'; }
     },
     { label: 'Posts (30d)',
       fn: function(p) { return p.posts_30d ? String(p.posts_30d) : '--'; }
+    },
+    { label: 'Total interactions (30d)',
+      fn: function(p) {
+        if (!p.total_interactions_30d) return '--';
+        var v = p.total_interactions_30d;
+        if      (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+        else if (v >= 100000)  return Math.round(v / 1000) + 'k';
+        else if (v >= 1000)    return (v / 1000).toFixed(1) + 'k';
+        return String(Math.round(v));
+      }
     },
     { label: 'FanScore (90d avg)',
       fn: function(p) { return fmt(p.avg_score_90d, 1); }
@@ -429,6 +476,28 @@ function renderComparisonTable(props) {
 
     html += '</tr>';
   });
+
+  /* Board action row */
+  html += '<tr class="compare-tr">';
+  html += '<td class="compare-td-label">Board</td>';
+  props.forEach(function(prop) {
+    var boardStage = SAI_STORAGE.board.getSlugStage(prop.slug);
+    html += '<td class="compare-td-val">';
+    if (boardStage) {
+      var stageLabel = boardStage.charAt(0).toUpperCase() + boardStage.slice(1);
+      html += '<button class="compare-board-btn compare-board-btn-active"' +
+              ' data-slug="' + escHtml(prop.slug) + '"' +
+              ' onclick="navigateTo(\'board.html\')"' +
+              ' title="On Board: ' + stageLabel + '">On Board</button>';
+    } else {
+      html += '<button class="compare-board-btn"' +
+              ' data-slug="' + escHtml(prop.slug) + '"' +
+              ' onclick="addToBoard(\'' + escHtml(prop.slug) + '\')"' +
+              ' title="Add to Board">Add to Board</button>';
+    }
+    html += '</td>';
+  });
+  html += '</tr>';
 
   html += '</tbody></table>';
 
@@ -623,6 +692,43 @@ SAI_UIH.initMenuListeners();
 .compare-save-link-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
+}
+
+/* Board action row buttons */
+.compare-board-btn {
+  padding: 5px var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.compare-board-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+
+.compare-board-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.compare-board-btn-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.compare-board-btn-active:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .state-msg {

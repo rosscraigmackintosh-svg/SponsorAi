@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/config.js", "destination": "/api/config" }
+  ],
   "headers": [
     {
       "source": "/(.*)\\.html",

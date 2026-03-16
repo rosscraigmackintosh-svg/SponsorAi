@@ -3,11 +3,587 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SponsorAI — Compare</title>
+<title>SponsorAI — Compare Properties</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script src="https://unpkg.com/lucide@latest"></script>
+<style>
+
+/* ── Compare page container ──────────────────────────────────────────── */
+.cmp-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4xl);
+}
+
+/* ── Page header ─────────────────────────────────────────────────────── */
+.cmp-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-2xl) 0 var(--spacing-xl);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.cmp-page-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.cmp-page-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.cmp-page-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: var(--spacing-xs);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.cmp-empty {
+  padding: var(--spacing-4xl) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.cmp-empty-body {
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+}
+
+.cmp-empty-lead {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.cmp-empty-hint {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin: 0 0 var(--spacing-2xl);
+  line-height: 1.55;
+}
+
+.cmp-empty-quick-add {
+  text-align: left;
+}
+
+.cmp-empty-add-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.cmp-add-search-wrap {
+  position: relative;
+}
+
+.cmp-add-search {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.cmp-add-search:focus {
+  border-color: var(--accent);
+}
+
+/* ── Shared add list ─────────────────────────────────────────────────── */
+.cmp-add-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-y: auto;
+  max-height: 260px;
+  margin-top: 4px;
+}
+
+.cmp-add-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  gap: var(--spacing-sm);
+  transition: background 0.12s;
+}
+
+.cmp-add-item:last-child {
+  border-bottom: none;
+}
+
+.cmp-add-item:hover {
+  background: var(--surface-muted);
+}
+
+.cmp-add-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmp-add-item-meta {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.cmp-add-empty {
+  padding: var(--spacing-md);
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* ── Workspace ───────────────────────────────────────────────────────── */
+.cmp-workspace {
+  overflow-x: auto;
+  /* --cmp-col-count set by JS */
+}
+
+/* ── Column header row ───────────────────────────────────────────────── */
+.cmp-header-row {
+  display: grid;
+  grid-template-columns: var(--cmp-label-w, 180px) repeat(var(--cmp-col-count, 2), 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  min-width: 0;
+}
+
+.cmp-label-spacer {
+  /* empty first cell to match label column width */
+  flex-shrink: 0;
+}
+
+/* ── Property column card ────────────────────────────────────────────── */
+.cmp-col-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.cmp-col-card:hover {
+  border-color: var(--accent);
+}
+
+.cmp-col-remove {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+
+.cmp-col-remove:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+
+.cmp-col-img-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-muted);
+  flex-shrink: 0;
+  margin-bottom: var(--spacing-xs);
+}
+
+.cmp-col-img {
+  width: 100%;
+  height: 100%;
+}
+
+.cmp-col-img--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  width: 100%;
+  height: 100%;
+}
+
+.cmp-col-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.35;
+  padding-right: 20px; /* avoid overlap with remove btn */
+}
+
+.cmp-col-meta {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  margin-bottom: var(--spacing-xs);
+}
+
+.cmp-col-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border);
+}
+
+.cmp-col-score-val {
+  font-family: var(--mono);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--text-1);
+  line-height: 1;
+}
+
+.cmp-col-score-val--suppressed {
+  color: var(--text-3);
+}
+
+.cmp-col-score-label {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cmp-col-conf {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.cmp-col-watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: var(--spacing-sm);
+  padding: 4px var(--spacing-sm);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.cmp-col-watch:hover {
+  border-color: var(--accent);
+  color: var(--text-1);
+}
+
+.cmp-col-watch.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface-muted);
+}
+
+/* ── Add property slot ───────────────────────────────────────────────── */
+.cmp-add-slot {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 172px;
+  position: relative;
+}
+
+.cmp-add-slot-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cmp-add-btn {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.cmp-add-btn:hover {
+  color: var(--text-1);
+  background: var(--surface-muted);
+}
+
+.cmp-add-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.cmp-add-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* ── Comparison sections ─────────────────────────────────────────────── */
+.cmp-sections {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.cmp-section {
+  border-bottom: 1px solid var(--border);
+}
+
+.cmp-section:last-child {
+  border-bottom: none;
+}
+
+.cmp-section-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmp-row {
+  display: grid;
+  grid-template-columns: var(--cmp-label-w, 180px) repeat(var(--cmp-col-count, 2), 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmp-row:last-child {
+  border-bottom: none;
+}
+
+.cmp-row-label {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border);
+  background: var(--surface-muted);
+  line-height: 1.4;
+}
+
+.cmp-cell {
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  border-right: 1px solid var(--border);
+  min-width: 0;
+}
+
+.cmp-cell:last-child {
+  border-right: none;
+}
+
+.cmp-cell--empty {
+  background: var(--bg);
+}
+
+/* ── Cell value types ────────────────────────────────────────────────── */
+.cmp-val-score {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.cmp-val-num {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+}
+
+.cmp-val-text {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+}
+
+.cmp-val-trend {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.cmp-val-delta {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.cmp-val-na {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.cmp-badge {
+  display: inline-block;
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+/* ── Disclaimer ──────────────────────────────────────────────────────── */
+.cmp-disclaimer {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  margin-bottom: var(--spacing-4xl);
+  line-height: 1.5;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .cmp-container {
+    padding: 0 var(--spacing-xl);
+  }
+  .cmp-page-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl) 0 var(--spacing-lg);
+  }
+  .cmp-header-row,
+  .cmp-row {
+    --cmp-label-w: 140px;
+    grid-template-columns: 140px repeat(var(--cmp-col-count, 2), 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cmp-container {
+    padding: 0 var(--spacing-lg);
+  }
+  .cmp-header-row,
+  .cmp-row {
+    --cmp-label-w: 110px;
+    grid-template-columns: 110px repeat(var(--cmp-col-count, 2), 1fr);
+  }
+  .cmp-col-score-val {
+    font-size: var(--text-lg);
+  }
+}
+
+/* ── Engagement chart section ───────────────────────────────────── */
+
+.cmp-chart-section {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.cmp-chart-section-hd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.cmp-chart-section-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.cmp-chart-section-sub {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+/* ECharts needs an explicit height on the container */
+#cmp-engagement-chart-wrap {
+  width: 100%;
+  /* Height set dynamically in JS based on property count */
+}
+
+</style>
 </head>
 <body>
 
@@ -164,611 +740,642 @@
       </div>
     </div>
 
-    <!-- Comparison page (hidden until loaded) -->
-    <div id="state-content" style="display:none;">
+    <!-- Compare content -->
+    <div id="state-content" style="display:none">
+      <div class="cmp-container">
 
-      <!-- Property selection area -->
-      <div class="compare-selectors">
-        <div class="compare-selector-group">
-          <label for="select-a" class="compare-selector-label">Property A</label>
-          <select id="select-a" class="compare-selector-input" onchange="updateComparison()">
-            <option value="">Select a property...</option>
-          </select>
+        <!-- Page header -->
+        <div class="cmp-page-header">
+          <div>
+            <h1 class="cmp-page-title">Compare Properties</h1>
+            <p class="cmp-page-subtitle">Compare properties side-by-side to understand differences in fan engagement, audience scale, and momentum.</p>
+          </div>
+          <div class="cmp-page-actions" id="cmp-page-actions">
+            <button class="chip" id="save-link-btn" onclick="saveComparisonLink()" style="display:none">Save link</button>
+            <button class="chip" id="clear-all-btn" onclick="clearAllProperties()" style="display:none">Clear all</button>
+          </div>
         </div>
-        <div class="compare-selector-group">
-          <label for="select-b" class="compare-selector-label">Property B</label>
-          <select id="select-b" class="compare-selector-input" onchange="updateComparison()">
-            <option value="">Select a property...</option>
-          </select>
+
+        <!-- Empty state -->
+        <div class="cmp-empty" id="cmp-empty">
+          <div class="cmp-empty-body">
+            <p class="cmp-empty-lead">No properties selected</p>
+            <p class="cmp-empty-hint">Add up to four properties to compare fan engagement, audience scale, and momentum side-by-side. Start from any property profile or search below.</p>
+            <div class="cmp-empty-quick-add">
+              <label class="cmp-empty-add-label" for="empty-add-input">Quick add</label>
+              <div class="cmp-add-search-wrap">
+                <input
+                  type="text"
+                  class="cmp-add-search"
+                  id="empty-add-input"
+                  placeholder="Search properties..."
+                  oninput="onEmptyAddInput(this.value)"
+                  onfocus="onEmptyAddFocus()"
+                  autocomplete="off"
+                  aria-label="Search properties to add"
+                  aria-autocomplete="list"
+                  aria-controls="empty-add-list">
+                <div class="cmp-add-list" id="empty-add-list" style="display:none" role="listbox"></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="compare-selector-group">
-          <label for="select-c" class="compare-selector-label">Property C <span class="compare-selector-optional">optional</span></label>
-          <select id="select-c" class="compare-selector-input" onchange="updateComparison()">
-            <option value="">Add a third property...</option>
-          </select>
+
+        <!-- Workspace (shown when >= 1 property selected) -->
+        <div class="cmp-workspace" id="cmp-workspace" style="display:none">
+          <div class="cmp-header-row" id="cmp-header-row"></div>
+          <div class="cmp-sections" id="cmp-sections"></div>
+          <!-- Engagement chart — shown when ≥2 properties have engagement data -->
+          <div class="cmp-chart-section" id="cmp-engagement-section" style="display:none">
+            <div class="cmp-chart-section-hd">
+              <span class="cmp-chart-section-title">Engagement Rate</span>
+              <span class="cmp-chart-section-sub">30-day average engagement rate by property</span>
+            </div>
+            <div id="cmp-engagement-chart-wrap"></div>
+          </div>
         </div>
+
+        <!-- Disclaimer -->
+        <p class="cmp-disclaimer" id="cmp-disclaimer" style="display:none">
+          FanScore is a descriptive indicator based on recent social signals. It does not predict future performance or guarantee sponsorship outcomes. Audience and engagement data is sourced from public platform signals and may not reflect all channels.
+        </p>
+
       </div>
-      <div id="compare-selection-status" class="compare-selection-status">Select up to 3 properties to compare</div>
-
-      <!-- Comparison table -->
-      <div id="comparison-table-container"></div>
-
-      <!-- Disclaimer -->
-      <div class="compare-disclaimer">
-        Signals shown are descriptive, not predictive. No alignment recommendation is implied.
-      </div>
-
     </div>
 
   </div>
 </main>
 
-<!-- ─────────────────────────────── SCRIPT ───────────────────────────── -->
 <script src="config.js"></script>
 <script src="storage.js"></script>
 <script src="data.js"></script>
 <script src="images.js"></script>
 <script src="ui.js"></script>
 <script src="ui-helpers.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="charts.js"></script>
 <script>
-
-/* ── Theme ────────────────────────────────────────────────────────── */
 SAI_UIH.initTheme();
 
-/* ── Global state ──────────────────────────────────────────────────── */
-var allProperties = [];
-var selectedA = null;
-var selectedB = null;
-var selectedC = null;
+/* ── State ───────────────────────────────────────────────────────────── */
+var allProperties  = [];
+var selectedSlugs  = [];   /* ordered array, max 4 */
 
-/* ── Save comparison link ──────────────────────────────────────────── */
-function saveComparisonLink() {
-  if (!selectedA || !selectedB) return;
-  var params = '?a=' + encodeURIComponent(selectedA) + '&b=' + encodeURIComponent(selectedB);
-  if (selectedC) params += '&c=' + encodeURIComponent(selectedC);
-  var url = window.location.origin + window.location.pathname + params;
-  navigator.clipboard.writeText(url).then(function() {
-    _showCompareNotice('Link copied to clipboard');
-  }).catch(function() {
-    window.history.replaceState(null, '', params);
-    _showCompareNotice('URL updated in address bar');
+/* ── Init ────────────────────────────────────────────────────────────── */
+function init() {
+  SAI_UIH.initMenuListeners();
+
+  loadGrid().then(function(cards) {
+    allProperties = cards;
+
+    /* Read initial slugs from URL params (sharing) and/or storage */
+    var urlParams = new URLSearchParams(window.location.search);
+    var fromUrl   = ['a','b','c','d']
+      .map(function(k) { return urlParams.get(k); })
+      .filter(Boolean);
+    var fromStore = SAI_STORAGE.compare.get();
+
+    /* URL params take precedence; if none present, use storage */
+    var source = fromUrl.length ? fromUrl : fromStore;
+    selectedSlugs = [];
+    source.forEach(function(s) {
+      if (s && selectedSlugs.indexOf(s) < 0 && selectedSlugs.length < 4) {
+        selectedSlugs.push(s);
+      }
+    });
+
+    /* Sync back to storage */
+    SAI_STORAGE.compare.set(selectedSlugs);
+
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-content').style.display = '';
+
+    renderPage();
+
+  }).catch(function(err) {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-content').style.display = '';
+    var c = document.querySelector('.cmp-container');
+    if (c) c.innerHTML = SAI_UIH.errorHtml('Could not load properties. ' + (err && err.message ? err.message : ''));
   });
 }
 
-/* ── Board action ──────────────────────────────────────────────────── */
-function addToBoard(slug) {
+/* ── Property selection ──────────────────────────────────────────────── */
+function getSelectedCards() {
+  return selectedSlugs.map(function(slug) {
+    return allProperties.find(function(c) { return c.slug === slug; });
+  }).filter(Boolean);
+}
+
+function addProperty(slug) {
   if (!slug) return;
-  SAI_STORAGE.board.addToStage(slug, 'watching');
-  /* Update button(s) in-place — avoids a full API re-fetch */
-  document.querySelectorAll('.compare-board-btn[data-slug="' + slug + '"]').forEach(function(btn) {
-    btn.className = 'compare-board-btn compare-board-btn-active';
-    btn.textContent = 'On Board';
-    btn.title = 'On Board: Watching';
-    btn.onclick = function() { navigateTo('board.html'); };
-  });
+  if (selectedSlugs.indexOf(slug) >= 0) return;
+  if (selectedSlugs.length >= 4) return;
+  selectedSlugs.push(slug);
+  SAI_STORAGE.compare.set(selectedSlugs);
+  closeAllDropdowns();
+  renderPage();
 }
 
-function clearCompareSelection() {
-  selectedA = null;
-  selectedB = null;
-  selectedC = null;
+function removeProperty(slug, evt) {
+  if (evt) { evt.stopPropagation(); }
+  selectedSlugs = selectedSlugs.filter(function(s) { return s !== slug; });
+  SAI_STORAGE.compare.set(selectedSlugs);
+  renderPage();
+}
+
+function clearAllProperties() {
+  selectedSlugs = [];
   SAI_STORAGE.compare.set([]);
-  document.getElementById('select-a').value = '';
-  document.getElementById('select-b').value = '';
-  document.getElementById('select-c').value = '';
-  document.getElementById('comparison-table-container').innerHTML = '';
-  _updateSelectionStatus(0);
-  window.history.replaceState(null, '', window.location.pathname);
+  renderPage();
 }
 
-function _showCompareNotice(msg) {
-  var el = document.getElementById('compare-notice');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.opacity = '1';
-  setTimeout(function() { el.style.opacity = '0'; }, 2400);
-}
+/* ── Master render ───────────────────────────────────────────────────── */
+function renderPage() {
+  var props     = getSelectedCards();
+  var hasProps  = props.length > 0;
+  var canAddMore = props.length < 4;
 
-function _updateSelectionStatus(count) {
-  var el = document.getElementById('compare-selection-status');
-  if (!el) return;
-  if      (count === 0) el.textContent = 'Select up to 3 properties to compare';
-  else if (count === 1) el.textContent = '1 of 3 selected \u2014 add 1 more to compare';
-  else if (count === 2) el.textContent = '2 of 3 selected \u2014 add a third for a 3-way view';
-  else                  el.textContent = '3 of 3 selected';
-}
+  document.getElementById('cmp-empty').style.display     = hasProps ? 'none' : '';
+  document.getElementById('cmp-workspace').style.display = hasProps ? ''     : 'none';
+  document.getElementById('cmp-disclaimer').style.display = hasProps ? ''    : 'none';
+  document.getElementById('save-link-btn').style.display = hasProps ? ''     : 'none';
+  document.getElementById('clear-all-btn').style.display = hasProps ? ''     : 'none';
 
-/* ── Load all properties and populate selectors ────────────────────── */
-function loadProperties() {
-  apiFetch('/v_property_summary_current?visible_in_ui=eq.true&select=property_id,property_name,property_type,slug&order=property_name.asc&limit=200')
-    .then(function(rows) {
-      allProperties = rows || [];
-      populateSelectors();
-
-      /* Priority 1: URL params (?a=slug&b=slug&c=slug) */
-      var urlParams = new URLSearchParams(window.location.search);
-      var slugA = urlParams.get('a');
-      var slugB = urlParams.get('b');
-      var slugC = urlParams.get('c');
-
-      /* Priority 2: persisted compare selection from sai-compare */
-      if (!slugA && !slugB) {
-        var saved = SAI_STORAGE.compare.get();
-        if (saved.length >= 1) slugA = saved[0];
-        if (saved.length >= 2) slugB = saved[1];
-        if (saved.length >= 3) slugC = saved[2];
-      }
-
-      if (slugA) { document.getElementById('select-a').value = slugA; selectedA = slugA; }
-      if (slugB) { document.getElementById('select-b').value = slugB; selectedB = slugB; }
-      if (slugC) { document.getElementById('select-c').value = slugC; selectedC = slugC; }
-
-      var selCount = [slugA, slugB, slugC].filter(Boolean).length;
-      _updateSelectionStatus(selCount);
-
-      if (slugA && slugB) {
-        updateComparison();
-      } else {
-        document.getElementById('state-loading').style.display = 'none';
-        document.getElementById('state-content').style.display = 'block';
-        /* If one property is pre-selected (e.g. arrived via ?a= from Board),
-           render the partial-state guidance so the container isn't blank */
-        if (selCount > 0) updateComparison();
-      }
-    })
-    .catch(function(err) {
-      document.getElementById('state-loading').innerHTML =
-        '<div class="state-msg" style="color:var(--negative)"><strong>Error loading properties</strong><br>' + err.message + '</div>';
-    });
-}
-
-function populateSelectors() {
-  var selectA = document.getElementById('select-a');
-  var selectB = document.getElementById('select-b');
-  var selectC = document.getElementById('select-c');
-
-  allProperties.forEach(function(prop) {
-    [selectA, selectB, selectC].forEach(function(sel) {
-      var opt = document.createElement('option');
-      opt.value = prop.slug;
-      opt.textContent = prop.property_name;
-      sel.appendChild(opt);
-    });
-  });
-}
-
-/* ── Build comparison table ────────────────────────────────────────── */
-function updateComparison() {
-  selectedA = document.getElementById('select-a').value || null;
-  selectedB = document.getElementById('select-b').value || null;
-  selectedC = document.getElementById('select-c').value || null;
-
-  /* Persist selection to SAI_STORAGE */
-  var toSave = [selectedA, selectedB, selectedC].filter(Boolean);
-  SAI_STORAGE.compare.set(toSave);
-
-  /* Selection status feedback */
-  _updateSelectionStatus(toSave.length);
-
-  /* Need at least 2 to render */
-  if (!selectedA || !selectedB) {
-    document.getElementById('comparison-table-container').innerHTML =
-      toSave.length === 1
-        ? '<div class="state-msg compare-partial-state">Select 1 more property to start comparing.<br><span class="compare-partial-hint">Add a third for a 3-way view.</span></div>'
-        : '';
+  if (!hasProps) {
+    /* Pre-populate empty-state search list */
+    buildEmptyAddList('');
     return;
   }
 
-  /* Fetch data for each selected property */
-  var cols = 'property_id,property_name,property_type,country,slug,avg_score_30d,trend_value_30d,confidence_band_30d,suppression_reason_30d,total_followers_latest,followers_net_30d,engagement_rate_30d_pct,posts_30d,total_interactions_30d,avg_score_90d,sport,region';
-  var slugsToFetch = [selectedA, selectedB];
-  if (selectedC) slugsToFetch.push(selectedC);
+  /* Total grid columns = property count + 1 add slot (if room) */
+  var totalCols = props.length + (canAddMore ? 1 : 0);
 
-  Promise.all(slugsToFetch.map(function(slug) {
-    return apiFetch('/v_property_summary_current?slug=eq.' + encodeURIComponent(slug) + '&select=' + cols);
-  })).then(function(results) {
-    var props = results.map(function(r) { return r && r[0]; }).filter(Boolean);
-    if (props.length < 2) {
-      document.getElementById('comparison-table-container').innerHTML =
-        '<div class="state-msg" style="color:var(--text-3)">One or more properties not found.</div>';
-      return;
-    }
-    renderComparisonTable(props);
-    document.getElementById('state-loading').style.display = 'none';
-    document.getElementById('state-content').style.display = 'block';
-  }).catch(function(err) {
-    document.getElementById('comparison-table-container').innerHTML =
-      '<div class="state-msg" style="color:var(--negative)"><strong>Error loading comparison</strong><br>' + err.message + '</div>';
-    document.getElementById('state-loading').style.display = 'none';
-    document.getElementById('state-content').style.display = 'block';
-  });
+  var workspace = document.getElementById('cmp-workspace');
+  workspace.style.setProperty('--cmp-col-count', totalCols);
+
+  renderColumnHeaders(props, canAddMore);
+  renderComparisonTable(props, canAddMore);
+  renderEngagementChart(props);
+  updateUrl(props);
 }
 
-/* props: array of 2 or 3 property objects */
-function renderComparisonTable(props) {
-  var html = '<table class="compare-table">';
+/* ── Column headers ──────────────────────────────────────────────────── */
+function renderColumnHeaders(props, showAddSlot) {
+  var html = '<div class="cmp-label-spacer" aria-hidden="true"></div>';
 
-  /* Header */
-  html += '<thead><tr>';
-  html += '<th class="compare-th-label"></th>';
+  props.forEach(function(c) {
+    var imgMeta = c.imageMeta;
+    var imgHtml;
+    if (imgMeta && imgMeta.url) {
+      imgHtml = '<div class="cmp-col-img" style="'
+        + 'background-image:url(' + escHtml(imgMeta.url) + ');'
+        + 'background-size:' + (imgMeta.fit || 'cover') + ';'
+        + 'background-position:' + (imgMeta.pos || 'center') + ';'
+        + (imgMeta.bg ? 'background-color:' + imgMeta.bg + ';' : '')
+        + '"></div>';
+    } else {
+      imgHtml = '<div class="cmp-col-img cmp-col-img--placeholder">'
+        + escHtml((c.name || '?').charAt(0).toUpperCase())
+        + '</div>';
+    }
 
-  props.forEach(function(prop) {
-    var cfg = TYPE[prop.property_type] || { label: prop.property_type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
-    var flag = countryFlag(prop.country);
-    html += '<th class="compare-th-prop">';
-    html += '<div class="compare-th-name">' + escHtml(prop.property_name) + ' ' + flag + '</div>';
-    html += '<span class="compare-th-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' +
-            escHtml(cfg.label || prop.property_type) + '</span>';
-    html += '</th>';
+    var slug = c.slug || '';
+
+    var metaParts = [];
+    if (c.sport)  metaParts.push(c.sport);
+    if (c.region) metaParts.push(c.region);
+
+    var scoreHtml = c.sup30
+      ? '<span class="cmp-col-score-val cmp-col-score-val--suppressed">--</span>'
+      : '<span class="cmp-col-score-val">' + fmtScore(c.s30) + '</span>';
+
+    var confHtml = c.conf30
+      ? '<div class="cmp-col-conf">' + escHtml(c.conf30) + ' confidence</div>'
+      : '';
+
+    var inWL    = SAI_STORAGE.watchlist.has(slug);
+    var watchHtml = '<button class="cmp-col-watch' + (inWL ? ' active' : '') + '" '
+      + 'onclick="toggleWatchFromCompare(\'' + escHtml(slug) + '\', event)" '
+      + 'title="' + (inWL ? 'Remove from watchlist' : 'Add to watchlist') + '" '
+      + 'aria-label="' + (inWL ? 'Remove ' : 'Watch ') + escHtml(c.name || '') + '">'
+      + '<svg width="12" height="12" viewBox="0 0 12 12" fill="' + (inWL ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<path d="M6 1l1.3 2.6L10 4.1 8 6l.5 3.1L6 7.7 3.5 9.1 4 6 2 4.1l2.7-.5z"/>'
+      + '</svg>'
+      + (inWL ? 'Watching' : 'Watch')
+      + '</button>';
+
+    html += '<div class="cmp-col-card" onclick="navigateTo(\'property.html?slug=' + encodeURIComponent(slug) + '\')" title="Open ' + escHtml(c.name) + '">'
+      + '<button class="cmp-col-remove" onclick="removeProperty(\'' + escHtml(slug) + '\', event)" aria-label="Remove ' + escHtml(c.name) + '">'
+      + '<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><line x1="1" y1="1" x2="10" y2="10"/><line x1="10" y1="1" x2="1" y2="10"/></svg>'
+      + '</button>'
+      + '<div class="cmp-col-img-wrap">' + imgHtml + '</div>'
+      + '<div class="cmp-col-name">' + escHtml(c.name) + '</div>'
+      + (metaParts.length ? '<div class="cmp-col-meta">' + escHtml(metaParts.join(' \u00b7 ')) + '</div>' : '')
+      + SAI_UIH.typeBadgeHtml(c.type)
+      + '<div class="cmp-col-score-row">'
+      + scoreHtml
+      + '<span class="cmp-col-score-label">FanScore</span>'
+      + '</div>'
+      + confHtml
+      + watchHtml
+      + '</div>';
   });
 
-  html += '</tr></thead>';
-  html += '<tbody>';
+  if (showAddSlot) {
+    html += '<div class="cmp-add-slot">'
+      + '<div class="cmp-add-slot-inner" id="add-slot-inner">'
+      + '<button class="cmp-add-btn" id="add-slot-btn" onclick="toggleAddDropdown(event)" aria-haspopup="listbox" aria-expanded="false">'
+      + '+ Add property'
+      + '</button>'
+      + '<div class="cmp-add-dropdown" id="add-slot-dropdown" style="display:none" role="listbox">'
+      + '<input type="text" class="cmp-add-input" id="add-slot-input" placeholder="Search properties..." oninput="onSlotAddInput(this.value)" autocomplete="off" aria-label="Search properties">'
+      + '<div class="cmp-add-list" id="add-slot-list"></div>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
 
-  /* Comparison rows */
-  var rows = [
-    { label: 'FanScore (30d avg)',
-      fn: function(p) { return !!p.suppression_reason_30d ? '--' : fmtScore(p.avg_score_30d); },
-      isFanScore: true
-    },
-    { label: '30d Trend',
-      fn: function(p) { return p.trend_value_30d != null ? arr(p.trend_value_30d) + ' ' + Math.abs(p.trend_value_30d).toFixed(2) + '/d' : '--'; },
-      color: function(p) { return p.trend_value_30d != null ? arrC(p.trend_value_30d) : null; }
-    },
-    { label: 'Confidence',
-      fn: function(p) { return p.confidence_band_30d || '--'; }
-    },
-    { label: 'Followers',
-      fn: function(p) { return p.total_followers_latest ? fmtFollowers(p.total_followers_latest) : '--'; }
-    },
-    { label: 'Followers change (30d)',
-      fn: function(p) {
-        if (p.followers_net_30d == null) return '--';
-        var v = p.followers_net_30d;
-        var abs = Math.abs(v);
-        var s;
-        if      (abs >= 1000000) s = (abs / 1000000).toFixed(1) + 'M';
-        else if (abs >= 100000)  s = Math.round(abs / 1000) + 'k';
-        else if (abs >= 1000)    s = (abs / 1000).toFixed(1) + 'k';
-        else                     s = String(Math.round(abs));
-        return (v >= 0 ? '+' : '\u2212') + s;
+  document.getElementById('cmp-header-row').innerHTML = html;
+}
+
+/* ── Comparison table ────────────────────────────────────────────────── */
+var SECTIONS = [
+  {
+    label: 'Fan Engagement',
+    rows: [
+      {
+        label: 'FanScore',
+        render: function(c) {
+          if (c.sup30) return '<span class="cmp-val-na">--</span>';
+          return '<span class="cmp-val-score">' + fmtScore(c.s30) + '</span>';
+        }
       },
-      color: function(p) { return p.followers_net_30d != null ? arrC(p.followers_net_30d) : null; }
-    },
-    { label: 'Engagement rate (30d)',
-      fn: function(p) { return p.engagement_rate_30d_pct != null ? p.engagement_rate_30d_pct.toFixed(2) + '%' : '--'; }
-    },
-    { label: 'Posts (30d)',
-      fn: function(p) { return p.posts_30d ? String(p.posts_30d) : '--'; }
-    },
-    { label: 'Total interactions (30d)',
-      fn: function(p) {
-        if (!p.total_interactions_30d) return '--';
-        var v = p.total_interactions_30d;
-        if      (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
-        else if (v >= 100000)  return Math.round(v / 1000) + 'k';
-        else if (v >= 1000)    return (v / 1000).toFixed(1) + 'k';
-        return String(Math.round(v));
+      {
+        label: 'Confidence',
+        render: function(c) {
+          return c.conf30
+            ? '<span class="cmp-val-text">' + escHtml(c.conf30) + '</span>'
+            : '<span class="cmp-val-na">--</span>';
+        }
+      },
+      {
+        label: 'Daily trend',
+        render: function(c) {
+          if (c.t30 == null) return '<span class="cmp-val-na">--</span>';
+          return '<span class="cmp-val-trend" style="color:' + arrC(c.t30) + '">'
+            + arr(c.t30) + '\u2009' + fmt(Math.abs(c.t30), 2) + '/day'
+            + '</span>';
+        }
       }
-    },
-    { label: 'FanScore (90d avg)',
-      fn: function(p) { return fmtScore(p.avg_score_90d); }
-    },
-    { label: 'Sport',
-      fn: function(p) { return p.sport ? escHtml(p.sport) : '--'; }
-    },
-    { label: 'Region',
-      fn: function(p) { return p.region ? escHtml(p.region) : '--'; }
-    }
-  ];
+    ]
+  },
+  {
+    label: 'Audience',
+    rows: [
+      {
+        label: 'Total followers',
+        render: function(c) {
+          var f = fmtFollowers(c.followers);
+          return f
+            ? '<span class="cmp-val-num">' + f + '</span>'
+            : '<span class="cmp-val-na">--</span>';
+        }
+      },
+      {
+        label: '30d follower change',
+        render: function(c) {
+          if (c.followersDelta == null) return '<span class="cmp-val-na">--</span>';
+          var abs = fmtFollowers(Math.abs(c.followersDelta));
+          var sign  = c.followersDelta >= 0 ? '+' : '-';
+          var color = c.followersDelta > 0
+            ? 'var(--positive)'
+            : c.followersDelta < 0
+              ? 'var(--negative)'
+              : 'var(--text-3)';
+          return '<span class="cmp-val-delta" style="color:' + color + '">' + sign + abs + '</span>';
+        }
+      },
+      {
+        label: 'Engagement rate',
+        render: function(c) {
+          if (c.engRate30d == null) return '<span class="cmp-val-na">--</span>';
+          return '<span class="cmp-val-num">' + fmt(c.engRate30d, 1) + '%</span>';
+        }
+      },
+      {
+        label: 'Posts (30d)',
+        render: function(c) {
+          if (c.posts30d == null) return '<span class="cmp-val-na">--</span>';
+          return '<span class="cmp-val-num">' + Math.round(c.posts30d) + '</span>';
+        }
+      },
+      {
+        label: 'Platforms active',
+        render: function(c) {
+          if (!c.platforms) return '<span class="cmp-val-na">--</span>';
+          return '<span class="cmp-val-num">' + escHtml(String(c.platforms)) + '</span>';
+        }
+      }
+    ]
+  },
+  {
+    label: 'Growth & Momentum',
+    rows: [
+      {
+        label: 'Momentum signals',
+        render: function(c) {
+          var badges = computeMomentumScore(c);
+          if (!badges.length) return '<span class="cmp-val-na">--</span>';
+          return badges.map(function(b) {
+            return '<span class="cmp-badge">' + escHtml(b) + '</span>';
+          }).join('');
+        }
+      },
+      {
+        label: '30d score change',
+        render: function(c) {
+          if (c.sup30 || c.s30 == null || c.s60 == null) return '<span class="cmp-val-na">--</span>';
+          var d = c.s30 - c.s60;
+          var sign  = d >= 0 ? '+' : '';
+          var color = d > 0.5 ? 'var(--positive)' : d < -0.5 ? 'var(--negative)' : 'var(--text-3)';
+          return '<span class="cmp-val-delta" style="color:' + color + '">' + sign + fmt(d, 1) + '</span>';
+        }
+      },
+      {
+        label: '90d score change',
+        render: function(c) {
+          if (c.sup30 || c.s30 == null || c.s90 == null) return '<span class="cmp-val-na">--</span>';
+          var d = c.s30 - c.s90;
+          var sign  = d >= 0 ? '+' : '';
+          var color = d > 0.5 ? 'var(--positive)' : d < -0.5 ? 'var(--negative)' : 'var(--text-3)';
+          return '<span class="cmp-val-delta" style="color:' + color + '">' + sign + fmt(d, 1) + '</span>';
+        }
+      }
+    ]
+  },
+  {
+    label: 'Identity',
+    rows: [
+      {
+        label: 'Type',
+        render: function(c) {
+          return SAI_UIH.typeBadgeHtml(c.type) || '<span class="cmp-val-na">--</span>';
+        }
+      },
+      {
+        label: 'Sport',
+        render: function(c) {
+          return c.sport
+            ? '<span class="cmp-val-text">' + escHtml(c.sport) + '</span>'
+            : '<span class="cmp-val-na">--</span>';
+        }
+      },
+      {
+        label: 'Region',
+        render: function(c) {
+          return c.region
+            ? '<span class="cmp-val-text">' + escHtml(c.region) + '</span>'
+            : '<span class="cmp-val-na">--</span>';
+        }
+      },
+      {
+        label: 'Country',
+        render: function(c) {
+          if (!c.country) return '<span class="cmp-val-na">--</span>';
+          var flag = countryFlag(c.country);
+          return '<span class="cmp-val-text">'
+            + (flag ? flag + ' ' : '')
+            + escHtml(c.country)
+            + '</span>';
+        }
+      }
+    ]
+  }
+];
 
-  rows.forEach(function(row) {
-    html += '<tr class="compare-tr">';
-    html += '<td class="compare-td-label">' + escHtml(row.label) + '</td>';
+function renderComparisonTable(props, showAddSlot) {
+  var html = '';
 
-    props.forEach(function(p) {
-      var val = row.fn(p);
-      var color = row.color ? row.color(p) : null;
-      var style = color ? ' style="color:' + color + '"' : '';
-      var cls = row.isFanScore ? ' compare-highlight' : '';
-      html += '<td class="compare-td-val' + cls + '"' + style + '>' + val + '</td>';
+  SECTIONS.forEach(function(section) {
+    html += '<div class="cmp-section">'
+      + '<div class="cmp-section-label">' + escHtml(section.label) + '</div>';
+
+    section.rows.forEach(function(row) {
+      html += '<div class="cmp-row">'
+        + '<div class="cmp-row-label">' + escHtml(row.label) + '</div>';
+
+      props.forEach(function(c) {
+        html += '<div class="cmp-cell">' + row.render(c) + '</div>';
+      });
+
+      if (showAddSlot) {
+        html += '<div class="cmp-cell cmp-cell--empty"></div>';
+      }
+
+      html += '</div>';
     });
 
-    html += '</tr>';
+    html += '</div>';
   });
 
-  /* Board action row */
-  html += '<tr class="compare-tr">';
-  html += '<td class="compare-td-label">Board</td>';
-  props.forEach(function(prop) {
-    var boardStage = SAI_STORAGE.board.getSlugStage(prop.slug);
-    html += '<td class="compare-td-val">';
-    if (boardStage) {
-      var stageLabel = boardStage.charAt(0).toUpperCase() + boardStage.slice(1);
-      html += '<button class="compare-board-btn compare-board-btn-active"' +
-              ' data-slug="' + escHtml(prop.slug) + '"' +
-              ' onclick="navigateTo(\'board.html\')"' +
-              ' title="On Board: ' + stageLabel + '">On Board</button>';
-    } else {
-      html += '<button class="compare-board-btn"' +
-              ' data-slug="' + escHtml(prop.slug) + '"' +
-              ' onclick="addToBoard(\'' + escHtml(prop.slug) + '\')"' +
-              ' title="Add to Board">Add to Board</button>';
+  document.getElementById('cmp-sections').innerHTML = html;
+}
+
+/* ── Engagement comparison chart ────────────────────────────────────── */
+function renderEngagementChart(props) {
+  var section = document.getElementById('cmp-engagement-section');
+  var wrap    = document.getElementById('cmp-engagement-chart-wrap');
+  if (!section || !wrap) return;
+
+  /* Require ≥2 properties with engagement data to show the chart */
+  var withData = (props || []).filter(function(c) { return c.engRate30d != null; });
+  if (withData.length < 2) {
+    section.style.display = 'none';
+    if (typeof SAI_CHARTS !== 'undefined') SAI_CHARTS.dispose('cmp-engagement-chart-wrap');
+    return;
+  }
+
+  /* Scale chart height: 48px per bar + 40px padding */
+  var barH = withData.length * 48 + 40;
+  wrap.style.height = barH + 'px';
+
+  section.style.display = 'block';
+
+  var data = withData.map(function(c) {
+    return { label: c.name || c.slug, value: c.engRate30d };
+  });
+
+  if (typeof SAI_CHARTS !== 'undefined') {
+    SAI_CHARTS.createEngagementComparisonChart('cmp-engagement-chart-wrap', data);
+  }
+}
+
+/* ── Watch toggle from compare header ───────────────────────────────── */
+function toggleWatchFromCompare(slug, evt) {
+  if (evt) evt.stopPropagation();
+  if (!slug) return;
+  var nowIn = SAI_STORAGE.watchlist.toggle(slug);
+  /* Re-render just the header row to reflect new state */
+  var props = getSelectedCards();
+  renderColumnHeaders(props, props.length < 4);
+}
+
+/* ── Add property dropdown (slot) ────────────────────────────────────── */
+function toggleAddDropdown(evt) {
+  if (evt) evt.stopPropagation();
+  var dd  = document.getElementById('add-slot-dropdown');
+  var btn = document.getElementById('add-slot-btn');
+  if (!dd) return;
+  var isOpen = dd.style.display !== 'none';
+  if (isOpen) {
+    dd.style.display = 'none';
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  } else {
+    dd.style.display = '';
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    buildSlotAddList('');
+    var input = document.getElementById('add-slot-input');
+    if (input) { input.value = ''; input.focus(); }
+  }
+}
+
+function onSlotAddInput(val) {
+  buildSlotAddList(val);
+}
+
+function buildSlotAddList(query) {
+  var list = document.getElementById('add-slot-list');
+  if (!list) return;
+  list.innerHTML = buildAddListHtml(query, 'addProperty');
+}
+
+/* ── Add property (empty state) ──────────────────────────────────────── */
+function onEmptyAddFocus() {
+  var list = document.getElementById('empty-add-list');
+  if (list) {
+    buildEmptyAddList(document.getElementById('empty-add-input').value || '');
+    list.style.display = '';
+  }
+}
+
+function onEmptyAddInput(val) {
+  buildEmptyAddList(val);
+  var list = document.getElementById('empty-add-list');
+  if (list) list.style.display = '';
+}
+
+function buildEmptyAddList(query) {
+  var list = document.getElementById('empty-add-list');
+  if (!list) return;
+  list.innerHTML = buildAddListHtml(query, 'addPropertyFromEmpty');
+}
+
+function addPropertyFromEmpty(slug) {
+  addProperty(slug);
+  var list  = document.getElementById('empty-add-list');
+  var input = document.getElementById('empty-add-input');
+  if (list)  list.style.display = 'none';
+  if (input) input.value = '';
+}
+
+/* ── Shared add list builder ─────────────────────────────────────────── */
+function buildAddListHtml(query, callbackFn) {
+  var q = (query || '').toLowerCase().trim();
+  var available = allProperties.filter(function(c) {
+    return c.slug && selectedSlugs.indexOf(c.slug) < 0;
+  });
+  var filtered = q
+    ? available.filter(function(c) {
+        return (c.name   || '').toLowerCase().indexOf(q) >= 0
+            || (c.sport  || '').toLowerCase().indexOf(q) >= 0
+            || (c.region || '').toLowerCase().indexOf(q) >= 0;
+      })
+    : available;
+
+  filtered = filtered.slice(0, 24);
+
+  if (!filtered.length) {
+    return '<div class="cmp-add-empty">' + (q ? 'No results for "' + escHtml(q) + '"' : 'No properties available') + '</div>';
+  }
+
+  return filtered.map(function(c) {
+    return '<button class="cmp-add-item" onclick="' + callbackFn + '(\'' + escHtml(c.slug) + '\')" role="option">'
+      + '<span class="cmp-add-item-name">' + escHtml(c.name) + '</span>'
+      + (c.sport ? '<span class="cmp-add-item-meta">' + escHtml(c.sport) + '</span>' : '')
+      + '</button>';
+  }).join('');
+}
+
+/* ── Close dropdowns ─────────────────────────────────────────────────── */
+function closeAllDropdowns() {
+  var dd = document.getElementById('add-slot-dropdown');
+  if (dd) dd.style.display = 'none';
+  var btn = document.getElementById('add-slot-btn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  var emptyList = document.getElementById('empty-add-list');
+  if (emptyList) emptyList.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  /* Close slot dropdown unless click is inside add slot */
+  var slot = document.getElementById('add-slot-inner');
+  if (slot && !slot.contains(e.target)) {
+    var dd = document.getElementById('add-slot-dropdown');
+    if (dd) dd.style.display = 'none';
+    var btn = document.getElementById('add-slot-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  /* Close empty state list unless click is inside the search wrap */
+  var emptyWrap = document.querySelector('.cmp-add-search-wrap');
+  if (emptyWrap && !emptyWrap.contains(e.target)) {
+    var emptyList = document.getElementById('empty-add-list');
+    if (emptyList) emptyList.style.display = 'none';
+  }
+});
+
+/* ── URL sync ────────────────────────────────────────────────────────── */
+function updateUrl(props) {
+  var params  = new URLSearchParams();
+  var letters = ['a','b','c','d'];
+  props.forEach(function(c, i) {
+    if (c && c.slug) params.set(letters[i], c.slug);
+  });
+  var qs = params.toString();
+  var newUrl = window.location.pathname + (qs ? '?' + qs : '');
+  window.history.replaceState({}, '', newUrl);
+}
+
+function saveComparisonLink() {
+  var url = window.location.href;
+  var btn = document.getElementById('save-link-btn');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() {
+      if (btn) {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Save link'; }, 2000);
+      }
+    }).catch(function() {
+      if (btn) btn.textContent = 'Save link';
+    });
+  } else {
+    /* Fallback: select and copy */
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    if (btn) {
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Save link'; }, 2000);
     }
-    html += '</td>';
-  });
-  html += '</tr>';
-
-  html += '</tbody></table>';
-
-  /* Actions row: save link + clear */
-  html += '<div style="margin-top:var(--spacing-xl);display:flex;gap:var(--spacing-md);align-items:center">';
-  html += '<button class="compare-save-link-btn" onclick="saveComparisonLink()">Save as link</button>';
-  html += '<button class="compare-save-link-btn" style="background:var(--surface-muted);color:var(--text-2);border-color:var(--border)" onclick="clearCompareSelection()">Clear selection</button>';
-  html += '<span id="compare-notice" style="font-size:var(--text-xs);color:var(--positive);opacity:0;transition:opacity 0.4s"></span>';
-  html += '</div>';
-
-  document.getElementById('comparison-table-container').innerHTML = html;
+  }
 }
 
-/* ── Menu listeners ────────────────────────────────────────────────── */
-SAI_UIH.initMenuListeners();
-
-/* ── Init ──────────────────────────────────────────────────────────── */
-(function init() {
-  loadProperties();
-})();
-
+/* ── Boot ────────────────────────────────────────────────────────────── */
+init();
 </script>
-
-<style>
-
-/* Compare-specific styles */
-
-.compare-selectors {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-md);
-  padding: var(--spacing-lg);
-  background: var(--surface-muted);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-
-.compare-selector-optional {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  font-weight: 400;
-}
-
-.compare-selection-status {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  padding: 0 var(--spacing-xs);
-  margin-bottom: var(--spacing-4xl);
-}
-
-.compare-selector-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.compare-selector-label {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-2);
-}
-
-.compare-selector-input {
-  padding: 8px var(--spacing-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-1);
-  font-family: var(--font);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.compare-selector-input:hover {
-  border-color: var(--border-strong);
-}
-
-.compare-selector-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 0;
-  border-color: var(--accent);
-}
-
-/* Comparison table */
-.compare-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: var(--spacing-2xl);
-}
-
-.compare-table thead {
-  border-bottom: 1px solid var(--border);
-}
-
-.compare-th-label {
-  text-align: left;
-  padding: var(--spacing-md) var(--spacing-lg);
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  font-weight: 500;
-  width: 160px;
-  min-width: 160px;
-}
-
-.compare-th-prop {
-  text-align: left;
-  padding: var(--spacing-md) var(--spacing-lg);
-  flex: 1;
-}
-
-.compare-th-name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-1);
-  margin-bottom: var(--spacing-xs);
-}
-
-.compare-th-type {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 500;
-}
-
-.compare-tr {
-  border-bottom: 1px solid var(--border);
-}
-
-.compare-tr:last-child {
-  border-bottom: none;
-}
-
-.compare-td-label {
-  padding: var(--spacing-lg);
-  font-size: var(--text-sm);
-  color: var(--text-2);
-  font-weight: 500;
-  width: 160px;
-  min-width: 160px;
-  text-align: left;
-  background: var(--surface-muted);
-}
-
-.compare-td-val {
-  padding: var(--spacing-lg);
-  font-size: var(--text-sm);
-  color: var(--text-1);
-  text-align: left;
-  flex: 1;
-}
-
-.compare-td-val.compare-highlight {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  background: var(--accent-soft);
-}
-
-/* Disclaimer */
-.compare-disclaimer {
-  padding: var(--spacing-lg);
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--text-3);
-  text-align: center;
-  margin-top: var(--spacing-2xl);
-}
-
-/* Save link button */
-.compare-save-link-btn {
-  padding: 8px var(--spacing-lg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.compare-save-link-btn:hover {
-  border-color: var(--border-strong);
-  color: var(--text-1);
-}
-
-.compare-save-link-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-/* Board action row buttons */
-.compare-board-btn {
-  padding: 5px var(--spacing-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-2);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: border-color 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.compare-board-btn:hover {
-  border-color: var(--border-strong);
-  color: var(--text-1);
-}
-
-.compare-board-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-.compare-board-btn-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: transparent;
-}
-
-.compare-board-btn-active:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.state-msg {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  color: var(--text-3);
-  font-size: var(--text-md);
-  text-align: center;
-}
-
-.compare-partial-state {
-  min-height: 160px;
-  font-size: var(--text-sm);
-}
-
-.compare-partial-hint {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  margin-top: var(--spacing-xs);
-  display: block;
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: var(--spacing-lg);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-</style>
 
 </body>
 </html>

@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SponsorAI — Market Board</title>
+<title>SponsorAI — Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="page-board">
+<body>
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
-<!-- ────────────────── APP HEADER — unified full-width bar ────────────────── -->
+<!-- ────────────────── APP HEADER ────────────────── -->
 <header class="app-header" role="banner">
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
@@ -153,91 +153,34 @@
 
 <!-- ─────────────────────────────── MAIN ─────────────────────────────── -->
 <main class="main" id="main-content" tabindex="-1">
+  <div class="content">
 
-  <!-- Board header — outside .content so it can span full width -->
-  <div class="board-page-header">
-    <div class="board-page-header-inner">
-      <div>
-        <h1 class="board-title">Market Board</h1>
-        <p class="board-subtitle" id="board-subtitle">No properties on board</p>
+    <!-- Page header -->
+    <div class="brd-page-hd">
+      <div class="brd-page-hd-left">
+        <h1 class="page-title">Board</h1>
+        <p class="page-subtitle" id="page-subtitle">Active evaluation workspace</p>
       </div>
-      <a class="board-explore-link" id="board-explore-link" href="explore.html">Browse Explore to add properties</a>
-    </div>
-  </div>
-
-  <!-- Loading state -->
-  <div id="state-loading" class="board-state-wrap">
-    <div class="state-msg">
-      <div class="spinner"></div>
-      Loading board...
-    </div>
-  </div>
-
-  <!-- Board content -->
-  <div id="board-content" class="board-wrap" style="display:none">
-
-    <div class="board-columns" id="board-columns">
-
-      <!-- Watching -->
-      <div class="board-col" data-stage="watching">
-        <div class="board-col-header">
-          <span class="board-col-title">Watching</span>
-          <span class="board-col-count" id="count-watching">0</span>
-        </div>
-        <div class="board-col-body"
-             id="col-watching"
-             ondragover="handleDragOver(event,'watching')"
-             ondrop="handleDrop(event,'watching')"
-             ondragleave="handleDragLeave(event)">
-        </div>
+      <div class="brd-page-hd-right">
+        <span class="brd-workspace-tag">
+          <span class="brd-workspace-dot" aria-hidden="true"></span>
+          Active evaluation workspace
+        </span>
       </div>
-
-      <!-- Shortlist -->
-      <div class="board-col" data-stage="shortlist">
-        <div class="board-col-header">
-          <span class="board-col-title">Shortlist</span>
-          <span class="board-col-count" id="count-shortlist">0</span>
-        </div>
-        <div class="board-col-body"
-             id="col-shortlist"
-             ondragover="handleDragOver(event,'shortlist')"
-             ondrop="handleDrop(event,'shortlist')"
-             ondragleave="handleDragLeave(event)">
-        </div>
-      </div>
-
-      <!-- Under Evaluation -->
-      <div class="board-col" data-stage="evaluation">
-        <div class="board-col-header">
-          <span class="board-col-title">Under Evaluation</span>
-          <span class="board-col-count" id="count-evaluation">0</span>
-        </div>
-        <div class="board-col-body"
-             id="col-evaluation"
-             ondragover="handleDragOver(event,'evaluation')"
-             ondrop="handleDrop(event,'evaluation')"
-             ondragleave="handleDragLeave(event)">
-        </div>
-      </div>
-
-      <!-- Confirmed -->
-      <div class="board-col" data-stage="confirmed">
-        <div class="board-col-header">
-          <span class="board-col-title">Confirmed</span>
-          <span class="board-col-count" id="count-confirmed">0</span>
-        </div>
-        <div class="board-col-body"
-             id="col-confirmed"
-             ondragover="handleDragOver(event,'confirmed')"
-             ondrop="handleDrop(event,'confirmed')"
-             ondragleave="handleDragLeave(event)">
-        </div>
-      </div>
-
     </div>
 
-  </div>
+    <!-- Loading state -->
+    <div id="state-loading">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        Loading board...
+      </div>
+    </div>
 
+    <!-- Board stages -->
+    <div id="board-sections" style="display:none"></div>
+
+  </div>
 </main>
 
 <!-- ─────────────────────────────── SCRIPT ───────────────────────────── -->
@@ -245,6 +188,7 @@
 <script src="storage.js"></script>
 <script src="data.js"></script>
 <script src="images.js"></script>
+<script src="components/card.js"></script>
 <script src="ui.js"></script>
 <script src="ui-helpers.js"></script>
 <script>
@@ -253,269 +197,334 @@
 SAI_UIH.initTheme();
 
 /* ── Global state ──────────────────────────────────────────────────── */
-/* Map of slug -> property data object, populated after fetch */
-var boardProperties = {};
-/* Slug being dragged, set on dragstart */
-var _dragSlug  = null;
-var _dragStage = null;
+var allCards    = [];   /* full loadGrid() result — used by selectCard + card.js */
+var compareList = [];   /* required by card.js at render time */
+var boardCards  = {};   /* slug -> card object, board members only */
 
-/* ── Stage labels ──────────────────────────────────────────────────── */
+/* ── Stage constants ───────────────────────────────────────────────── */
+var STAGE_ORDER  = ['watching', 'shortlist', 'evaluation', 'confirmed'];
 var STAGE_LABELS = {
   watching:   'Watching',
   shortlist:  'Shortlist',
   evaluation: 'Under Evaluation',
   confirmed:  'Confirmed'
 };
+/* Short labels used in the stage-movement control pills */
+var STAGE_LABELS_SHORT = {
+  watching:   'Watching',
+  shortlist:  'Shortlist',
+  evaluation: 'Evaluating',
+  confirmed:  'Confirmed'
+};
 
-/* ── Load board ────────────────────────────────────────────────────── */
+/* ── selectCard — navigate to property page (no side panel here) ────── */
+function selectCard(id) {
+  var c = allCards.find(function(x) { return x.id === id; });
+  if (c && c.slug) navigateTo('property.html?slug=' + encodeURIComponent(c.slug) + '&ref=board');
+}
+
+/* ── Subtitle ──────────────────────────────────────────────────────── */
+function updateSubtitle(count) {
+  var el = document.getElementById('page-subtitle');
+  if (!el) return;
+  if (count === 0)      el.textContent = 'Active evaluation workspace';
+  else if (count === 1) el.textContent = '1 property under evaluation';
+  else                  el.textContent = count + ' properties under evaluation';
+}
+
+/* ── Stage summary ─────────────────────────────────────────────────── */
+function computeStageSummary(slugs) {
+  var cards = slugs.map(function(s) { return boardCards[s]; }).filter(Boolean);
+  var scored = cards.filter(function(c) { return !c.sup30 && c.s30 != null; });
+
+  /* Avg FanScore */
+  var avgScore = null;
+  if (scored.length > 0) {
+    var sum = scored.reduce(function(a, c) { return a + c.s30; }, 0);
+    avgScore = Math.round(sum / scored.length);
+  }
+
+  /* Best momentum */
+  var bestCard = null;
+  var bestT30  = -Infinity;
+  scored.forEach(function(c) {
+    if (c.t30 != null && c.t30 > bestT30) { bestT30 = c.t30; bestCard = c; }
+  });
+
+  /* Dominant sport / type */
+  var buckets = {};
+  cards.forEach(function(c) {
+    var key = c.sport || c.type || 'Unknown';
+    buckets[key] = (buckets[key] || 0) + 1;
+  });
+  var focus = null, focusMax = 0;
+  Object.keys(buckets).forEach(function(k) {
+    if (buckets[k] > focusMax) { focusMax = buckets[k]; focus = k; }
+  });
+
+  /* Total audience */
+  var totalAud = 0, hasAud = false;
+  cards.forEach(function(c) {
+    if (c.followers != null) { totalAud += c.followers; hasAud = true; }
+  });
+
+  return {
+    avgScore:     avgScore,
+    bestCard:     bestCard,
+    bestT30:      bestT30,
+    focus:        focus,
+    totalAud:     hasAud ? totalAud : null
+  };
+}
+
+function renderStageSummaryText(slugs) {
+  var s = computeStageSummary(slugs);
+  var parts = [];
+  if (s.avgScore !== null)             parts.push('Avg FanScore ' + s.avgScore);
+  if (s.bestCard && s.bestT30 > 0.05)  parts.push('Rising: ' + s.bestCard.name);
+  if (s.focus)                         parts.push('Focus: ' + escHtml(s.focus));
+  if (s.totalAud !== null)             parts.push(fmtFollowers(s.totalAud) + ' total audience');
+  return parts.join(' &middot; ') || 'No score data available for this stage';
+}
+
+/* ── Compare stage ─────────────────────────────────────────────────── */
+function compareStageSlugs(stage) {
+  var board = SAI_STORAGE.board.getBoard();
+  var stageSlugs = (board[stage] || []).filter(function(s) { return boardCards[s]; });
+  var toCompare  = stageSlugs.slice(0, 4);
+  if (toCompare.length < 2) return;
+
+  /* Replace compare queue with these stage items */
+  var current = SAI_STORAGE.compare.get().slice();
+  current.forEach(function(s) { SAI_STORAGE.compare.toggle(s); });     /* clear */
+  toCompare.forEach(function(s) { SAI_STORAGE.compare.toggle(s); });   /* set   */
+  navigateTo('compare.html');
+}
+
+/* ── Compare hero-btn sync ─────────────────────────────────────────── */
+function _syncCompareHeroBtns() {
+  var cmpList  = SAI_STORAGE.compare.get();
+  var cmpCount = cmpList.length;
+  document.querySelectorAll('.hero-btn[data-action="compare"]').forEach(function(btn) {
+    var slug  = btn.dataset.slug || null;
+    var bIn   = slug && cmpList.indexOf(slug) >= 0;
+    var bFull = !bIn && cmpCount >= 4;
+    btn.classList.toggle('active', !!bIn);
+    btn.classList.toggle('disabled', bFull);
+    btn.setAttribute('aria-disabled', bFull ? 'true' : 'false');
+    btn.title = bIn    ? 'Remove from compare'
+              : bFull  ? 'Compare queue full (4/4)'
+              : cmpCount > 0 ? 'Add to compare (' + cmpCount + '/4 selected)'
+              : 'Add to compare';
+  });
+}
+
+/* ── Event delegation ──────────────────────────────────────────────── */
+document.addEventListener('click', function(e) {
+
+  /* ── Stage movement pills ── */
+  var pill = e.target.closest('.brd-stage-pill[data-action="move-stage"]');
+  if (pill) {
+    e.stopPropagation();
+    var slug     = pill.dataset.slug;
+    var newStage = pill.dataset.stage;
+    if (!slug || !newStage) return;
+    var curStage = SAI_STORAGE.board.getSlugStage(slug);
+    if (curStage === newStage) return;
+    SAI_STORAGE.board.moveToStage(slug, newStage);
+    renderBoard();
+    updateSubtitle(SAI_STORAGE.board.getAllSlugs().length);
+    return;
+  }
+
+  /* ── Hero buttons ── */
+  var btn = e.target.closest('.hero-btn[data-action]');
+  if (!btn) return;
+  e.stopPropagation();
+  var action = btn.dataset.action;
+  var slug   = btn.dataset.slug || null;
+
+  if (action === 'board') {
+    /* Board hero-btn removes property from board entirely */
+    if (!slug) return;
+    SAI_STORAGE.board.removeFromBoard(slug);
+    delete boardCards[slug];
+
+    /* Surgical removal: remove the card wrapper, then the section if empty */
+    var item = document.querySelector('.brd-card-item[data-slug="' + CSS.escape(slug) + '"]');
+    if (item) {
+      var section = item.closest('.brd-stage');
+      item.remove();
+      if (section && section.querySelectorAll('.brd-card-item').length === 0) {
+        section.remove();
+      }
+    }
+
+    var total = SAI_STORAGE.board.getAllSlugs().length;
+    updateSubtitle(total);
+    if (total === 0) renderBoard();
+
+  } else if (action === 'watchlist') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.watchlist.toggle(slug);
+    document.querySelectorAll('.hero-btn[data-action="watchlist"][data-slug="' + CSS.escape(slug) + '"]').forEach(function(b) {
+      b.classList.toggle('active', nowIn);
+      b.title = nowIn ? 'Remove from watchlist' : 'Add to watchlist';
+    });
+
+  } else if (action === 'portfolio') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.portfolio.toggle(slug);
+    document.querySelectorAll('.hero-btn[data-action="portfolio"][data-slug="' + CSS.escape(slug) + '"]').forEach(function(b) {
+      b.classList.toggle('active', nowIn);
+      b.title = nowIn ? 'Remove from portfolio' : 'Add to portfolio';
+    });
+
+  } else if (action === 'compare') {
+    if (!slug) return;
+    SAI_STORAGE.compare.toggle(slug);
+    _syncCompareHeroBtns();
+  }
+});
+
+/* ── Load ──────────────────────────────────────────────────────────── */
 function loadBoard() {
   var slugs = SAI_STORAGE.board.getAllSlugs();
 
   if (slugs.length === 0) {
-    showEmpty();
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('board-sections').style.display = '';
+    updateSubtitle(0);
+    renderBoard();
     return;
   }
 
-  var cols = 'property_id,property_name,property_type,slug,country,avg_score_30d,' +
-             'trend_value_30d,confidence_band_30d,suppression_reason_30d,' +
-             'total_followers_latest,sport,region';
-  var slugList = slugs.map(function(s) { return encodeURIComponent(s); }).join(',');
-
-  apiFetch('/v_property_summary_current?slug=in.(' + slugList + ')&select=' + cols + '&visible_in_ui=eq.true')
-    .then(function(rows) {
-      boardProperties = {};
-      (rows || []).forEach(function(r) { boardProperties[r.slug] = r; });
-      renderBoard();
-      document.getElementById('state-loading').style.display = 'none';
-      document.getElementById('board-content').style.display = '';
-      updateSubtitle(slugs.length);
-    })
-    .catch(function(err) {
-      document.getElementById('state-loading').innerHTML =
-        '<div class="state-msg" style="color:var(--negative)"><strong>Error loading board</strong><br>' +
-        escHtml(err.message) + '</div>';
+  loadGrid().then(function(cards) {
+    allCards   = cards;
+    boardCards = {};
+    cards.forEach(function(c) {
+      if (slugs.indexOf(c.slug) >= 0) boardCards[c.slug] = c;
     });
-}
 
-function showEmpty() {
-  document.getElementById('state-loading').style.display = 'none';
-  document.getElementById('board-content').style.display = '';
-  updateSubtitle(0);
-  /* Render all columns as empty */
-  SAI_STORAGE.board.stages.forEach(function(stage) {
-    renderColumn(stage, []);
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('board-sections').style.display = '';
+    updateSubtitle(slugs.length);
+    renderBoard();
+  }).catch(function(err) {
+    document.getElementById('state-loading').innerHTML =
+      '<div class="state-msg" style="color:var(--negative)">'
+      + '<strong>Error loading board</strong><br>'
+      + escHtml(err && err.message ? err.message : 'Unknown error')
+      + '</div>';
   });
 }
 
-function updateSubtitle(count) {
-  var el   = document.getElementById('board-subtitle');
-  var link = document.getElementById('board-explore-link');
-  if (count === 0) {
-    el.textContent = 'No properties on board';
-    if (link) { link.textContent = 'Browse Explore to add properties'; link.removeAttribute('aria-label'); }
-  } else if (count === 1) {
-    el.textContent = '1 property tracked';
-    if (link) { link.textContent = 'Add more from Explore'; link.removeAttribute('aria-label'); }
-  } else {
-    el.textContent = count + ' properties tracked';
-    if (link) { link.textContent = 'Add more from Explore'; link.removeAttribute('aria-label'); }
-  }
-}
-
-/* ── Render board ──────────────────────────────────────────────────── */
+/* ── Render ────────────────────────────────────────────────────────── */
 function renderBoard() {
-  var board = SAI_STORAGE.board.getBoard();
-  SAI_STORAGE.board.stages.forEach(function(stage) {
-    renderColumn(stage, board[stage] || []);
-  });
-}
+  var container = document.getElementById('board-sections');
+  if (!container) return;
 
-function renderColumn(stage, slugs) {
-  var col   = document.getElementById('col-' + stage);
-  var count = document.getElementById('count-' + stage);
-  if (!col) return;
-
-  count.textContent = slugs.length;
-
-  if (slugs.length === 0) {
-    col.innerHTML = '<div class="board-col-empty">Drop a card here</div>';
-    return;
-  }
-
-  var html = '';
-  slugs.forEach(function(slug) {
-    var prop = boardProperties[slug];
-    if (!prop) return; /* may not be visible_in_ui */
-    html += renderBoardCard(prop, stage);
-  });
-  col.innerHTML = html;
-}
-
-/* ── Render a single board card ────────────────────────────────────── */
-function renderBoardCard(prop, stage) {
-  var cfg        = TYPE[prop.property_type] || { label: prop.property_type, bgVar:'var(--surface-muted)', fgVar:'var(--text-2)', scoreVar:'var(--text-1)' };
-  var suppressed = !!prop.suppression_reason_30d;
-  var scoreVal   = suppressed ? '--' : fmtScore(prop.avg_score_30d);
-  var scoreColor = suppressed ? 'var(--text-3)' : (cfg.scoreVar || 'var(--text-1)');
-  var trendArrow = (!suppressed && prop.trend_value_30d != null) ? arr(prop.trend_value_30d) : '';
-  var trendClr   = (!suppressed && prop.trend_value_30d != null) ? arrC(prop.trend_value_30d) : 'var(--text-3)';
-  var audience   = fmtFollowers(prop.total_followers_latest);
-  var flag       = countryFlag(prop.country);
-  var slug       = prop.slug;
-
-  /* Move-to select: shows only the other 3 stages */
-  var moveOpts = '';
-  SAI_STORAGE.board.stages.forEach(function(s) {
-    if (s !== stage) {
-      moveOpts += '<option value="' + s + '">' + STAGE_LABELS[s] + '</option>';
-    }
-  });
-
-  var h = '';
-  h += '<div class="board-card" draggable="true"' +
-       ' data-slug="' + escHtml(slug) + '"' +
-       ' data-stage="' + stage + '"' +
-       ' ondragstart="handleDragStart(event,\'' + escHtml(slug) + '\',\'' + stage + '\')"' +
-       ' ondragend="handleDragEnd(event)">';
-
-  /* Header: drag handle + name + flag */
-  h += '<div class="board-card-header">';
-  h += '<div class="board-card-drag" aria-hidden="true">' +
-       '<svg width="10" height="14" viewBox="0 0 10 14" fill="none" aria-hidden="true">' +
-       '<circle cx="3" cy="3"  r="1.2" fill="currentColor"/>' +
-       '<circle cx="7" cy="3"  r="1.2" fill="currentColor"/>' +
-       '<circle cx="3" cy="7"  r="1.2" fill="currentColor"/>' +
-       '<circle cx="7" cy="7"  r="1.2" fill="currentColor"/>' +
-       '<circle cx="3" cy="11" r="1.2" fill="currentColor"/>' +
-       '<circle cx="7" cy="11" r="1.2" fill="currentColor"/>' +
-       '</svg></div>';
-  h += '<div class="board-card-name"><a class="board-card-name-link" href="property.html?slug=' + encodeURIComponent(slug) + '&ref=board">' + escHtml(prop.property_name) + '</a></div>';
-  if (flag) h += '<span class="board-card-flag">' + flag + '</span>';
-  h += '</div>'; /* /header */
-
-  /* Meta: type badge + sport */
-  h += '<div class="board-card-meta">';
-  h += SAI_UIH.typeBadgeHtml(prop.property_type);
-  if (prop.sport) h += '<span class="board-card-sport">' + escHtml(prop.sport) + '</span>';
-  h += '</div>';
-
-  /* Signals: FanScore + audience + confidence */
-  var confBand = prop.confidence_band_30d || null;
-  h += '<div class="board-card-signals">';
-  h += '<div class="board-card-score">';
-  h += '<span class="board-card-score-val" style="color:' + scoreColor + '">' + scoreVal + '</span>';
-  if (trendArrow) h += '<span class="board-card-score-trend" style="color:' + trendClr + '">' + trendArrow + '</span>';
-  h += '<span class="board-card-score-label">FanScore</span>';
-  h += '</div>';
-  if (audience) {
-    h += '<div class="board-card-audience">';
-    h += '<span class="board-card-audience-val">' + audience + '</span>';
-    h += '<span class="board-card-audience-label">Audience</span>';
-    h += '</div>';
-  }
-  if (confBand) {
-    h += '<div class="board-card-conf">';
-    h += '<span class="board-card-conf-val">' + escHtml(confBand) + '</span>';
-    h += '<span class="board-card-conf-label">Confidence</span>';
-    h += '</div>';
-  }
-  h += '</div>'; /* /signals */
-
-  /* Actions: View + Move dropdown + Compare + Remove */
-  h += '<div class="board-card-actions">';
-  h += '<button class="board-card-btn" onclick="navigateTo(\'property.html?slug=' +
-       encodeURIComponent(slug) + '&ref=board\')" title="View full profile">View</button>';
-  h += '<label class="board-card-move-wrap" title="Move to another stage">';
-  h += '<span class="board-card-move-label">Move</span>';
-  h += '<select class="board-card-move" onchange="moveBoardCard(\'' + escHtml(slug) + '\',this.value,\'' + stage + '\');this.value=\'\'">';
-  h += '<option value="" disabled selected></option>';
-  h += moveOpts;
-  h += '</select>';
-  h += '</label>';
-  h += '<button class="board-card-btn" onclick="navigateTo(\'compare.html?a=' +
-       encodeURIComponent(slug) + '\')" title="Compare in side-by-side view">Compare</button>';
-  h += '<button class="board-card-btn board-card-remove" onclick="removeBoardCard(\'' + escHtml(slug) + '\')" title="Remove from board" aria-label="Remove ' + escHtml(prop.property_name) + ' from board">&times;</button>';
-  h += '</div>'; /* /actions */
-
-  h += '</div>'; /* /board-card */
-  return h;
-}
-
-/* ── Board mutations ───────────────────────────────────────────────── */
-function moveBoardCard(slug, targetStage, currentStage) {
-  if (!targetStage || targetStage === currentStage) return;
-  SAI_STORAGE.board.moveToStage(slug, targetStage);
   var board    = SAI_STORAGE.board.getBoard();
   var allSlugs = SAI_STORAGE.board.getAllSlugs();
-  SAI_STORAGE.board.stages.forEach(function(s) {
-    if (s === currentStage || s === targetStage) renderColumn(s, board[s] || []);
-  });
-  updateSubtitle(allSlugs.length);
-}
 
-function removeBoardCard(slug) {
-  SAI_STORAGE.board.removeFromBoard(slug);
-  delete boardProperties[slug];
-  renderBoard();
-  updateSubtitle(SAI_STORAGE.board.getAllSlugs().length);
-}
-
-/* ── Drag and drop ─────────────────────────────────────────────────── */
-function handleDragStart(event, slug, stage) {
-  _dragSlug  = slug;
-  _dragStage = stage;
-  event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData('text/plain', slug);
-  /* Visually fade the card being dragged */
-  var card = event.currentTarget;
-  setTimeout(function() { card.classList.add('dragging'); }, 0);
-}
-
-function handleDragEnd(event) {
-  _dragSlug  = null;
-  _dragStage = null;
-  document.querySelectorAll('.board-card.dragging').forEach(function(el) {
-    el.classList.remove('dragging');
-  });
-  document.querySelectorAll('.board-col-body.drag-over').forEach(function(el) {
-    el.classList.remove('drag-over');
-  });
-}
-
-function handleDragOver(event, stage) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  var colBody = document.getElementById('col-' + stage);
-  if (colBody && !colBody.classList.contains('drag-over')) {
-    colBody.classList.add('drag-over');
+  /* ── Empty state ── */
+  if (allSlugs.length === 0) {
+    container.innerHTML =
+      '<div class="brd-empty" role="status">'
+      + '<div class="brd-empty-icon" aria-hidden="true">'
+      + '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">'
+      + '<rect x="3" y="3" width="7" height="7" rx="1"/>'
+      + '<rect x="14" y="3" width="7" height="7" rx="1"/>'
+      + '<rect x="3" y="14" width="7" height="7" rx="1"/>'
+      + '<rect x="14" y="14" width="7" height="7" rx="1"/>'
+      + '</svg>'
+      + '</div>'
+      + '<p class="brd-empty-heading">Your evaluation board is empty</p>'
+      + '<p class="brd-empty-body">Move serious opportunities here to compare, review, and track them through your evaluation process.</p>'
+      + '<div class="brd-empty-actions">'
+      + '<button class="brd-empty-btn brd-empty-btn--primary" onclick="navigateTo(\'explore.html\')">Browse properties</button>'
+      + '<button class="brd-empty-btn" onclick="navigateTo(\'watchlist.html\')">View watchlist</button>'
+      + '</div>'
+      + '</div>';
+    return;
   }
-}
 
-function handleDragLeave(event) {
-  /* Only clear when truly leaving the column body (not entering a child) */
-  var colBody = event.currentTarget;
-  if (!colBody.contains(event.relatedTarget)) {
-    colBody.classList.remove('drag-over');
-  }
-}
+  var html    = '';
+  var cardIdx = 0;
 
-function handleDrop(event, targetStage) {
-  event.preventDefault();
-  var col = document.getElementById('col-' + targetStage);
-  if (col) col.classList.remove('drag-over');
+  STAGE_ORDER.forEach(function(stage) {
+    var stageSlugs = (board[stage] || []).filter(function(s) { return boardCards[s]; });
+    if (!stageSlugs.length) return;
 
-  var slug = _dragSlug || event.dataTransfer.getData('text/plain');
-  if (!slug || targetStage === _dragStage) return;
+    var label    = STAGE_LABELS[stage] || stage;
+    var count    = stageSlugs.length;
+    var canCmp   = count >= 2;
+    var cmpLabel = count > 4 ? 'Compare first 4' : 'Compare ' + count;
 
-  SAI_STORAGE.board.moveToStage(slug, targetStage);
-  var board = SAI_STORAGE.board.getBoard();
-  /* Re-render both affected columns */
-  if (_dragStage) renderColumn(_dragStage, board[_dragStage] || []);
-  renderColumn(targetStage, board[targetStage] || []);
-  updateSubtitle(SAI_STORAGE.board.getAllSlugs().length);
+    html += '<section class="brd-stage" data-stage="' + escHtml(stage) + '" aria-label="' + escHtml(label) + ' stage">';
 
-  _dragSlug  = null;
-  _dragStage = null;
+    /* Stage header row */
+    html += '<div class="brd-stage-hd">';
+    html += '<div class="brd-stage-hd-left">';
+    html += '<span class="brd-stage-name">' + escHtml(label) + '</span>';
+    html += '<span class="brd-stage-count" aria-label="' + count + ' properties">' + count + '</span>';
+    html += '</div>';
+    html += '<div class="brd-stage-hd-right">';
+    if (canCmp) {
+      html += '<button class="brd-cmp-btn" onclick="compareStageSlugs(\'' + escHtml(stage) + '\')"'
+            + ' title="Compare properties in this stage">'
+            + escHtml(cmpLabel)
+            + '<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:4px"><path d="M2 5.5h7M6 2l3 3.5L6 9"/></svg>'
+            + '</button>';
+    } else {
+      html += '<span class="brd-cmp-hint">Add 1 more to compare</span>';
+    }
+    html += '</div>';
+    html += '</div>'; /* /brd-stage-hd */
+
+    /* Stage summary strip */
+    html += '<div class="brd-stage-summary" aria-label="Stage summary">'
+          + renderStageSummaryText(stageSlugs)
+          + '</div>';
+
+    /* Card grid */
+    html += '<div class="brd-stage-grid">';
+
+    stageSlugs.forEach(function(slug) {
+      var c = boardCards[slug];
+      html += '<div class="brd-card-item" data-slug="' + escHtml(slug) + '">';
+
+      /* Shared property card — unchanged */
+      html += renderCard(c, cardIdx++);
+
+      /* Board-specific stage control — sits below the card */
+      html += '<div class="brd-stage-ctrl" role="group" aria-label="Move ' + escHtml(c.name) + ' to stage">';
+      html += '<span class="brd-ctrl-label">Stage</span>';
+      html += '<div class="brd-ctrl-pills">';
+      STAGE_ORDER.forEach(function(s) {
+        var isCur = s === stage;
+        html += '<button class="brd-stage-pill' + (isCur ? ' brd-stage-pill--cur' : '') + '"'
+              + ' data-action="move-stage"'
+              + ' data-slug="' + escHtml(slug) + '"'
+              + ' data-stage="' + escHtml(s) + '"'
+              + ' title="' + (isCur ? 'Currently: ' : 'Move to ') + escHtml(STAGE_LABELS_SHORT[s]) + '"'
+              + (isCur ? ' aria-current="true"' : '')
+              + '>'
+              + escHtml(STAGE_LABELS_SHORT[s])
+              + '</button>';
+      });
+      html += '</div>'; /* /brd-ctrl-pills */
+      html += '</div>'; /* /brd-stage-ctrl */
+
+      html += '</div>'; /* /brd-card-item */
+    });
+
+    html += '</div>'; /* /brd-stage-grid */
+    html += '</section>';
+  });
+
+  container.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
 }
 
 /* ── Menu listeners ────────────────────────────────────────────────── */
@@ -530,404 +539,317 @@ SAI_UIH.initMenuListeners();
 
 <style>
 
-/* ── Board layout ──────────────────────────────────────────────────── */
-
-.page-board .main {
-  padding-top: 0;
+/* ── Page header ──────────────────────────────────────────────────── */
+.brd-page-hd {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.board-page-header {
-  flex: 0 0 auto;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  padding: var(--spacing-xl) var(--spacing-4xl);
-}
-
-.board-page-header-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-4xl);
 }
 
-.board-title {
-  font-size: 20px;
+.brd-page-hd-left {
+  min-width: 0;
+}
+
+.brd-page-hd-right {
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+
+.page-title {
+  font-size: 28px;
   font-weight: 600;
   color: var(--text-1);
-  margin: 0 0 2px 0;
+  margin: 0 0 var(--spacing-xs) 0;
 }
 
-.board-subtitle {
+.page-subtitle {
   font-size: var(--text-sm);
   color: var(--text-3);
   margin: 0;
 }
 
-.board-explore-link {
-  flex: 0 0 auto;
-  font-size: var(--text-xs);
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 500;
-  border-bottom: 1px solid var(--accent-border);
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
-.board-explore-link:hover {
-  opacity: 0.8;
-}
-
-/* ── Board columns wrapper ─────────────────────────────────────────── */
-
-.board-state-wrap {
-  flex: 1;
-  display: flex;
+/* Workspace tag — right side of header */
+.brd-workspace-tag {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-}
-
-.board-wrap {
-  flex: 1;
-  overflow-x: auto;
-  padding: var(--spacing-3xl) var(--spacing-4xl) var(--spacing-3xl);
-}
-
-.board-columns {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(230px, 1fr));
-  gap: var(--spacing-xl);
-  min-width: 900px;
-  max-width: 1400px;
-  margin: 0 auto;
-  /* Enough bottom padding so scrolled columns don't clip */
-  padding-bottom: var(--spacing-3xl);
-}
-
-/* ── Column ────────────────────────────────────────────────────────── */
-
-.board-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  gap: var(--spacing-xs);
+  padding: 4px var(--spacing-md);
+  border-radius: var(--radius-full, 999px);
   background: var(--surface-muted);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.board-col-header {
+.brd-workspace-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+/* ── Stage sections ───────────────────────────────────────────────── */
+.brd-stage {
+  margin-bottom: var(--spacing-5xl, 56px);
+}
+
+.brd-stage:last-child {
+  margin-bottom: var(--spacing-4xl);
+}
+
+/* Stage header row */
+.brd-stage-hd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex: 0 0 auto;
+  margin-bottom: var(--spacing-sm);
 }
 
-.board-col-title {
+.brd-stage-hd-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.brd-stage-name {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text-2);
+  color: var(--text-1);
   letter-spacing: 0.01em;
 }
 
-.board-col-count {
+.brd-stage-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text-3);
   background: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 1px 7px;
-  min-width: 20px;
-  text-align: center;
+  padding: 1px 8px;
+  min-width: 22px;
+  line-height: 1.5;
 }
 
-.board-col-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  min-height: 120px;
-  transition: background 0.15s;
-}
-
-.board-col-body.drag-over {
-  background: var(--accent-soft);
-  border-radius: 0;
-  outline: 2px dashed var(--accent-border);
-  outline-offset: -2px;
-}
-
-/* ── Column empty state ────────────────────────────────────────────── */
-
-.board-col-empty {
-  padding: var(--spacing-xl) var(--spacing-lg);
-  text-align: center;
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  opacity: 0.6;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* ── Board card ────────────────────────────────────────────────────── */
-
-.board-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  cursor: grab;
-  transition: border-color 0.12s, box-shadow 0.12s, opacity 0.12s;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.board-card:hover {
-  border-color: var(--border-strong);
-}
-
-.board-card.dragging {
-  opacity: 0.45;
-  cursor: grabbing;
-}
-
-.board-card:active {
-  cursor: grabbing;
-}
-
-/* Header row */
-.board-card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-xs);
-}
-
-.board-card-drag {
-  flex: 0 0 auto;
-  color: var(--text-3);
-  opacity: 0.45;
-  cursor: grab;
-  margin-top: 2px;
-  padding-right: 2px;
-}
-
-.board-card-name {
-  flex: 1;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-1);
-  line-height: 1.3;
-  word-break: break-word;
-}
-
-.board-card-flag {
-  flex: 0 0 auto;
-  font-size: 13px;
-  line-height: 1;
-}
-
-/* Name link */
-.board-card-name-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.board-card-name-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: var(--border-strong);
-}
-
-.board-card-name-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-radius: 2px;
-}
-
-/* Meta row */
-.board-card-meta {
+.brd-stage-hd-right {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
 }
 
-.board-card-sport {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-}
-
-/* Signals row */
-.board-card-signals {
-  display: flex;
-  gap: var(--spacing-lg);
-  padding-top: var(--spacing-xs);
-  border-top: 1px solid var(--divider);
-}
-
-.board-card-score,
-.board-card-audience {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.board-card-score-val {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1;
-  font-family: var(--font-mono);
-}
-
-.board-card-score-trend {
-  font-size: var(--text-xs);
-  font-weight: 600;
-}
-
-.board-card-score-label,
-.board-card-audience-label {
-  font-size: 10px;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-}
-
-.board-card-audience-val {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-2);
-  font-family: var(--font-mono);
-}
-
-/* Confidence column */
-.board-card-conf {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin-left: auto; /* push to right edge of signals row */
-}
-
-.board-card-conf-val {
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-3);
-  text-transform: capitalize;
-}
-
-.board-card-conf-label {
-  font-size: 10px;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
-}
-
-/* Actions row */
-.board-card-actions {
-  display: flex;
+/* Compare stage button */
+.brd-cmp-btn {
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding-top: var(--spacing-xs);
-  border-top: 1px solid var(--divider);
-}
-
-.board-card-btn {
-  flex: 1;
-  padding: 4px 0;
+  gap: 0;
+  padding: 4px var(--spacing-md);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  color: var(--text-2);
   font-size: var(--text-xs);
   font-weight: 500;
+  color: var(--text-2);
   cursor: pointer;
-  font-family: var(--font);
-  transition: border-color 0.12s, color 0.12s;
-  text-align: center;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
   white-space: nowrap;
 }
 
-.board-card-btn:hover {
-  border-color: var(--border-strong);
+.brd-cmp-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft, var(--surface-muted));
+}
+
+.brd-cmp-hint {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* Stage summary strip */
+.brd-stage-summary {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.5;
+  padding: var(--spacing-xs) 0;
+}
+
+/* ── Card grid ────────────────────────────────────────────────────── */
+.brd-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+}
+
+/* Card item — grid cell containing card + stage control */
+.brd-card-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the shared card fills its container naturally */
+.brd-card-item .fanscore-card {
+  flex: 1;
+}
+
+/* ── Stage movement control ───────────────────────────────────────── */
+.brd-stage-ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.brd-ctrl-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-right: var(--spacing-xs);
+  border-right: 1px solid var(--border);
+}
+
+.brd-ctrl-pills {
+  display: flex;
+  gap: 2px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* Individual stage pill */
+.brd-stage-pill {
+  flex: 1;
+  min-width: 0;
+  padding: 3px var(--spacing-xs);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
+  text-align: center;
+}
+
+.brd-stage-pill:hover {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-2);
+}
+
+/* Active / current stage pill */
+.brd-stage-pill--cur {
+  background: var(--surface);
+  border-color: var(--border-strong, var(--border));
+  color: var(--text-1);
+  font-weight: 600;
+  cursor: default;
+}
+
+.brd-stage-pill--cur:hover {
+  background: var(--surface);
+  border-color: var(--border-strong, var(--border));
   color: var(--text-1);
 }
 
-.board-card-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-/* Move dropdown — styled to match btn */
-.board-card-move-wrap {
-  flex: 1;
-  position: relative;
+/* ── Empty state ──────────────────────────────────────────────────── */
+.brd-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  cursor: pointer;
-  transition: border-color 0.12s;
-  overflow: hidden;
-}
-
-.board-card-move-wrap:hover {
-  border-color: var(--border-strong);
-}
-
-.board-card-move-label {
-  position: absolute;
-  left: 0;
-  right: 0;
+  justify-content: center;
+  min-height: 420px;
+  padding: var(--spacing-4xl) var(--spacing-2xl);
   text-align: center;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-2);
-  pointer-events: none;
-  line-height: 1;
-  padding: 4px 0;
 }
 
-.board-card-move {
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  padding: 4px 0;
-  border: none;
-  background: transparent;
-  font-size: var(--text-xs);
-  font-family: var(--font);
-}
-
-.board-card-remove {
-  flex: 0 0 auto;
-  width: 26px;
-  padding: 4px 0;
-  font-size: 14px;
+.brd-empty-icon {
+  width: 48px;
+  height: 48px;
   color: var(--text-3);
+  opacity: 0.3;
+  margin-bottom: var(--spacing-2xl);
 }
 
-.board-card-remove:hover {
-  color: var(--negative);
-  border-color: var(--negative);
+.brd-empty-heading {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 0 0 var(--spacing-md) 0;
 }
 
-/* ── State helpers ─────────────────────────────────────────────────── */
+.brd-empty-body {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  max-width: 44ch;
+  line-height: 1.6;
+  margin: 0 0 var(--spacing-2xl) 0;
+}
 
+.brd-empty-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.brd-empty-btn {
+  padding: 7px var(--spacing-xl);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.brd-empty-btn:hover {
+  border-color: var(--border-strong, var(--border));
+  color: var(--text-1);
+}
+
+.brd-empty-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.brd-empty-btn--primary:hover {
+  opacity: 0.88;
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Loading / error states ───────────────────────────────────────── */
 .state-msg {
   display: flex;
   flex-direction: column;
@@ -935,22 +857,42 @@ SAI_UIH.initMenuListeners();
   justify-content: center;
   min-height: 300px;
   color: var(--text-3);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   text-align: center;
+  gap: var(--spacing-sm);
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: var(--spacing-lg);
+  animation: brd-spin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes brd-spin {
   to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .brd-page-hd {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .brd-stage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brd-ctrl-pills {
+    flex-wrap: wrap;
+  }
+
+  .brd-workspace-tag {
+    display: none;
+  }
 }
 
 </style>

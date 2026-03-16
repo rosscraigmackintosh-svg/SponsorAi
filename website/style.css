@@ -450,16 +450,17 @@ body {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.72);
   margin-bottom: 36px;
 }
 
 .eyebrow-dot {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(120, 220, 120, 0.7);
+  background: rgba(100, 220, 100, 1);
+  box-shadow: 0 0 6px rgba(100, 220, 100, 0.55);
   animation: blink 2.8s ease-in-out infinite;
 }
 
@@ -500,10 +501,13 @@ body {
   font-size: clamp(13px, 1.3vw, 15px);
   font-weight: 300;
   line-height: 1.8;
-  color: rgba(255, 255, 255, 0.28);
-  font-style: italic;
+  color: rgba(255, 255, 255, 0.55);
   max-width: 440px;
   margin-bottom: 56px;
+}
+
+.hero__whisper + .hero__whisper {
+  margin-top: -28px;
 }
 
 /* === Email Signup === */
@@ -645,7 +649,7 @@ body {
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.2; }
+  50%       { opacity: 0.38; }
 }
 
 @keyframes noise-shift {

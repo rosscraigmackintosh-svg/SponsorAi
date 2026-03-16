@@ -187,8 +187,9 @@
         </div>
       </div>
 
-      <!-- Properties list -->
-      <div id="watchlist-items" class="watchlist-items"></div>
+      <!-- Properties grid -->
+      <div id="watchlist-items" class="watchlist-items" style="display:none"></div>
+      <!-- panel.js not used on watchlist; card clicks navigate to property page -->
 
     </div>
 
@@ -200,6 +201,7 @@
 <script src="storage.js"></script>
 <script src="data.js"></script>
 <script src="images.js"></script>
+<script src="components/card.js"></script>
 <script src="ui.js"></script>
 <script src="ui-helpers.js"></script>
 <script>
@@ -208,124 +210,145 @@
 SAI_UIH.initTheme();
 
 /* ── Global state ──────────────────────────────────────────────────── */
-var watchlistSlugs = [];
-var watchlistProperties = [];
+var allCards      = [];   /* full loadGrid() result — card.js + selectCard use this */
+var compareList   = [];   /* required by card.js renderCard() — kept empty, storage drives state */
+var watchlistCards = [];  /* filtered to watchlist slugs */
 
-/* ── Watchlist management ──────────────────────────────────────────── */
-function removeFromWatchlist(slug) {
-  SAI_STORAGE.watchlist.remove(slug);
-  watchlistSlugs = watchlistSlugs.filter(function(s) { return s !== slug; });
-  if (watchlistSlugs.length === 0) {
-    loadWatchlist();
-  } else {
-    watchlistProperties = watchlistProperties.filter(function(p) { return p.slug !== slug; });
-    renderWatchlist();
-    updateSubtitle(watchlistProperties.length);
-  }
+/* ── selectCard — navigates to property page (no panel on this page) ── */
+function selectCard(id) {
+  var c = allCards.find(function(x) { return x.id === id; });
+  if (c && c.slug) navigateTo('property.html?slug=' + encodeURIComponent(c.slug));
 }
 
-/* ── Load watchlist ────────────────────────────────────────────────── */
-function loadWatchlist() {
-  /* Read from SAI_STORAGE (consistent with Explore/panel) */
-  watchlistSlugs = SAI_STORAGE.watchlist.get();
+/* ── Helpers ───────────────────────────────────────────────────────── */
+function updateSubtitle(count) {
+  var el = document.getElementById('page-subtitle');
+  if (!el) return;
+  el.textContent = count === 0 ? 'No properties tracked'
+    : count === 1 ? '1 property tracked'
+    : count + ' properties tracked';
+}
 
-  if (watchlistSlugs.length === 0) {
+function _syncCompareHeroBtns() {
+  var cmpList  = SAI_STORAGE.compare.get();
+  var cmpCount = cmpList.length;
+  document.querySelectorAll('.hero-btn[data-action="compare"]').forEach(function(btn) {
+    var slug  = btn.dataset.slug || null;
+    var bIn   = slug && cmpList.indexOf(slug) >= 0;
+    var bFull = !bIn && cmpCount >= 4;
+    btn.classList.toggle('active', !!bIn);
+    btn.classList.toggle('disabled', bFull);
+    btn.setAttribute('aria-disabled', bFull ? 'true' : 'false');
+    btn.title = bIn    ? 'Remove from compare'
+              : bFull  ? 'Compare queue full (4/4)'
+              : cmpCount > 0 ? 'Add to compare (' + cmpCount + '/4 selected)'
+              : 'Add to compare';
+  });
+}
+
+/* ── Hero-btn event delegation ─────────────────────────────────────── */
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.hero-btn[data-action]');
+  if (!btn) return;
+  e.stopPropagation();
+  var action = btn.dataset.action;
+  var slug   = btn.dataset.slug || null;
+
+  if (action === 'watchlist') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.watchlist.toggle(slug);
+    if (!nowIn) {
+      /* Removed — drop card from page */
+      watchlistCards = watchlistCards.filter(function(c) { return c.slug !== slug; });
+      renderWatchlist();
+      updateSubtitle(watchlistCards.length);
+      if (watchlistCards.length === 0) {
+        document.getElementById('state-empty').style.display = '';
+        document.getElementById('watchlist-items').style.display = 'none';
+      }
+    } else {
+      document.querySelectorAll('.hero-btn[data-action="watchlist"]').forEach(function(b) {
+        if (b.dataset.slug !== slug) return;
+        b.classList.add('active');
+        b.title = 'Remove from watchlist';
+      });
+    }
+
+  } else if (action === 'portfolio') {
+    if (!slug) return;
+    var nowIn = SAI_STORAGE.portfolio.toggle(slug);
+    document.querySelectorAll('.hero-btn[data-action="portfolio"]').forEach(function(b) {
+      if (b.dataset.slug !== slug) return;
+      b.classList.toggle('active', nowIn);
+      b.title = nowIn ? 'Remove from portfolio' : 'Add to portfolio';
+    });
+
+  } else if (action === 'compare') {
+    if (!slug) return;
+    SAI_STORAGE.compare.toggle(slug);
+    _syncCompareHeroBtns();
+
+  } else if (action === 'board') {
+    if (!slug) return;
+    var wasIn = SAI_STORAGE.board.isOnBoard(slug);
+    if (wasIn) SAI_STORAGE.board.removeFromBoard(slug);
+    else SAI_STORAGE.board.addToStage(slug, 'watching');
+    var nowIn = !wasIn;
+    document.querySelectorAll('.hero-btn[data-action="board"]').forEach(function(b) {
+      if (b.dataset.slug !== slug) return;
+      b.classList.toggle('active', nowIn);
+      b.title = nowIn ? 'Remove from Board' : 'Add to Board';
+    });
+  }
+});
+
+/* ── Load ──────────────────────────────────────────────────────────── */
+function loadWatchlist() {
+  var slugs = SAI_STORAGE.watchlist.get();
+
+  if (slugs.length === 0) {
     document.getElementById('state-loading').style.display = 'none';
-    document.getElementById('state-content').style.display = 'block';
-    document.getElementById('state-empty').style.display = 'block';
+    document.getElementById('state-content').style.display = '';
+    document.getElementById('state-empty').style.display = '';
     updateSubtitle(0);
     return;
   }
 
-  /* Fetch properties */
-  var cols = 'property_id,property_name,property_type,slug,country,avg_score_30d,trend_value_30d,confidence_band_30d,suppression_reason_30d,total_followers_latest,engagement_rate_30d_pct,sport';
-  var slugList = watchlistSlugs.map(function(s) { return encodeURIComponent(s); }).join(',');
+  loadGrid().then(function(cards) {
+    allCards = cards;
+    /* Preserve watchlist order */
+    watchlistCards = slugs.map(function(s) {
+      return cards.find(function(c) { return c.slug === s; });
+    }).filter(Boolean);
 
-  apiFetch('/v_property_summary_current?slug=in.(' + slugList + ')&select=' + cols + '&visible_in_ui=eq.true')
-    .then(function(rows) {
-      watchlistProperties = rows || [];
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-content').style.display = '';
+    updateSubtitle(watchlistCards.length);
+
+    if (watchlistCards.length === 0) {
+      document.getElementById('state-empty').style.display = '';
+    } else {
       renderWatchlist();
-      document.getElementById('state-loading').style.display = 'none';
-      document.getElementById('state-content').style.display = 'block';
-      updateSubtitle(watchlistProperties.length);
-    })
-    .catch(function(err) {
-      document.getElementById('state-loading').innerHTML =
-        '<div class="state-msg" style="color:var(--negative)"><strong>Error loading watchlist</strong><br>' + err.message + '</div>';
-    });
+    }
+  }).catch(function(err) {
+    document.getElementById('state-loading').innerHTML =
+      '<div class="state-msg" style="color:var(--negative)"><strong>Error loading watchlist</strong><br>'
+      + escHtml(err && err.message ? err.message : 'Unknown error') + '</div>';
+  });
 }
 
-function updateSubtitle(count) {
-  var subtitle = document.getElementById('page-subtitle');
-  if (count === 0) {
-    subtitle.textContent = 'No properties tracked';
-  } else if (count === 1) {
-    subtitle.textContent = '1 property tracked';
-  } else {
-    subtitle.textContent = count + ' properties tracked';
-  }
-}
-
-/* ── Board action ──────────────────────────────────────────────────── */
-function addToBoard(slug) {
-  if (!slug) return;
-  SAI_STORAGE.board.addToStage(slug, 'watching');
-  renderWatchlist();
-}
-
-/* ── Render watchlist items ────────────────────────────────────────── */
+/* ── Render ────────────────────────────────────────────────────────── */
 function renderWatchlist() {
   var container = document.getElementById('watchlist-items');
+  if (!container) return;
+  container.style.display = '';
+
   var html = '';
-
-  watchlistProperties.forEach(function(prop) {
-    var cfg = TYPE[prop.property_type] || { label: prop.property_type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
-    var flag = countryFlag(prop.country);
-    var trendArrow = prop.trend_value_30d != null ? arr(prop.trend_value_30d) : '';
-    var trendColor = prop.trend_value_30d != null ? arrC(prop.trend_value_30d) : 'var(--text-3)';
-    var suppressed = !!prop.suppression_reason_30d;
-    var score = suppressed ? '--' : fmtScore(prop.avg_score_30d);
-
-    html += '<div class="watchlist-item">';
-    html += '<div class="watchlist-item-left">';
-    html += '<div class="watchlist-item-header">';
-    html += '<div class="watchlist-item-name"><a class="watchlist-item-name-link" href="property.html?slug=' + encodeURIComponent(prop.slug) + '&ref=watchlist">' + escHtml(prop.property_name) + ' ' + flag + '</a></div>';
-    html += '</div>';
-    html += '<div class="watchlist-item-meta">';
-    html += '<span class="watchlist-item-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' +
-            escHtml(cfg.label || prop.property_type) + '</span>';
-    html += '</div>';
-    html += '</div>';
-
-    html += '<div class="watchlist-item-score">';
-    if (!suppressed) {
-      html += '<div class="watchlist-item-score-val">' + score + '</div>';
-      if (trendArrow) {
-        html += '<div class="watchlist-item-trend" style="color:' + trendColor + '">' + trendArrow + '</div>';
-      }
-    } else {
-      html += '<div class="watchlist-item-score-val">--</div>';
-    }
-    html += '<div class="watchlist-item-confidence">' + (prop.confidence_band_30d || '--') + '</div>';
-    html += '</div>';
-
-    var boardStage = SAI_STORAGE.board.getSlugStage(prop.slug);
-    html += '<div class="watchlist-item-actions">';
-    html += '<button class="watchlist-action-btn" onclick="navigateTo(\'property.html?slug=' + encodeURIComponent(prop.slug) + '&ref=watchlist\')">View</button>';
-    html += '<button class="watchlist-action-btn" onclick="navigateTo(\'compare.html?a=' + encodeURIComponent(prop.slug) + '\')">Compare</button>';
-    if (boardStage) {
-      var stageLabel = boardStage.charAt(0).toUpperCase() + boardStage.slice(1);
-      html += '<button class="watchlist-action-btn watchlist-action-onboard" onclick="navigateTo(\'board.html\')" title="On Board: ' + stageLabel + '">On Board</button>';
-    } else {
-      html += '<button class="watchlist-action-btn" onclick="addToBoard(\'' + escHtml(prop.slug) + '\')">Add to Board</button>';
-    }
-    html += '<button class="watchlist-action-btn watchlist-action-remove" onclick="removeFromWatchlist(\'' + escHtml(prop.slug) + '\')">Remove</button>';
-    html += '</div>';
-
-    html += '</div>';
+  watchlistCards.forEach(function(c, idx) {
+    html += renderCard(c, idx);
   });
-
   container.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
 }
 
 /* ── Menu listeners ────────────────────────────────────────────────── */
@@ -357,7 +380,15 @@ SAI_UIH.initMenuListeners();
   margin: 0;
 }
 
-/* Watchlist empty state */
+/* ── Watchlist grid — uses fanscore-card from card.js ────────────── */
+.watchlist-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-4xl);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
 .watchlist-empty {
   display: flex;
   flex-direction: column;
@@ -399,153 +430,7 @@ SAI_UIH.initMenuListeners();
   opacity: 0.8;
 }
 
-/* Watchlist items */
-.watchlist-items {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.watchlist-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: border-color 0.15s;
-}
-
-.watchlist-item:hover {
-  border-color: var(--border-strong);
-}
-
-.watchlist-item-left {
-  flex: 1;
-  min-width: 0;
-}
-
-.watchlist-item-header {
-  margin-bottom: var(--spacing-xs);
-}
-
-.watchlist-item-name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-1);
-}
-
-.watchlist-item-name-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.watchlist-item-name-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: var(--border-strong);
-}
-
-.watchlist-item-name-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-radius: 2px;
-}
-
-.watchlist-item-meta {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.watchlist-item-type {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 500;
-}
-
-.watchlist-item-score {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xxs);
-  padding: var(--spacing-md);
-  background: var(--surface-muted);
-  border-radius: var(--radius-sm);
-  min-width: 70px;
-  text-align: center;
-}
-
-.watchlist-item-score-val {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--text-1);
-}
-
-.watchlist-item-trend {
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.watchlist-item-confidence {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-}
-
-.watchlist-item-actions {
-  flex: 0 0 auto;
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.watchlist-action-btn {
-  padding: 6px var(--spacing-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-2);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: border-color 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.watchlist-action-btn:hover {
-  border-color: var(--border-strong);
-  color: var(--text-1);
-}
-
-.watchlist-action-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-.watchlist-action-remove {
-  color: var(--negative);
-}
-
-.watchlist-action-remove:hover {
-  border-color: var(--negative);
-}
-
-.watchlist-action-onboard {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: transparent;
-}
-
-.watchlist-action-onboard:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
+/* ── State helpers ───────────────────────────────────────────────── */
 .state-msg {
   display: flex;
   flex-direction: column;

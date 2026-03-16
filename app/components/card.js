@@ -35,10 +35,10 @@ function renderCard(c, idx) {
   var _inCmpL   = typeof compareList !== 'undefined' && compareList.indexOf(c.id) >= 0;
   var _inCmp    = _inCmpS || _inCmpL;
   var _cmpCount = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
-  var _cmpFull  = !_inCmp && _cmpCount >= 3;
+  var _cmpFull  = !_inCmp && _cmpCount >= 4;
   var _cmpTitle = _inCmp    ? 'Remove from compare'
-                : _cmpFull  ? 'Compare queue full (3/3)'
-                : _cmpCount > 0 ? 'Add to compare (' + _cmpCount + '/3 selected)'
+                : _cmpFull  ? 'Compare queue full (4/4)'
+                : _cmpCount > 0 ? 'Add to compare (' + _cmpCount + '/4 selected)'
                 : 'Add to compare';
   var _inBoard  = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.board.isOnBoard(_slug);
   heroHtml += '<div class="card-hero-actions">'

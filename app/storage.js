@@ -139,7 +139,7 @@ var SAI_STORAGE = (function() {
   return {
     watchlist: makeList('sai-watchlist'),
     portfolio: makeList('sai-portfolio'),
-    compare:   makeList('sai-compare', 3),
+    compare:   makeList('sai-compare', 4),
     board:     makeBoard('sai-board')
   };
 

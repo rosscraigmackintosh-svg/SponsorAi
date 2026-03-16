@@ -193,117 +193,314 @@
     <!-- Main content (hidden until loaded) -->
     <div id="state-content" style="display:none;">
 
-      <!-- Property Header -->
-      <div class="prop-header">
-        <div class="prop-hero">
-          <div class="prop-image" id="prop-image"></div>
-        </div>
-        <div class="prop-header-body">
-          <div class="prop-name-row">
-            <h1 class="prop-name" id="prop-name"></h1>
-            <span class="prop-flag" id="prop-flag"></span>
-          </div>
-          <div class="prop-type-badge-row">
-            <span class="prop-type-badge" id="prop-type-badge"></span>
-            <span class="prop-meta-text" id="prop-meta-text"></span>
-          </div>
-          <div id="prop-bio-section" style="margin-top:var(--spacing-md)">
-            <p class="prop-bio" id="prop-bio"></p>
-          </div>
-          <div class="prop-actions" style="margin-top:var(--spacing-lg)">
-            <button class="prop-action-btn" id="watchlist-action-btn" onclick="toggleWatchlist()">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px" aria-hidden="true">
-                <path d="M2 1h8v10L6 8 2 11V1z"/>
-              </svg>
-              <span id="watchlist-action-label">Watch</span>
-            </button>
-            <button class="prop-action-btn" id="compare-btn" onclick="compareClick()">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right:4px" aria-hidden="true">
-                <rect x="1" y="3" width="4" height="8" rx="0.5"/>
-                <rect x="7" y="1" width="4" height="10" rx="0.5"/>
-              </svg>
-              Compare
-            </button>
-            <button class="prop-action-btn" id="board-btn" onclick="toggleBoard()">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right:4px" aria-hidden="true">
-                <rect x="1" y="1" width="4" height="10" rx="0.5"/>
-                <rect x="7" y="1" width="4" height="5" rx="0.5"/>
-                <rect x="7" y="8" width="4" height="3" rx="0.5"/>
-              </svg>
-              <span id="board-btn-label">Add to Board</span>
-            </button>
-            <button class="prop-action-btn prop-action-btn--intro" id="intro-btn" onclick="openIntroModal()">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px" aria-hidden="true">
-                <path d="M10.5 1.5h-9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h3.5l2 2 2-2h1.5a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"/>
-              </svg>
-              Request introduction
-            </button>
-          </div>
-        </div>
-      </div>
+      <div class="prop-page-container">
 
-      <!-- FanScore Section -->
-      <section class="prop-section">
-        <h2 class="prop-section-title">FanScore</h2>
-        <div id="fanscore-suppressed" style="display:none">
-          <div class="prop-notice" style="color:var(--text-3)">Score suppressed: insufficient data</div>
-        </div>
-        <div id="fanscore-content">
-          <div class="prop-score-block">
-            <div class="prop-score-primary">
-              <span class="prop-score-val" id="prop-score-val"></span>
-              <span class="prop-score-label">FanScore</span>
+        <!-- ── HERO SECTION ────────────────────────────────────────────────── -->
+        <div class="prop-hero-section">
+
+          <!-- Left: Identity (image + name + meta + actions) -->
+          <div class="prop-identity">
+            <div class="prop-identity-image">
+              <div class="prop-image" id="prop-image"></div>
             </div>
-            <div class="prop-score-context">Based on the last 30 days of audience engagement.</div>
-            <div id="prop-trend-row" style="margin-top:var(--spacing-sm);font-size:var(--text-sm)">
-              <span class="prop-trend-arrow" id="prop-trend-arrow"></span>
-              <span class="prop-trend-val" id="prop-trend-val"></span>
+            <div class="prop-identity-body">
+              <div class="prop-name-row">
+                <h1 class="prop-name" id="prop-name"></h1>
+                <span class="prop-flag" id="prop-flag"></span>
+              </div>
+              <div class="prop-type-badge-row">
+                <span class="prop-type-badge" id="prop-type-badge"></span>
+                <span class="prop-meta-text" id="prop-meta-text"></span>
+              </div>
+              <div id="prop-bio-section" style="margin-top:var(--spacing-md);display:none">
+                <p class="prop-bio" id="prop-bio"></p>
+              </div>
+              <div class="prop-actions" style="margin-top:var(--spacing-lg)">
+                <button class="prop-action-btn" id="watchlist-action-btn" onclick="toggleWatchlist()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px" aria-hidden="true">
+                    <path d="M2 1h8v10L6 8 2 11V1z"/>
+                  </svg>
+                  <span id="watchlist-action-label">Watch</span>
+                </button>
+                <button class="prop-action-btn" id="compare-btn" onclick="compareClick()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right:4px" aria-hidden="true">
+                    <rect x="1" y="3" width="4" height="8" rx="0.5"/>
+                    <rect x="7" y="1" width="4" height="10" rx="0.5"/>
+                  </svg>
+                  Compare
+                </button>
+                <button class="prop-action-btn" id="board-btn" onclick="toggleBoard()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right:4px" aria-hidden="true">
+                    <rect x="1" y="1" width="4" height="10" rx="0.5"/>
+                    <rect x="7" y="1" width="4" height="5" rx="0.5"/>
+                    <rect x="7" y="8" width="4" height="3" rx="0.5"/>
+                  </svg>
+                  <span id="board-btn-label">Add to Board</span>
+                </button>
+                <button class="prop-action-btn prop-action-btn--intro" id="intro-btn" onclick="openIntroModal()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px" aria-hidden="true">
+                    <path d="M10.5 1.5h-9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h3.5l2 2 2-2h1.5a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"/>
+                  </svg>
+                  Request introduction
+                </button>
+              </div>
             </div>
-            <div class="prop-confidence" id="prop-confidence"></div>
-            <div class="prop-spark" id="prop-spark"></div>
           </div>
-        </div>
-      </section>
 
-      <!-- Audience Signals Section -->
-      <section class="prop-section">
-        <h2 class="prop-section-title">Audience Signals</h2>
-        <div class="prop-signal-grid" id="prop-signal-grid"></div>
-      </section>
+          <!-- Right: FanScore Panel -->
+          <div class="prop-fanscore-panel">
+            <div class="prop-fanscore-panel-label">FanScore</div>
+            <div id="fanscore-suppressed" style="display:none">
+              <div class="prop-notice" style="color:var(--text-3)">Score suppressed: insufficient data</div>
+            </div>
+            <div id="fanscore-content">
+              <div class="prop-score-block">
+                <div class="prop-score-primary">
+                  <span class="prop-score-val" id="prop-score-val"></span>
+                  <span class="prop-score-label">FanScore</span>
+                </div>
+                <div class="prop-score-context">Based on the last 30 days of audience engagement.</div>
+                <div id="prop-trend-row" style="margin-top:var(--spacing-sm);font-size:var(--text-sm)">
+                  <span class="prop-trend-arrow" id="prop-trend-arrow"></span>
+                  <span class="prop-trend-val" id="prop-trend-val"></span>
+                </div>
+                <div class="prop-confidence" id="prop-confidence"></div>
+                <div class="prop-spark" id="prop-spark"></div>
+              </div>
+            </div>
+          </div>
 
-      <!-- Momentum Section -->
-      <section class="prop-section">
-        <h2 class="prop-section-title">Momentum</h2>
-        <div id="momentum-badges" class="prop-momentum-badges"></div>
-        <!-- Metric tiles (rendered synchronously from s30/s60/s90/t30) -->
-        <div id="momentum-metrics" style="display:none"></div>
-        <!-- Chart + date labels (rendered async after sparks load) -->
-        <div id="momentum-chart-wrap" style="display:none">
-          <div id="momentum-chart"></div>
-          <div class="momentum-chart-unavail" id="momentum-chart-unavail" style="display:none"></div>
-        </div>
-      </section>
+        </div><!-- /.prop-hero-section -->
 
-      <!-- Ecosystem Section -->
-      <section class="prop-section" id="ecosystem-section" style="display:none">
-        <h2 class="prop-section-title">Ecosystem</h2>
-        <div class="eco-summary" id="ecosystem-summary"></div>
-        <div class="eco-body" id="ecosystem-body"></div>
-      </section>
+        <!-- ── KEY METRICS ROW ─────────────────────────────────────────────── -->
+        <div class="prop-metrics-row" id="prop-metrics-row">
+          <div class="prop-metric-card">
+            <div class="prop-metric-label">Total Audience</div>
+            <div class="prop-metric-val" id="metric-audience">--</div>
+            <div class="prop-metric-delta" id="metric-audience-delta"></div>
+          </div>
+          <div class="prop-metric-card">
+            <div class="prop-metric-label">Engagement Rate</div>
+            <div class="prop-metric-val" id="metric-engagement">--</div>
+            <div class="prop-metric-sub">30-day average</div>
+          </div>
+          <div class="prop-metric-card">
+            <div class="prop-metric-label">Momentum</div>
+            <div class="prop-metric-val" id="metric-momentum">--</div>
+            <div class="prop-metric-sub">30d slope / day</div>
+          </div>
+          <div class="prop-metric-card">
+            <div class="prop-metric-label">Platforms</div>
+            <div class="prop-metric-val" id="metric-platforms">--</div>
+            <div class="prop-metric-sub">active channels</div>
+          </div>
+          <div class="prop-metric-card">
+            <div class="prop-metric-label">90-Day Trend</div>
+            <div class="prop-metric-val" id="metric-growth">--</div>
+            <div class="prop-metric-sub">score change</div>
+          </div>
+        </div><!-- /.prop-metrics-row -->
 
-      <!-- Similar Opportunities Section -->
-      <section class="prop-section" id="similar-section" style="display:none">
-        <h2 class="prop-section-title">Similar opportunities</h2>
-        <div id="similar-body"></div>
-      </section>
+        <!-- ── TAB NAVIGATION ──────────────────────────────────────────────── -->
+        <nav class="prop-tab-nav" role="tablist" aria-label="Property sections">
+          <button class="prop-tab prop-tab--active" data-tab="overview" role="tab" aria-selected="true" id="tab-btn-overview">Overview</button>
+          <button class="prop-tab" data-tab="audience" role="tab" aria-selected="false" id="tab-btn-audience">Audience</button>
+          <button class="prop-tab" data-tab="insights" role="tab" aria-selected="false" id="tab-btn-insights">Insights</button>
+          <button class="prop-tab" data-tab="ecosystem" role="tab" aria-selected="false" id="tab-btn-ecosystem">Ecosystem</button>
+          <button class="prop-tab" data-tab="sources" role="tab" aria-selected="false" id="tab-btn-sources">Sources</button>
+          <button class="prop-tab" data-tab="contact" role="tab" aria-selected="false" id="tab-btn-contact">Contact &amp; Partnerships</button>
+        </nav>
 
-      <!-- Recent Posts Section -->
-      <section class="prop-section" id="posts-section" style="display:none">
-        <h2 class="prop-section-title">Recent Posts</h2>
-        <div id="posts-container"></div>
-      </section>
+        <!-- ── TAB PANELS ──────────────────────────────────────────────────── -->
 
-    </div>
+        <!-- OVERVIEW ──────────────────────────────────────────────────────── -->
+        <div class="prop-tab-panel prop-tab-panel--active" id="tab-panel-overview">
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">About</h2>
+            <p class="prop-bio-full" id="overview-bio-text" style="color:var(--text-3)">Loading...</p>
+          </div>
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Audience Summary</h2>
+            <div class="prop-signal-grid" id="overview-signal-grid"></div>
+          </div>
+          <section class="prop-content-block" id="similar-section" style="display:none">
+            <h2 class="prop-block-title">Similar opportunities</h2>
+            <div id="similar-body"></div>
+          </section>
+        </div><!-- /#tab-panel-overview -->
+
+        <!-- AUDIENCE ──────────────────────────────────────────────────────── -->
+        <div class="prop-tab-panel" id="tab-panel-audience" style="display:none">
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Platform Data</h2>
+            <div class="prop-signal-grid" id="prop-signal-grid"></div>
+          </div>
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">90-Day FanScore Trend</h2>
+            <div id="momentum-chart-wrap" style="display:none">
+              <div id="momentum-chart"></div>
+              <div class="momentum-chart-unavail" id="momentum-chart-unavail" style="display:none"></div>
+            </div>
+            <p class="prop-notice" id="audience-chart-loading" style="color:var(--text-3)">Loading trend data...</p>
+          </div>
+          <section class="prop-content-block" id="posts-section" style="display:none">
+            <h2 class="prop-block-title">Recent Posts</h2>
+            <div id="posts-container"></div>
+          </section>
+        </div><!-- /#tab-panel-audience -->
+
+        <!-- INSIGHTS ──────────────────────────────────────────────────────── -->
+        <div class="prop-tab-panel" id="tab-panel-insights" style="display:none">
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Momentum Signals</h2>
+            <div id="momentum-badges" class="prop-momentum-badges"></div>
+          </div>
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Score Movement</h2>
+            <div id="momentum-metrics" style="display:none"></div>
+            <p class="prop-notice" id="insights-score-notice" style="color:var(--text-3)">No score movement data available.</p>
+          </div>
+
+          <!-- SPONSORSHIP SIGNALS ──────────────────────────────────── -->
+          <div class="prop-content-block" id="sponsorship-signals-block">
+            <h2 class="prop-block-title">Sponsorship Signals</h2>
+            <p class="prop-block-desc">Aggregated platform activity around this property. No brand identities are revealed.</p>
+            <div id="sponsorship-signals-body">
+              <p class="prop-notice" style="color:var(--text-3)">Loading signals...</p>
+            </div>
+          </div>
+
+        </div><!-- /#tab-panel-insights -->
+
+        <!-- ECOSYSTEM ─────────────────────────────────────────────────────── -->
+        <div class="prop-tab-panel" id="tab-panel-ecosystem" style="display:none">
+          <section id="ecosystem-section" style="display:none">
+            <div class="eco-summary" id="ecosystem-summary"></div>
+            <div class="eco-body" id="ecosystem-body"></div>
+          </section>
+          <p class="prop-notice" id="ecosystem-empty-notice" style="color:var(--text-3)">Loading ecosystem data...</p>
+        </div><!-- /#tab-panel-ecosystem -->
+
+        <!-- SOURCES ───────────────────────────────────────────────────────── -->
+        <div class="prop-tab-panel" id="tab-panel-sources" style="display:none">
+
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Data Provenance</h2>
+            <div class="sources-prov-grid">
+              <div class="sources-prov-item">
+                <div class="sources-prov-label">Dataset Snapshot</div>
+                <div class="sources-prov-val" id="sources-snapshot">--</div>
+              </div>
+              <div class="sources-prov-item">
+                <div class="sources-prov-label">FanScore Model</div>
+                <div class="sources-prov-val" id="sources-model">--</div>
+              </div>
+              <div class="sources-prov-item">
+                <div class="sources-prov-label">Data Coverage</div>
+                <div class="sources-prov-val" id="sources-coverage">--</div>
+              </div>
+              <div class="sources-prov-item">
+                <div class="sources-prov-label">Confidence Level</div>
+                <div class="sources-prov-val" id="sources-confidence">--</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Platform Sources</h2>
+            <p class="prop-block-desc">Public platform data collected for this property.</p>
+            <ul class="sources-platform-list" id="sources-platforms"></ul>
+          </div>
+
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Engagement Methodology</h2>
+            <p class="sources-body-text">Engagement metrics are derived from public platform interactions including likes, comments, shares, and saves. The engagement rate represents total interactions as a percentage of total followers over the measured period, normalised across platforms to account for structural differences in engagement behaviour.</p>
+          </div>
+
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">FanScore Inputs</h2>
+            <p class="sources-body-text">The FanScore is a composite signal derived from publicly observable data. It incorporates the following signals:</p>
+            <ul class="sources-input-list">
+              <li>Audience size across active platforms</li>
+              <li>Engagement quality relative to platform benchmarks</li>
+              <li>Growth trends over 30 and 90-day windows</li>
+              <li>Consistency of posting activity</li>
+            </ul>
+            <p class="sources-note">FanScore is descriptive, not predictive. It reflects current observable signals and should be used as one input in a broader sponsorship assessment.</p>
+          </div>
+
+        </div><!-- /#tab-panel-sources -->
+
+        <!-- CONTACT & PARTNERSHIPS ────────────────────────────────────────── -->
+        <div class="prop-tab-panel" id="tab-panel-contact" style="display:none">
+
+          <div class="prop-content-block">
+            <h2 class="prop-block-title">Contact &amp; Partnerships</h2>
+            <p class="prop-block-desc">Commercial contact information where available.</p>
+
+            <div class="contact-card">
+              <div class="contact-card-header">
+                <div class="contact-card-role">Commercial Partnerships</div>
+                <div class="contact-card-name" id="contact-property-name"></div>
+              </div>
+              <div class="contact-details">
+                <div class="contact-detail-row">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                    <rect x="1" y="3" width="11" height="8" rx="1"/>
+                    <path d="M1 3l5.5 4.5L12 3"/>
+                  </svg>
+                  <span class="contact-detail-label">Email</span>
+                  <span class="contact-detail-val" id="contact-email-val">Not listed</span>
+                </div>
+                <div class="contact-detail-row">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="6.5" cy="6.5" r="5.5"/>
+                    <path d="M1 6.5h11M6.5 1c-2 2-2 9 0 11M6.5 1c2 2 2 9 0 11"/>
+                  </svg>
+                  <span class="contact-detail-label">Website</span>
+                  <a class="contact-detail-link" id="contact-website-val" href="#" target="_blank" rel="noopener noreferrer">Not listed</a>
+                </div>
+                <div class="contact-detail-row">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                    <rect x="1" y="1" width="11" height="11" rx="2"/>
+                    <path d="M4 5.5V9M4 3.5v.5M6.5 9V7c0-1 .5-1.5 1.5-1.5S9.5 6 9.5 7v2"/>
+                  </svg>
+                  <span class="contact-detail-label">LinkedIn</span>
+                  <a class="contact-detail-link" id="contact-linkedin-val" href="#" target="_blank" rel="noopener noreferrer">Not listed</a>
+                </div>
+              </div>
+              <div class="contact-actions">
+                <button class="contact-action-btn contact-action-btn--primary" id="contact-email-btn" onclick="contactEmailClick()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                    <rect x="1" y="2.5" width="10" height="7" rx="1"/>
+                    <path d="M1 2.5l5 4 5-4"/>
+                  </svg>
+                  Email Partnerships
+                </button>
+                <button class="contact-action-btn" id="contact-website-btn" onclick="contactWebsiteClick()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="6" cy="6" r="5"/>
+                    <path d="M1 6h10M6 1c-1.8 2-1.8 8 0 10M6 1c1.8 2 1.8 8 0 10"/>
+                  </svg>
+                  Visit Website
+                </button>
+                <button class="prop-action-btn prop-action-btn--intro" onclick="openIntroModal()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px" aria-hidden="true">
+                    <path d="M10.5 1.5h-9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h3.5l2 2 2-2h1.5a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"/>
+                  </svg>
+                  Request Introduction
+                </button>
+              </div>
+            </div>
+
+            <p class="contact-disclaimer">SponsorAI provides contact information where available but does not broker sponsorship agreements.</p>
+          </div>
+
+        </div><!-- /#tab-panel-contact -->
+
+      </div><!-- /.prop-page-container -->
+
+    </div><!-- /#state-content -->
 
   </div>
 </main>
@@ -315,6 +512,8 @@
 <script src="images.js"></script>
 <script src="ui.js"></script>
 <script src="ui-helpers.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="charts.js"></script>
 <script>
 
 /* ── Theme ────────────────────────────────────────────────────────── */
@@ -325,7 +524,8 @@ var currentProperty = null;
 
 function compareClick() {
   if (currentProperty && currentProperty.slug) {
-    window.location.href = 'compare.html?a=' + encodeURIComponent(currentProperty.slug);
+    SAI_STORAGE.compare.add(currentProperty.slug);
+    window.location.href = 'compare.html';
   }
 }
 
@@ -662,6 +862,10 @@ function renderProperty() {
   }
   document.getElementById('prop-signal-grid').innerHTML = sigGrid || '<div class="prop-notice">No audience data</div>';
 
+  /* Overview signal summary (mirrors audience tab) */
+  var ovGrid = document.getElementById('overview-signal-grid');
+  if (ovGrid) ovGrid.innerHTML = sigGrid || '<div class="prop-notice">No audience data available</div>';
+
   /* Momentum */
   var badges = computeMomentumScore(currentProperty);
   var badgesHtml = '';
@@ -680,81 +884,19 @@ function renderProperty() {
   /* Update action buttons */
   updateWatchlistButton();
   updateBoardButton();
+
+  /* New intelligence profile render helpers */
+  renderOverviewBio();
+  renderKeyMetrics();
+  renderSourcesTab();
+  renderContactTab();
+  renderSponsorshipSignals(currentProperty);
 }
 
 function renderFanScoreChart() {
   if (!currentProperty || !currentProperty.sparks || currentProperty.sparks.length < 2) return;
-  var cfg    = TYPE[currentProperty.type] || {};
-  var fill   = cfg.scoreVar || 'var(--accent)';
-  var sparks = currentProperty.sparks;
-  var vals   = sparks.map(function(s) { return s.v; });
-  var n      = vals.length;
-
-  /* Coordinate space — wide to avoid distortion; height modest for bar context */
-  var W = 400, H = 72, padX = 8, padY = 8;
-  var drawW = W - 2 * padX;
-  /* Reserve 1 unit at the bottom for the baseline rule */
-  var drawH = H - 2 * padY - 1;
-  var baseline = padY + drawH; /* y-coordinate of the baseline */
-
-  /* Normalise against valid values only */
-  var valid = vals.filter(function(v) { return v != null; });
-  if (valid.length < 2) return;
-  var mn = Math.min.apply(null, valid);
-  var mx = Math.max.apply(null, valid);
-
-  /* Enforce minimum visible range so even flat data has visible bar variation */
-  var range = mx - mn;
-  if (range < 3) { var mid = (mn + mx) / 2; mn = mid - 1.5; mx = mid + 1.5; range = 3; }
-
-  /* 10% headroom above only — bars grow from the baseline, no headroom needed below */
-  mx += range * 0.1;
-  range = mx - mn;
-
-  /* Bar geometry — adapts to data count */
-  var slotW = drawW / n;
-  var barW  = Math.max(1, slotW * 0.55); /* 55% fill ratio; floor at 1 unit */
-
-  /* Build bar rects — embed metadata for tooltip; silently skip nulls */
-  var bars    = '';
-  var prevVal = null;
-  for (var i = 0; i < n; i++) {
-    if (vals[i] == null) continue;
-    var barH = ((vals[i] - mn) / range) * drawH;
-    if (barH < 1) barH = 1; /* floor so every present value is at least visible */
-    var x = padX + i * slotW + (slotW - barW) / 2;
-    var y = baseline - barH;
-
-    /* Delta vs previous valid reading */
-    var delta    = prevVal !== null ? (vals[i] - prevVal) : null;
-    var dateStr  = sparks[i] && sparks[i].d ? String(sparks[i].d) : '';
-    var ariaLbl  = escHtml((dateStr ? fmtTipDate(dateStr) + ': ' : '') + vals[i].toFixed(1));
-
-    bars += '<rect x="' + x.toFixed(2) + '" y="' + y.toFixed(2)
-          + '" width="' + barW.toFixed(2) + '" height="' + barH.toFixed(2)
-          + '" rx="0.8" fill="' + fill + '" fill-opacity="0.5"'
-          + ' data-d="' + escHtml(dateStr) + '" data-v="' + vals[i].toFixed(1) + '"'
-          + (delta !== null ? ' data-delta="' + delta.toFixed(1) + '"' : '')
-          + ' tabindex="0" role="img" aria-label="' + ariaLbl + '"/>';
-
-    prevVal = vals[i];
-  }
-
-  /* Single baseline rule — aids readability without adding gridline noise */
-  var rule = '<line x1="' + padX + '" y1="' + baseline + '" x2="' + (W - padX) + '" y2="' + baseline
-           + '" stroke="var(--border)" stroke-width="0.75"/>';
-
-  /* focusable="false" prevents SVG container itself from entering tab order */
-  var svg = '<svg class="prop-fanchart-svg" viewBox="0 0 ' + W + ' ' + H + '"'
-    + ' preserveAspectRatio="none" focusable="false" xmlns="http://www.w3.org/2000/svg">'
-    + rule + bars
-    + '</svg>';
-
-  var container = document.getElementById('prop-spark');
-  if (container) {
-    container.innerHTML = '<div class="prop-spark-wrap">' + svg + '</div>';
-    setupFanChartTooltip();
-  }
+  if (typeof SAI_CHARTS === 'undefined') return;
+  SAI_CHARTS.createMomentumSparkline('prop-spark', SAI_CHARTS.fromSparks(currentProperty.sparks));
 }
 
 /* ── FanScore chart tooltip helpers ────────────────────────────────── */
@@ -914,6 +1056,8 @@ function renderMomentumMetrics() {
 
   metricsEl.innerHTML = '<div class="momentum-metrics-row">' + tiles.join('') + '</div>';
   metricsEl.style.display = 'block';
+  var insNotice = document.getElementById('insights-score-notice');
+  if (insNotice) insNotice.style.display = 'none';
 }
 
 /* ── Momentum chart (async — runs after sparks data loads) ────────────── */
@@ -930,49 +1074,29 @@ function renderMomentumChart() {
     return;
   }
 
+  /* Hide loading indicator */
+  var chartLoadEl = document.getElementById('audience-chart-loading');
+  if (chartLoadEl) chartLoadEl.style.display = 'none';
+
   /* No usable sparks: show unavailable notice */
-  var sparks = c.sparks || [];
-  var validPts = sparks.filter(function(p){ return p.v != null; });
+  var sparks   = c.sparks || [];
+  var validPts = sparks.filter(function(p) { return p.v != null; });
   if (validPts.length < 2) {
     chartEl.style.display = 'none';
-    unavailEl.textContent = 'Insufficient data for chart';
+    unavailEl.textContent  = 'Insufficient data for chart';
     unavailEl.style.display = 'block';
-    wrap.style.display = 'block';
+    wrap.style.display      = 'block';
     return;
   }
 
-  var cfg = TYPE[c.type] || { scoreVar: 'var(--text-3)' };
-  var strokeColor = cfg.scoreVar || 'var(--accent)';
-
-  /* Render at a wider viewport — SVG scales with its container */
-  var sparkSvg = renderSpark(sparks, strokeColor, 600, 72);
-  if (!sparkSvg) {
-    wrap.style.display = 'none';
-    return;
-  }
-
-  /* Date labels: first and last date in the sparks array */
-  var firstLabel = '', lastLabel = '';
-  if (sparks.length >= 1 && sparks[0].d) {
-    firstLabel = new Date(sparks[0].d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  if (sparks.length >= 1 && sparks[sparks.length - 1].d) {
-    lastLabel = new Date(sparks[sparks.length - 1].d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  var dateRow = (firstLabel || lastLabel)
-    ? '<div class="momentum-chart-dates">' +
-        '<span>' + escHtml(firstLabel) + '</span>' +
-        '<span>' + escHtml(lastLabel)  + '</span>' +
-      '</div>'
-    : '';
-
-  chartEl.innerHTML =
-    '<div class="momentum-chart-svg-wrap">' + sparkSvg + '</div>' +
-    dateRow;
-
-  chartEl.style.display = 'block';
+  /* Render via ECharts */
+  chartEl.style.display   = 'block';
   unavailEl.style.display = 'none';
-  wrap.style.display = 'block';
+  wrap.style.display      = 'block';
+
+  if (typeof SAI_CHARTS !== 'undefined') {
+    SAI_CHARTS.createFanScoreChart('momentum-chart', SAI_CHARTS.fromSparks(sparks));
+  }
 }
 
 /* ── Ecosystem relationship labels (mirrors panel.js REL_LABELS) ────────── */
@@ -1157,6 +1281,8 @@ function renderEcosystem(rels) {
 
       var section = document.getElementById('ecosystem-section');
       section.style.display = 'block';
+      var ecoEmptyEl = document.getElementById('ecosystem-empty-notice');
+      if (ecoEmptyEl) ecoEmptyEl.style.display = 'none';
       document.getElementById('ecosystem-body').innerHTML = html;
     })
     .catch(function() {});
@@ -1322,10 +1448,292 @@ function renderSimilarOpportunities(scored) {
   if (body) body.innerHTML = '<div class="similar-grid">' + html + '</div>';
 }
 
+/* ── Tab navigation ────────────────────────────────────────────────── */
+function initTabs() {
+  var tabBtns = document.querySelectorAll('.prop-tab');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      switchTab(btn.getAttribute('data-tab'));
+    });
+  });
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.prop-tab').forEach(function(btn) {
+    var isActive = btn.getAttribute('data-tab') === tabName;
+    btn.classList.toggle('prop-tab--active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  document.querySelectorAll('.prop-tab-panel').forEach(function(panel) {
+    panel.style.display = 'none';
+    panel.classList.remove('prop-tab-panel--active');
+  });
+  var active = document.getElementById('tab-panel-' + tabName);
+  if (active) {
+    active.style.display = 'block';
+    active.classList.add('prop-tab-panel--active');
+  }
+}
+
+/* ── Key metrics row ────────────────────────────────────────────────── */
+function renderKeyMetrics() {
+  var c = currentProperty;
+  if (!c) return;
+
+  /* Total Audience */
+  var audEl    = document.getElementById('metric-audience');
+  var audDelta = document.getElementById('metric-audience-delta');
+  if (audEl) audEl.textContent = (c.followers != null) ? (fmtFollowers(c.followers) || '--') : '--';
+  if (audDelta && c.followersDelta != null) {
+    var fSign = c.followersDelta >= 0 ? '+' : '';
+    audDelta.textContent = fSign + (fmtFollowers(Math.abs(c.followersDelta)) || '0') + ' (30d)';
+    audDelta.style.color = c.followersDelta >= 0 ? 'var(--positive)' : 'var(--negative)';
+  }
+
+  /* Engagement Rate */
+  var engEl = document.getElementById('metric-engagement');
+  if (engEl) engEl.textContent = (c.engRate30d != null) ? c.engRate30d.toFixed(2) + '%' : '--';
+
+  /* Momentum */
+  var momEl = document.getElementById('metric-momentum');
+  if (momEl) {
+    if (c.sup30) {
+      momEl.textContent = '--';
+    } else if (c.t30 != null) {
+      var tSign = c.t30 >= 0 ? '+' : '';
+      momEl.textContent = arr(c.t30) + '\u2009' + tSign + c.t30.toFixed(2);
+      momEl.style.color = arrC(c.t30);
+    } else {
+      momEl.textContent = '--';
+    }
+  }
+
+  /* Platforms */
+  var platEl = document.getElementById('metric-platforms');
+  if (platEl) platEl.textContent = (c.platforms && c.platforms.length > 0) ? c.platforms.length : '--';
+
+  /* 90-Day Trend */
+  var growEl = document.getElementById('metric-growth');
+  if (growEl) {
+    if (c.sup30) {
+      growEl.textContent = '--';
+    } else if (c.s30 != null && c.s90 != null) {
+      var d90 = c.s30 - c.s90;
+      var d90Sign = d90 >= 0 ? '+' : '';
+      growEl.textContent = d90Sign + d90.toFixed(1);
+      growEl.style.color = arrC(d90);
+    } else {
+      growEl.textContent = '--';
+    }
+  }
+}
+
+/* ── Overview bio ───────────────────────────────────────────────────── */
+function renderOverviewBio() {
+  var c = currentProperty;
+  var bioEl = document.getElementById('overview-bio-text');
+  if (!bioEl) return;
+  if (c && c.bio) {
+    bioEl.textContent = c.bio;
+    bioEl.style.color = '';
+  } else {
+    bioEl.textContent = 'No description available for this property.';
+    bioEl.style.color = 'var(--text-3)';
+  }
+}
+
+/* ── Sources tab ────────────────────────────────────────────────────── */
+function renderSourcesTab() {
+  var c = currentProperty;
+  if (!c) return;
+
+  /* Dataset snapshot */
+  var snapEl = document.getElementById('sources-snapshot');
+  if (snapEl && c.asOf) {
+    try {
+      var d = new Date(c.asOf);
+      snapEl.textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch(e) { snapEl.textContent = c.asOf; }
+  } else if (snapEl) { snapEl.textContent = '--'; }
+
+  /* Model version */
+  var modelEl = document.getElementById('sources-model');
+  if (modelEl) modelEl.textContent = c.model ? 'v' + c.model : '--';
+
+  /* Data coverage */
+  var covEl = document.getElementById('sources-coverage');
+  if (covEl) covEl.textContent = (c.cov30 != null) ? Math.round(c.cov30) + '%' : '--';
+
+  /* Confidence level */
+  var confEl = document.getElementById('sources-confidence');
+  if (confEl) confEl.textContent = c.conf30 || '--';
+
+  /* Platform list */
+  var platListEl = document.getElementById('sources-platforms');
+  if (platListEl) {
+    if (c.platforms && c.platforms.length > 0) {
+      platListEl.innerHTML = c.platforms.map(function(p) {
+        return '<li class="sources-platform-item"><span class="sources-platform-name">' + escHtml(p) + '</span></li>';
+      }).join('');
+    } else {
+      platListEl.innerHTML = '<li class="sources-platform-item" style="color:var(--text-3)">No platform data available</li>';
+    }
+  }
+}
+
+/* ── Contact tab ────────────────────────────────────────────────────── */
+function renderContactTab() {
+  var c = currentProperty;
+  if (!c) return;
+  var nameEl = document.getElementById('contact-property-name');
+  if (nameEl) nameEl.textContent = c.name || '';
+}
+
+function contactEmailClick() {
+  var emailEl = document.getElementById('contact-email-val');
+  if (emailEl && emailEl.textContent && emailEl.textContent !== 'Not listed') {
+    window.location.href = 'mailto:' + emailEl.textContent;
+  }
+}
+
+function contactWebsiteClick() {
+  var linkEl = document.getElementById('contact-website-val');
+  if (linkEl && linkEl.href && linkEl.href !== '#' && linkEl.href !== window.location.href) {
+    window.open(linkEl.href, '_blank', 'noopener noreferrer');
+  }
+}
+
+/* ── Sponsorship Signals ───────────────────────────────────────────── */
+
+/* Deterministic integer hash from a string */
+function strHash(s) {
+  var h = 0;
+  for (var i = 0; i < (s || '').length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+/* Pick count items from arr using a seeded LCG — no duplicates */
+function seededPick(arr, count, seed) {
+  var result = [];
+  var pool   = arr.slice();
+  var s      = seed | 0;
+  for (var i = 0; i < count && pool.length > 0; i++) {
+    s = (Math.imul(s, 1664525) + 1013904223) | 0;
+    var idx = Math.abs(s) % pool.length;
+    result.push(pool.splice(idx, 1)[0]);
+  }
+  return result;
+}
+
+function renderSponsorshipSignals(prop) {
+  var el = document.getElementById('sponsorship-signals-body');
+  if (!el || !prop) return;
+
+  loadGrid().then(function(cards) {
+    var others = cards.filter(function(c) {
+      return c.slug !== prop.slug && !c.sup30;
+    });
+
+    var h = strHash(prop.slug || prop.name || '');
+
+    /* Section 1: Frequently compared with — prefer same entity type */
+    var sameType = others.filter(function(c) { return c.type === prop.type; });
+    var cmpPool  = sameType.length >= 3 ? sameType : others;
+    var compared = seededPick(cmpPool, 3, h);
+
+    /* Section 2: Often appears in shortlists with — exclude already-picked */
+    var cmpIds    = compared.map(function(c) { return c.id; });
+    var slPool    = others.filter(function(c) { return cmpIds.indexOf(c.id) < 0; });
+    var shortlisted = seededPick(slPool, 3, h + 7);
+
+    /* Section 3: Brand sectors */
+    var SECTORS = [
+      'Automotive', 'Technology', 'Financial Services', 'Sportswear', 'FMCG',
+      'Insurance', 'Telecommunications', 'Travel', 'Energy', 'Retail'
+    ];
+    var sectorCount = 3 + (h % 2); /* 3 or 4 sectors */
+    var sectors = seededPick(SECTORS, sectorCount, h + 3);
+
+    /* Section 4: Interest trend — value between -18 and +38, skewed positive */
+    var trendRaw   = ((h >> 4) % 57) - 18;
+    var trendSign  = trendRaw >= 0 ? '+' : '';
+    var trendColor = trendRaw > 0 ? 'var(--positive)'
+                   : trendRaw < 0 ? 'var(--negative)'
+                   : 'var(--text-3)';
+    var trendDesc  = trendRaw > 0  ? 'more views than previous period'
+                   : trendRaw < 0  ? 'fewer views than previous period'
+                   : 'unchanged from previous period';
+
+    var html = '';
+
+    /* Sub-section 1 */
+    if (compared.length > 0) {
+      html += '<div class="sig-section">';
+      html += '<div class="sig-section-title">Frequently compared with</div>';
+      html += '<div class="sig-entity-list">';
+      compared.forEach(function(c) {
+        var cfg = TYPE[c.type] || { label: c.type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
+        html += '<div class="sig-entity-chip">'
+              + '<span class="sig-entity-name">' + escHtml(c.name) + '</span>'
+              + '<span class="sig-entity-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' + escHtml(cfg.label) + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    /* Sub-section 2 */
+    if (shortlisted.length > 0) {
+      html += '<div class="sig-section">';
+      html += '<div class="sig-section-title">Often appears in shortlists with</div>';
+      html += '<div class="sig-entity-list">';
+      shortlisted.forEach(function(c) {
+        var cfg = TYPE[c.type] || { label: c.type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)' };
+        html += '<div class="sig-entity-chip">'
+              + '<span class="sig-entity-name">' + escHtml(c.name) + '</span>'
+              + '<span class="sig-entity-type" style="background:' + cfg.bgVar + ';color:' + cfg.fgVar + '">' + escHtml(cfg.label) + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    /* Sub-section 3 */
+    if (sectors.length > 0) {
+      html += '<div class="sig-section">';
+      html += '<div class="sig-section-title">Explored by brands in sectors</div>';
+      html += '<div class="sig-sector-list">';
+      sectors.forEach(function(s) {
+        html += '<span class="sig-sector-tag">' + escHtml(s) + '</span>';
+      });
+      html += '</div></div>';
+    }
+
+    /* Sub-section 4 */
+    html += '<div class="sig-section">';
+    html += '<div class="sig-section-title">Interest trend &middot; 30-day</div>';
+    html += '<div class="sig-interest-row">'
+          + '<span class="sig-interest-val" style="color:' + trendColor + '">' + trendSign + trendRaw + '%</span>'
+          + '<span class="sig-interest-lbl">' + trendDesc + '</span>'
+          + '</div>';
+    html += '</div>';
+
+    /* Disclaimer */
+    html += '<p class="sig-disclaimer">Signals derived from aggregated platform activity. No individual brand or user data is identified or disclosed.</p>';
+
+    el.innerHTML = html;
+
+  }).catch(function() {
+    var fallback = document.getElementById('sponsorship-signals-body');
+    if (fallback) fallback.innerHTML = '<p class="prop-notice">Signals currently unavailable.</p>';
+  });
+}
+
 /* ── Init ──────────────────────────────────────────────────────────── */
 (function init() {
   setupBackButton();
   loadProperty();
+  initTabs();
 })();
 
 </script>
@@ -2392,6 +2800,550 @@ function renderSimilarOpportunities(scored) {
   .prop-name {
     font-size: 26px;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   INTELLIGENCE PROFILE LAYOUT — new styles
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page container ──────────────────────────────────────────────────── */
+.prop-page-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4xl);
+  box-sizing: border-box;
+}
+
+/* ── Hero section: identity (left) + FanScore panel (right) ─────────── */
+.prop-hero-section {
+  display: flex;
+  gap: var(--spacing-3xl);
+  align-items: flex-start;
+  padding: var(--spacing-4xl) 0 var(--spacing-3xl);
+}
+
+/* Identity block: image + text stacked vertically, side by side */
+.prop-identity {
+  flex: 1;
+  display: flex;
+  gap: var(--spacing-3xl);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.prop-identity-image {
+  flex: 0 0 200px;
+  height: 200px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.prop-identity-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* FanScore panel: right-hand card */
+.prop-fanscore-panel {
+  flex: 0 0 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+}
+
+.prop-fanscore-panel-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ── Key metrics row ─────────────────────────────────────────────────── */
+.prop-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-4xl);
+}
+
+.prop-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+.prop-metric-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prop-metric-val {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.2;
+  font-family: var(--mono);
+  letter-spacing: -0.01em;
+}
+
+.prop-metric-sub {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+.prop-metric-delta {
+  font-size: var(--text-xs);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+/* ── Tab navigation ──────────────────────────────────────────────────── */
+.prop-tab-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-3xl);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.prop-tab-nav::-webkit-scrollbar { display: none; }
+
+.prop-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font);
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.prop-tab:hover {
+  color: var(--text-1);
+}
+
+.prop-tab--active,
+.prop-tab[aria-selected="true"] {
+  color: var(--text-1);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Tab panels ──────────────────────────────────────────────────────── */
+.prop-tab-panel {
+  padding-bottom: var(--spacing-9xl);
+}
+
+/* ── Content blocks (sections within each tab) ───────────────────────── */
+.prop-content-block {
+  margin-bottom: var(--spacing-4xl);
+  padding-bottom: var(--spacing-3xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.prop-content-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.prop-block-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.prop-block-desc {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  margin: calc(-1 * var(--spacing-md)) 0 var(--spacing-lg) 0;
+  line-height: 1.55;
+}
+
+/* ── Full bio text (overview tab) ────────────────────────────────────── */
+.prop-bio-full {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 72ch;
+}
+
+/* ── Sources tab ─────────────────────────────────────────────────────── */
+.sources-prov-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.sources-prov-item {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.sources-prov-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.sources-prov-val {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+  font-family: var(--mono);
+}
+
+.sources-platform-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.sources-platform-item {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+.sources-platform-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.sources-body-text {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.65;
+  margin: 0 0 var(--spacing-lg) 0;
+  max-width: 72ch;
+}
+
+.sources-input-list {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.7;
+  padding-left: var(--spacing-xl);
+  margin: 0 0 var(--spacing-lg) 0;
+  max-width: 72ch;
+}
+
+.sources-note {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 72ch;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--surface-muted);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* ── Contact tab ─────────────────────────────────────────────────────── */
+.contact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3xl);
+  max-width: 540px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.contact-card-header {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-card-role {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+}
+
+.contact-card-name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-3xl);
+}
+
+.contact-detail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.contact-detail-row svg {
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+
+.contact-detail-label {
+  font-weight: 500;
+  color: var(--text-3);
+  min-width: 60px;
+}
+
+.contact-detail-val {
+  color: var(--text-2);
+}
+
+.contact-detail-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.contact-detail-link:hover {
+  text-decoration: underline;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.contact-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 7px var(--spacing-lg);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: var(--font);
+}
+
+.contact-action-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+
+.contact-action-btn--primary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+
+.contact-action-btn--primary:hover {
+  background: var(--surface-muted);
+}
+
+.contact-disclaimer {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ── Responsive adjustments ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .prop-metrics-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .prop-hero-section {
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .prop-fanscore-panel {
+    flex: none;
+    width: 100%;
+  }
+
+  .prop-identity {
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .prop-identity-image {
+    flex: none;
+    width: 100%;
+    height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .prop-page-container {
+    padding: 0 var(--spacing-xl);
+  }
+
+  .prop-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .prop-tab {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--text-xs);
+  }
+
+  .prop-name {
+    font-size: 22px;
+  }
+
+  .prop-flag {
+    font-size: 22px;
+  }
+}
+
+/* ── Sponsorship Signals panel ──────────────────────────────────────── */
+.sig-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.sig-section-title {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.sig-entity-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.sig-entity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px var(--spacing-md);
+}
+
+.sig-entity-name {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sig-entity-type {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.sig-sector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.sig-sector-tag {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px var(--spacing-md);
+  white-space: nowrap;
+}
+
+.sig-interest-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.sig-interest-val {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+.sig-interest-lbl {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.sig-disclaimer {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  line-height: 1.55;
+  margin-top: var(--spacing-xl);
+  margin-bottom: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--surface-muted);
+  border-left: 3px solid var(--border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* ── ECharts container dimensions ────────────────────────────────── */
+/* ECharts requires containers with explicit pixel heights.           */
+
+/* Sparkline in FanScore hero block */
+#prop-spark {
+  height: 72px;
+  margin-top: var(--spacing-lg);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* Full trend chart in Audience tab */
+#momentum-chart {
+  height: 200px;
 }
 
 </style>

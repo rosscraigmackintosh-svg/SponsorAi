@@ -533,7 +533,7 @@ function compareToggle(id) {
     if (idx >= 0) compareList.splice(idx, 1);
     if (slug) SAI_STORAGE.compare.remove(slug);
   } else {
-    if (compareList.length >= 3) return false; /* queue full — no change */
+    if (compareList.length >= 4) return false; /* queue full — no change */
     compareList.push(id);
     if (slug) SAI_STORAGE.compare.add(slug);
   }
@@ -553,13 +553,13 @@ function syncCompareButtons() {
     var slug  = btn.dataset.slug || null;
     var inStorage = slug && SAI_STORAGE.compare.has(slug);
     var active = isIn || inStorage;
-    var isFull = !active && cmpCount >= 3;
+    var isFull = !active && cmpCount >= 4;
     btn.classList.toggle('active', active);
     btn.classList.toggle('disabled', isFull);
     btn.setAttribute('aria-disabled', isFull ? 'true' : 'false');
     btn.title = active   ? 'Remove from compare'
-              : isFull   ? 'Compare queue full (3/3)'
-              : cmpCount > 0 ? 'Add to compare (' + cmpCount + '/3 selected)'
+              : isFull   ? 'Compare queue full (4/4)'
+              : cmpCount > 0 ? 'Add to compare (' + cmpCount + '/4 selected)'
               : 'Add to compare';
   });
   /* Legacy card-btn selectors (retain for compatibility) */

@@ -100,10 +100,10 @@ function populateDetail(c) {
   var _boardStageLbls = { watching:'Watching', shortlist:'Shortlist', evaluation:'Evaluating', confirmed:'Confirmed' };
   var _boardLabel = _inBoard ? (_boardStageLbls[_boardStage] || 'On board') : 'Add to Board';
   var _cmpCount  = typeof SAI_STORAGE !== 'undefined' ? SAI_STORAGE.compare.get().length : 0;
-  var _cmpFull   = !_inCmp && _cmpCount >= 3;
+  var _cmpFull   = !_inCmp && _cmpCount >= 4;
   var _cmpLabel  = _inCmp   ? 'Comparing'
                  : _cmpFull ? 'Compare (full)'
-                 : _cmpCount > 0 ? 'Compare (' + _cmpCount + '/3)' : 'Compare';
+                 : _cmpCount > 0 ? 'Compare (' + _cmpCount + '/4)' : 'Compare';
   h += '<div class="dp-actions">';
   h += '<button class="dp-action-btn' + (_inWL  ? ' active' : '') + '" id="dp-btn-watch"'
      + ' onclick="dpAction(\'watch\',\'' + c.id + '\')">'
@@ -538,10 +538,10 @@ function dpAction(action, id) {
       nowIn = SAI_STORAGE.compare.toggle(slug);
     }
     var _newCount = SAI_STORAGE.compare.get().length;
-    var _cmpFull  = !nowIn && _newCount >= 3;
+    var _cmpFull  = !nowIn && _newCount >= 4;
     var _newLabel = nowIn     ? 'Comparing'
                   : _cmpFull  ? 'Compare (full)'
-                  : _newCount > 0 ? 'Compare (' + _newCount + '/3)' : 'Compare';
+                  : _newCount > 0 ? 'Compare (' + _newCount + '/4)' : 'Compare';
     _dpRefreshBtn('dp-btn-compare', _newLabel, _newLabel, nowIn);
 
   } else if (action === 'board') {

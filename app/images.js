@@ -1,11 +1,20 @@
 /* ── SponsorAI Property Image Map ─────────────────────────────────────────
    Each entry is a typed image asset object:
-     src      — image URL
-     kind     — 'logo' | 'portrait' | 'venue' | 'series'
+
+   Required rendering fields (read by resolveImageMeta in data.js):
+     src      — image URL (relative path for local assets, https:// for external)
+     kind     — 'logo' | 'portrait' | 'venue' | 'series' | 'car'
      fit      — CSS object-fit value
      pos      — CSS object-position value
      pad      — optional padding inside the hero container (logos only)
      bg       — optional override for the hero background colour/token
+
+   Optional governance fields (ignored by renderer; used by SAI_IMAGES.audit()):
+     hosted      — true if the file is stored in local assets (assets/portraits/ etc.)
+                   Omit for all external URLs.
+     source_host — explicit host classification override. Only needed when the host
+                   cannot be reliably inferred from the URL (e.g. Gatsby content-hash
+                   paths that look like a CDN but are actually a team site).
 
    Merge strategy (applied in data.js resolveImageMeta):
      1. Direct lookup: PROPERTY_IMAGES[slug]
@@ -59,17 +68,21 @@ var PROPERTY_IMAGES = {
   },
 
   'silverstone-circuit': {
-    src:  'https://www.silverstone.co.uk/sites/default/files/images/Gallery4.png',
-    kind: 'venue',
-    fit:  'cover',
-    pos:  'center center'
+    // was: https://www.silverstone.co.uk/sites/default/files/images/Gallery4.png
+    src:    '../assets/venues/silverstone-circuit.png',
+    kind:   'venue',
+    fit:    'cover',
+    pos:    'center center',
+    hosted: true
   },
 
   'circuit-de-spa-francorchamps': {
-    src:  'https://www.spa-francorchamps.be/assets/9421a327-18b7-4a81-abbb-407b8ec246e0/bg-circuit.png',
-    kind: 'venue',
-    fit:  'cover',
-    pos:  'center center'
+    // was: https://www.spa-francorchamps.be/assets/9421a327-18b7-4a81-abbb-407b8ec246e0/bg-circuit.png
+    src:    '../assets/venues/circuit-de-spa-francorchamps.png',
+    kind:   'venue',
+    fit:    'cover',
+    pos:    'center center',
+    hosted: true
   },
 
   'snetterton-circuit': {
@@ -97,12 +110,14 @@ var PROPERTY_IMAGES = {
 
   /* Logo assets — PNG/SVG from team sites or external sources — contained */
   'barwell-motorsport': {
-    src:  'https://barwellmotorsport.co.uk/assets/logos/logo.svg',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '14%',
-    bg:   'var(--surface-muted)'
+    // was: https://barwellmotorsport.co.uk/assets/logos/logo.svg
+    src:    '../assets/logos/barwell-motorsport.svg',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '14%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'century-motorsport': {
@@ -580,14 +595,15 @@ var PROPERTY_IMAGES = {
   },
 
   'emil-frey-racing': {
-    /* Gatsby static asset from emilfreyracing.com — verified 200 2026-03-13
-       WARNING: Gatsby content-hash paths change on site rebuild. Recheck if image breaks. */
-    src:  'https://emilfreyracing.com/static/5f6060afd22983f8e634b02ecb154415/80f52/logo.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '14%',
-    bg:   'var(--surface-muted)'
+    // was: https://emilfreyracing.com/static/5f6060afd22983f8e634b02ecb154415/80f52/logo.png
+    // (Gatsby content-hash path — would have silently broken on next site rebuild)
+    src:    '../assets/logos/emil-frey-racing.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '14%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   /* ── GTWCE Athletes — portraits from the GTWCE driver portal ───────────
@@ -635,8 +651,18 @@ var PROPERTY_IMAGES = {
     pos:  'center top'
   },
 
-  /* timur-boguslavskiy, marco-varrone — no confirmed portrait IDs found;
-     fall through to placeholder hero icon */
+  /* timur-boguslavskiy — no confirmed portrait ID found; falls through to placeholder */
+
+  'marco-varrone': {
+    /* F2/VAR era studio portrait (2026-03-15). Clear identity confirmed: "N.VARRONE" name tag,
+       Argentine flag. Not a GT3-context image — update to a GTWCE/Iron Lynx portrait once a
+       stable source is confirmed. */
+    src:    '../assets/portraits/nico-varrone-black-suit.jpg',
+    kind:   'portrait',
+    fit:    'cover',
+    pos:    'center top',
+    hosted: true
+  },
 
   /* ── Premiership Rugby ecosystem ──────────────────────────────────────
      Team badge URLs from premiershiprugby.com CDN (incrowdsports.com / cortextech.io).
@@ -647,23 +673,27 @@ var PROPERTY_IMAGES = {
 
   /* Series / governing body */
   'premiership-rugby': {
-    /* Gallagher Premiership Rugby wordmark from premiershiprugby.com CDN */
-    src:  'https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png',
-    kind: 'series',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '18%',
-    bg:   'var(--surface-muted)'
+    /* Gallagher Premiership Rugby wordmark — locally hosted 2026-03-15
+       was: https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png */
+    src:    '../assets/logos/premiership-rugby.png',
+    kind:   'series',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '18%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'premiership-rugby-ltd': {
-    /* Governing body — reuse Gallagher Premiership wordmark */
-    src:  'https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png',
-    kind: 'series',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '18%',
-    bg:   'var(--surface-muted)'
+    /* Governing body — reuse Gallagher Premiership wordmark, locally hosted 2026-03-15
+       was: https://media-cdn.cortextech.io/0708621a-5825-46bf-98c2-33b9e4f7c4fb.png */
+    src:    '../assets/logos/premiership-rugby-ltd.png',
+    kind:   'series',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '18%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   /* Venue */
@@ -677,102 +707,139 @@ var PROPERTY_IMAGES = {
 
   /* Teams — badge PNGs from premiershiprugby.com CDN */
   'bath-rugby': {
-    src:  'https://media-cdn.incrowdsports.com/f4d9a293-9086-41bf-aa1b-c98d1c62fe3b.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/f4d9a293-9086-41bf-aa1b-c98d1c62fe3b.png
+    src:    '../assets/logos/bath-rugby.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'bristol-bears': {
-    src:  'https://media-cdn.incrowdsports.com/7952282c-a8b0-4e70-af53-906f215035c2.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/7952282c-a8b0-4e70-af53-906f215035c2.png
+    src:    '../assets/logos/bristol-bears.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'exeter-chiefs': {
-    src:  'https://media-cdn.incrowdsports.com/434b059d-21e6-49ba-8d26-9af27fb98f19.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/434b059d-21e6-49ba-8d26-9af27fb98f19.png
+    src:    '../assets/logos/exeter-chiefs.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'gloucester-rugby': {
-    src:  'https://media-cdn.incrowdsports.com/57109498-ebce-4d81-949a-c0bd84420813.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/57109498-ebce-4d81-949a-c0bd84420813.png
+    src:    '../assets/logos/gloucester-rugby.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'harlequins': {
-    src:  'https://media-cdn.incrowdsports.com/af0358f8-9fb4-415b-a13e-03f955d1bcc8.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/af0358f8-9fb4-415b-a13e-03f955d1bcc8.png
+    src:    '../assets/logos/harlequins.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'leicester-tigers': {
-    src:  'https://media-cdn.cortextech.io/438e7cd5-fe7c-4002-897c-e702a579fbf1.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.cortextech.io/438e7cd5-fe7c-4002-897c-e702a579fbf1.png
+    src:    '../assets/logos/leicester-tigers.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'newcastle-falcons': {
-    /* Club rebranded as Newcastle Red Bulls 2024-25; DB slug remains newcastle-falcons */
-    src:  'https://media-cdn.cortextech.io/16fafbdc-a308-43b3-80bd-c4b1e8077290.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    /* Club rebranded as Newcastle Red Bulls 2024-25; DB slug remains newcastle-falcons
+       was: https://media-cdn.cortextech.io/16fafbdc-a308-43b3-80bd-c4b1e8077290.png */
+    src:    '../assets/logos/newcastle-falcons.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'northampton-saints': {
-    src:  'https://media-cdn.incrowdsports.com/f8cf95ed-e223-43ab-bae1-1b708d811c58.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/f8cf95ed-e223-43ab-bae1-1b708d811c58.png
+    src:    '../assets/logos/northampton-saints.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'sale-sharks': {
-    src:  'https://media-cdn.incrowdsports.com/ebb6895c-51ae-4403-9a82-470bb8eed534.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    // was: https://media-cdn.incrowdsports.com/ebb6895c-51ae-4403-9a82-470bb8eed534.png
+    src:    '../assets/logos/sale-sharks.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
   'saracens': {
-    src:  'https://media-cdn.cortextech.io/00ac0c8c-7562-4d0c-9d4e-dba7b72612b0.png',
-    kind: 'logo',
-    fit:  'contain',
-    pos:  'center center',
-    pad:  '12%',
-    bg:   'var(--surface-muted)'
+    /* was: https://media-cdn.cortextech.io/00ac0c8c-7562-4d0c-9d4e-dba7b72612b0.png
+       cortextech URL returned AccessDenied; replaced with Wikipedia-sourced PNG (2026-03-15)
+       Note: entity_images DB entry for saracens takes precedence at runtime */
+    src:    '../assets/logos/saracens.png',
+    kind:   'logo',
+    fit:    'contain',
+    pos:    'center center',
+    pad:    '12%',
+    bg:     'var(--surface-muted)',
+    hosted: true
   },
 
-  /* alex-mitchell, ben-spencer, ellis-genge, finn-russell, freddie-steward, henry-slade,
-     jack-nowell, kyle-sinckler, marcus-smith-rugby, maro-itoje, tom-curry —
-     Portrait URLs require premiershiprugby.com player portal or club photography access.
-     All 11 fall through to placeholder hero icon.
-     Add via Control Room > Images (scan from premiershiprugby.com/players/<slug>) or
-     direct club site sourcing once confirmed URLs are available.                      */
+  'maro-itoje': {
+    /* Official Saracens club portrait, black StoneX kit (2026-03-15).
+       Source: Saracens club photography. */
+    src:    '../assets/portraits/maro-itoje.jpg',
+    kind:   'portrait',
+    fit:    'cover',
+    pos:    'center top',
+    hosted: true
+  },
+
+  /* finn-russell, sam-underhill, ellis-genge, henry-slade, ben-morgan, ben-youngs,
+     alex-lozowski, george-ford, tommy-taylor, tom-curry-rugby —
+     Portrait URLs require premiershiprugby.com player portal or direct club photography.
+     Best sources: each club's Squad/Players page.
+       Bath: bathrugby.com/players/
+       Bristol: bristolbears.co.uk/players/
+       Exeter: exeterchiefs.co.uk/players/
+       Gloucester: gloucesterrugby.co.uk/players/
+       Leicester: leicestertigers.com/players/
+       Sale: salesharks.com/players/
+       Saracens: saracens.com/players/                                               */
 
 };
 
@@ -807,3 +874,127 @@ var EVENT_VENUE_MAP = {
   /* Premiership Rugby */
   'premiership-rugby-final-2026':           'allianz-stadium-twickenham'
 };
+
+/* ── Image asset audit helper ────────────────────────────────────────────
+   SAI_IMAGES — diagnostic utilities for image governance.
+   Available in DevTools on any page that loads images.js.
+
+   Usage:
+     SAI_IMAGES.audit()   — full stats grouped by source host
+     SAI_IMAGES.list()    — flat array suitable for console.table()
+     SAI_IMAGES.risky()   — entries on known unstable hosts only
+
+   None of these functions affect rendering. They read PROPERTY_IMAGES only.
+──────────────────────────────────────────────────────────────────────────── */
+var SAI_IMAGES = (function() {
+
+  /* Hosts known to be unstable: official sites with hotlink risk,
+     small team sites, third-party CDNs without an SLA, Gatsby hash paths. */
+  var RISKY_HOSTS = [
+    'silverstone.co.uk',
+    'spa-francorchamps.be',
+    'barwellmotorsport.co.uk',
+    'emilfreyracing.com',
+    'incrowdsports-cdn',
+    'cortextech-cdn'
+  ];
+
+  /* Derive a canonical host label from a src URL.
+     Returns 'local' for relative paths, otherwise a short label string. */
+  function _host(entry) {
+    /* Explicit override wins */
+    if (entry.source_host) return entry.source_host;
+    /* Local asset */
+    if (entry.hosted || !entry.src || entry.src.indexOf('://') === -1) return 'local';
+    var m = entry.src.match(/^https?:\/\/([^/]+)/);
+    if (!m) return 'unknown';
+    var h = m[1].replace(/^www\./, '');
+    /* Normalise CDN labels */
+    if (h === 'upload.wikimedia.org')           return 'wikimedia';
+    if (h === 'media-cdn.incrowdsports.com')    return 'incrowdsports-cdn';
+    if (h === 'media-cdn.cortextech.io')        return 'cortextech-cdn';
+    if (h === 'msvstatic.blob.core.windows.net') return 'msv-azure-cdn';
+    if (h === 'images.squarespace-cdn.com')     return 'squarespace-cdn';
+    return h;
+  }
+
+  /* Build a flat array of all entries with derived metadata */
+  function _entries() {
+    return Object.keys(PROPERTY_IMAGES).map(function(slug) {
+      var e    = PROPERTY_IMAGES[slug];
+      var host = _host(e);
+      return {
+        slug:        slug,
+        kind:        e.kind  || 'unknown',
+        host:        host,
+        hosted:      !!e.hosted,
+        risky:       RISKY_HOSTS.indexOf(host) !== -1,
+        src:         e.src   || ''
+      };
+    });
+  }
+
+  return {
+
+    /* Full audit — grouped counts and per-host slug lists */
+    audit: function() {
+      var all    = _entries();
+      var byHost = {};
+      var risky  = [];
+
+      all.forEach(function(e) {
+        if (!byHost[e.host]) byHost[e.host] = [];
+        byHost[e.host].push(e.slug);
+        if (e.risky) risky.push(e.slug);
+      });
+
+      var result = {
+        total:    all.length,
+        local:    all.filter(function(e) { return e.hosted; }).length,
+        external: all.filter(function(e) { return !e.hosted; }).length,
+        risky:    risky.length,
+        byHost:   byHost,
+        riskyList: risky
+      };
+
+      /* Pretty-print to console */
+      console.group('SAI_IMAGES.audit() — ' + result.total + ' entries');
+      console.log('Local (hosted):  ', result.local);
+      console.log('External:        ', result.external);
+      console.log('Risky hosts:     ', result.risky, '—', risky.join(', ') || 'none');
+      console.log('');
+      Object.keys(byHost).sort().forEach(function(h) {
+        var flag = RISKY_HOSTS.indexOf(h) !== -1 ? ' ⚠' : '';
+        console.log(h + flag + ' (' + byHost[h].length + '): ' + byHost[h].join(', '));
+      });
+      console.groupEnd();
+
+      return result;
+    },
+
+    /* Flat array for console.table() */
+    list: function() {
+      var rows = _entries().map(function(e) {
+        return {
+          slug:   e.slug,
+          kind:   e.kind,
+          host:   e.host,
+          hosted: e.hosted,
+          risky:  e.risky
+        };
+      });
+      console.table(rows);
+      return rows;
+    },
+
+    /* Only entries on risky hosts */
+    risky: function() {
+      var rows = _entries().filter(function(e) { return e.risky; });
+      console.table(rows.map(function(e) {
+        return { slug: e.slug, kind: e.kind, host: e.host, src: e.src };
+      }));
+      return rows;
+    }
+
+  };
+}());

@@ -189,12 +189,12 @@
     <div class="profile-name">Ross Mackintosh</div>
     <div class="profile-email">rosscraigmackintosh@gmail.com</div>
   </div>
-  <button class="profile-item" role="menuitem">
+  <button class="profile-item" role="menuitem" onclick="window.location.href='account.html'">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
       <circle cx="6.5" cy="4.5" r="2.5"/>
       <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
     </svg>
-    Profile settings
+    My account
   </button>
   <button class="profile-item" role="menuitem">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
@@ -618,7 +618,7 @@ function updateCompareTray() {
     var sup = !!c.sup30;
     html += '<div class="compare-slot">';
     html += '<span class="compare-slot-name" title="' + escHtml(c.name) + '">' + escHtml(c.name) + '</span>';
-    if (!sup && c.s30 != null) html += '<span class="compare-slot-score">\u00B7 ' + fmt(c.s30, 1) + '</span>';
+    if (!sup && c.s30 != null) html += '<span class="compare-slot-score">\u00B7 ' + fmtScore(c.s30) + '</span>';
     html += '<button class="compare-slot-remove" onclick="compareToggle(\'' + id + '\')" aria-label="Remove ' + escHtml(c.name) + '">\u00D7</button>';
     html += '</div>';
   });
@@ -663,7 +663,7 @@ function buildCompareTable() {
   if (cards.length < 2) return;
 
   var rows = [
-    { label: 'FanScore (30d avg)', fn: function(c) { return !!c.sup30 ? '--' : fmt(c.s30, 1); }, size: 'lg' },
+    { label: 'FanScore (30d avg)', fn: function(c) { return !!c.sup30 ? '--' : fmtScore(c.s30); }, size: 'lg' },
     { label: '30-day trend',       fn: function(c) { return c.t30 != null ? arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '/d' : '--'; }, color: function(c) { return c.t30 != null ? arrC(c.t30) : null; } },
     { label: 'Confidence',         fn: function(c) { return c.conf30 || '--'; } },
     { label: 'Followers',          fn: function(c) { return (c.followers && c.followers > 0) ? fmtFollowers(c.followers) : '--'; }, signal: true },

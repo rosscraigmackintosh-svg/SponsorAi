@@ -320,7 +320,7 @@ function buildSystemPrompt() {
       (byT.venue||0) + ' venues, ' + (byT.governing_body||0) + ' governing bodies. ' +
       sup + ' have suppressed 30-day windows (low data coverage). ' +
       rising + ' showing positive 30-day momentum. ' +
-      (top ? 'Highest FanScore: ' + top.name + ' at ' + fmt(top.s30,1) + '. ' : '') +
+      (top ? 'Highest FanScore: ' + top.name + ' at ' + fmtScore(top.s30) + '. ' : '') +
       driversWithTeam + ' drivers/athletes have a linked team.',
     '',
     '--- TEAM ROSTERS (use IDs with [CMD:show:...]) ---' + teamRoster,

@@ -1,28 +1,19 @@
 /* =============================================
-   SPONSORAI — Investor Auth (Magic Link)
-   Replaces hardcoded credential approach.
-   Requires: Supabase JS CDN + website/config.js loaded before this script.
+   SPONSORAI — Partner Auth (Username + Password)
+   Credentials set in website/config.js (gitignored).
+   Requires: website/config.js loaded before this script.
    ============================================= */
 
 (function () {
   'use strict';
 
+  var SESSION_KEY = 'sponsorai_portal_auth';
+
   /* ── Config ────────────────────────────────────────────────────────── */
-  var SUPABASE_URL = (typeof WEBSITE_SUPABASE_URL !== 'undefined') ? WEBSITE_SUPABASE_URL : null;
-  var SUPABASE_KEY = (typeof WEBSITE_API_KEY     !== 'undefined') ? WEBSITE_API_KEY     : null;
-  var API_URL      = (typeof WEBSITE_API_URL     !== 'undefined') ? WEBSITE_API_URL     : null;
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error('[SponsorAI] investor-auth.js: Supabase config missing. Load website/config.js before this script.');
-    return;
-  }
-
-  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-    console.error('[SponsorAI] investor-auth.js: Supabase JS client not found. Load the Supabase CDN before this script.');
-    return;
-  }
-
-  var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var API_URL     = (typeof WEBSITE_API_URL          !== 'undefined') ? WEBSITE_API_URL          : null;
+  var SUPABASE_KEY= (typeof WEBSITE_API_KEY          !== 'undefined') ? WEBSITE_API_KEY          : null;
+  var PORTAL_USER = (typeof WEBSITE_PORTAL_USERNAME  !== 'undefined') ? WEBSITE_PORTAL_USERNAME  : null;
+  var PORTAL_PASS = (typeof WEBSITE_PORTAL_PASSWORD  !== 'undefined') ? WEBSITE_PORTAL_PASSWORD  : null;
 
   /* ── Route detection ───────────────────────────────────────────────── */
   var path     = window.location.pathname;
@@ -33,82 +24,66 @@
   if (isPortal) { guardPortal(); }
   if (isLogin)  { initLoginPage(); }
 
-  /* Sign-out wired here so it works regardless of which page loads first */
+  /* Sign-out — clears session and returns to login */
   var signOutBtn = document.getElementById('signOutBtn');
   if (signOutBtn) {
     signOutBtn.addEventListener('click', function () {
-      db.auth.signOut().then(function () {
-        window.location.replace('investor-login.html');
-      });
+      sessionStorage.removeItem(SESSION_KEY);
+      window.location.replace('investor-login.html');
     });
   }
 
   /* ── Portal guard ──────────────────────────────────────────────────── */
   /*
    * body starts visibility:hidden (set in investor-portal.html).
-   * We only reveal it after confirming:
-   *   1. A valid Supabase session exists (magic link processed or existing session)
-   *   2. The authenticated user's email is in investor_allowlist (enforced by RLS)
+   * Only revealed after confirming a valid session flag set at login.
    */
   function guardPortal() {
-    db.auth.getSession().then(function (result) {
-      var session = result.data && result.data.session;
-
-      if (!session) {
-        /* No active session — magic link may not have been clicked yet */
-        window.location.replace('investor-login.html');
-        return;
-      }
-
-      /* Check allowlist. RLS ensures this query returns at most one row:
-         the row matching the authenticated user's own email. Zero rows = not authorised. */
-      db.from('investor_allowlist')
-        .select('id')
-        .limit(1)
-        .then(function (result) {
-          if (result.error || !result.data || result.data.length === 0) {
-            /* Authenticated but not on the allowlist — sign out cleanly */
-            db.auth.signOut().then(function () {
-              window.location.replace('investor-login.html?reason=not_authorised');
-            });
-          } else {
-            /* Authorised — reveal page and wire up portal-specific behaviour */
-            document.body.style.visibility = 'visible';
-            initPortalSignupForm();
-          }
-        });
-    });
+    if (sessionStorage.getItem(SESSION_KEY) !== '1') {
+      window.location.replace('investor-login.html');
+      return;
+    }
+    document.body.style.visibility = 'visible';
+    initPortalSignupForm();
   }
 
   /* ── Login page ────────────────────────────────────────────────────── */
   function initLoginPage() {
-    var loginForm  = document.getElementById('loginForm');
-    var emailInput = document.getElementById('emailInput');
-    var errorEl    = document.getElementById('loginError');
-    var sentState  = document.getElementById('loginSent');
+    var loginForm     = document.getElementById('loginForm');
+    var usernameInput = document.getElementById('usernameInput');
+    var passwordInput = document.getElementById('passwordInput');
+    var errorEl       = document.getElementById('loginError');
 
     if (!loginForm) return;
 
-    /* Show rejection message if redirected back after allowlist check failed */
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('reason') === 'not_authorised' && errorEl) {
-      errorEl.textContent = 'This email address is not on the investor list. Please contact us if you think this is an error.';
-    }
-
-    if (emailInput) {
-      emailInput.addEventListener('input', function () {
-        if (errorEl)  { errorEl.textContent = ''; }
-        emailInput.classList.remove('is-error');
+    [usernameInput, passwordInput].forEach(function (input) {
+      if (!input) return;
+      input.addEventListener('input', function () {
+        if (errorEl) { errorEl.textContent = ''; }
+        input.classList.remove('is-error');
       });
-    }
+    });
 
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var email = (emailInput ? emailInput.value.trim() : '');
+      var username = (usernameInput ? usernameInput.value.trim() : '');
+      var password = (passwordInput ? passwordInput.value        : '');
 
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        if (errorEl)    { errorEl.textContent = 'Please enter a valid email address.'; }
-        if (emailInput) { emailInput.classList.add('is-error'); }
+      if (!username) {
+        if (errorEl)       { errorEl.textContent = 'Please enter your username.'; }
+        if (usernameInput) { usernameInput.classList.add('is-error'); }
+        return;
+      }
+
+      if (!password) {
+        if (errorEl)       { errorEl.textContent = 'Please enter your password.'; }
+        if (passwordInput) { passwordInput.classList.add('is-error'); }
+        return;
+      }
+
+      if (!PORTAL_USER || !PORTAL_PASS) {
+        if (errorEl) { errorEl.textContent = 'Login is not configured. Please contact us.'; }
+        console.error('[SponsorAI] WEBSITE_PORTAL_USERNAME / WEBSITE_PORTAL_PASSWORD not set in config.js.');
         return;
       }
 
@@ -116,27 +91,18 @@
       if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
       if (errorEl) { errorEl.textContent = ''; }
 
-      /* Compute portal URL for the magic link redirect.
-         Works for both local file:// and hosted environments. */
-      var portalUrl = window.location.href
-        .split('?')[0]
-        .replace('investor-login.html', 'investor-portal.html');
-
-      db.auth.signInWithOtp({
-        email: email,
-        options: { emailRedirectTo: portalUrl }
-      }).then(function (result) {
+      if (username === PORTAL_USER && password === PORTAL_PASS) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        var portalUrl = window.location.href
+          .split('?')[0]
+          .replace('investor-login.html', 'investor-portal.html');
+        window.location.replace(portalUrl);
+      } else {
         if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); }
-
-        if (result.error) {
-          if (errorEl) { errorEl.textContent = 'Something went wrong. Please try again in a moment.'; }
-          console.error('[SponsorAI] Magic link error:', result.error);
-        } else {
-          /* Show "check your inbox" state — hide form, show confirmation */
-          loginForm.style.display = 'none';
-          if (sentState) { sentState.style.display = 'block'; }
-        }
-      });
+        if (errorEl)       { errorEl.textContent = 'Incorrect username or password. Please try again.'; }
+        if (usernameInput) { usernameInput.classList.add('is-error'); }
+        if (passwordInput) { passwordInput.classList.add('is-error'); }
+      }
     });
   }
 

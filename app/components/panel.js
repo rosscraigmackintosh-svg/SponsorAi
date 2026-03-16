@@ -79,7 +79,7 @@ function populateDetail(c) {
     h += '<div class="dp-conf" style="margin-top:var(--spacing-xs)">' + escHtml(c.sup30) + '</div>';
   } else {
     h += '<div class="dp-score-primary">';
-    h += '<span class="dp-score-val" style="color:' + scoreColor + '">' + (c.s30 != null ? fmt(c.s30, 1) : '--') + '</span>';
+    h += '<span class="dp-score-val" style="color:' + scoreColor + '">' + fmtScore(c.s30) + '</span>';
     h += '<span class="dp-score-label">30-day average</span>';
     h += '</div>';
     if (c.t30 != null) h += '<div class="dp-trend" style="color:' + arrC(c.t30) + ';margin-bottom:var(--spacing-xs)">' + arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '\u2009/\u2009day</div>';
@@ -381,7 +381,7 @@ function renderRelationshipsInPanel(rels) {
       h += '<div class="dp-related-reason">' + escHtml(TYPE[card.type] ? TYPE[card.type].label : card.type) + '</div>';
       h += '</div>';
       h += '<div class="dp-related-score" style="color:' + (rCfg.scoreVar || rCfg.fgVar) + '">'
-        + (card.s30 != null ? fmt(card.s30, 1) : '--') + '</div>';
+        + fmtScore(card.s30) + '</div>';
       h += '</div>';
     });
     if (cards.length > REL_MAX_PER_GROUP) {

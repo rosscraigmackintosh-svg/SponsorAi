@@ -1,0 +1,2273 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SponsorAI — My Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+
+/* ── Account Layout ──────────────────────────────────────────────────────── */
+
+.account-shell {
+  display: flex;
+  min-height: calc(100vh - 56px);
+  align-items: flex-start;
+}
+
+/* Sidebar */
+.account-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-3xl) 0 var(--spacing-3xl) 0;
+  overflow-y: auto;
+}
+
+.account-sidebar-header {
+  padding: 0 var(--spacing-3xl) var(--spacing-xl) var(--spacing-3xl);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-md);
+}
+
+.account-sidebar-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--spacing-xs);
+}
+
+.account-sidebar-org {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-sidebar-email {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.account-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-md) var(--spacing-sm);
+  flex: 1;
+}
+
+.account-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+
+.account-nav-item:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+}
+
+.account-nav-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.account-nav-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.account-nav-item.active svg {
+  opacity: 1;
+}
+
+/* Status badge in sidebar */
+.account-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  margin: var(--spacing-lg) var(--spacing-3xl) 0 var(--spacing-3xl);
+}
+
+.account-status-badge.draft {
+  background: var(--surface-muted);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.account-status-badge.complete {
+  background: #ECFDF3;
+  color: #067647;
+  border: 1px solid #A9DABD;
+}
+
+.account-status-badge.verified {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+/* ── Account Main Content ─────────────────────────────────────────────────── */
+
+.account-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-5xl) var(--spacing-6xl);
+  max-width: 760px;
+}
+
+.account-panel {
+  display: none;
+}
+
+.account-panel.active {
+  display: block;
+}
+
+/* Panel header */
+.account-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-5xl);
+  padding-bottom: var(--spacing-3xl);
+  border-bottom: 1px solid var(--border);
+}
+.account-panel-header-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Small secondary action button used in panel headers */
+.panel-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.panel-action-btn:hover {
+  background: var(--surface-muted);
+  color: var(--text-1);
+  border-color: var(--border-strong, var(--border));
+}
+.panel-action-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel-action-btn:disabled { opacity: 0.45; cursor: default; }
+
+.account-panel-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.account-panel-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* ── Form sections ────────────────────────────────────────────────────────── */
+
+.form-section {
+  margin-bottom: var(--spacing-5xl);
+}
+
+.form-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.form-section-desc {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin: 0 0 var(--spacing-3xl) 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.form-row.single {
+  grid-template-columns: 1fr;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.form-label .required-mark {
+  color: var(--negative);
+  margin-left: 2px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--text-3);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* ── Form footer / save row ──────────────────────────────────────────────── */
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-3xl);
+  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-4xl);
+}
+
+.form-save-status {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  min-height: 18px;
+}
+
+.form-save-status.saving {
+  color: var(--text-2);
+}
+
+.form-save-status.saved {
+  color: #067647;
+}
+
+.form-save-status.error {
+  color: var(--negative);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Completeness indicator ──────────────────────────────────────────────── */
+
+.completeness-bar-wrap {
+  margin-bottom: var(--spacing-5xl);
+  padding: var(--spacing-3xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.completeness-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.completeness-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.completeness-pct {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+.completeness-track {
+  height: 4px;
+  background: var(--surface-muted);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.completeness-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.completeness-fill.complete {
+  background: #17B26A;
+}
+
+.completeness-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.completeness-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.completeness-item.done {
+  color: #067647;
+}
+
+.completeness-item svg {
+  flex-shrink: 0;
+}
+
+/* ── Overview panel stats ────────────────────────────────────────────────── */
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-5xl);
+}
+
+.overview-stat {
+  padding: var(--spacing-3xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.overview-stat-value {
+  font-family: var(--mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: var(--spacing-xs);
+}
+
+.overview-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* ── Stub panels ──────────────────────────────────────────────────────────── */
+
+.stub-panel {
+  padding: var(--spacing-8xl) var(--spacing-5xl);
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.stub-panel-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stub-panel-desc {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  max-width: 340px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Identity gate ────────────────────────────────────────────────────────── */
+
+.identity-gate {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-5xl);
+}
+
+.identity-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-5xl);
+}
+
+.identity-card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.identity-card-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin: 0 0 var(--spacing-4xl) 0;
+  line-height: 1.5;
+}
+
+.identity-card-note {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-top: var(--spacing-xl);
+  line-height: 1.5;
+}
+
+.identity-error {
+  font-size: var(--text-xs);
+  color: var(--negative);
+  margin-top: var(--spacing-sm);
+  min-height: 16px;
+}
+
+/* ── Introductions panel ─────────────────────────────────────────────────── */
+
+/* Summary stats row */
+.intro-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-4xl);
+}
+
+.intro-stat-card {
+  padding: var(--spacing-3xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.intro-stat-value {
+  font-family: var(--mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: var(--spacing-xs);
+}
+
+.intro-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* Request list */
+.intro-req-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.intro-req-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.12s;
+}
+
+.intro-req-card:hover {
+  border-color: var(--border-strong);
+}
+
+.intro-req-card.expanded {
+  border-color: var(--accent-border);
+}
+
+.intro-req-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-3xl);
+  cursor: pointer;
+  user-select: none;
+}
+
+.intro-req-card-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.intro-req-prop-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.intro-req-prop-slug {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-bottom: var(--spacing-md);
+}
+
+.intro-req-preview {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.intro-req-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.intro-req-date {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.intro-req-chevron {
+  color: var(--text-3);
+  transition: transform 0.18s ease;
+  margin-top: var(--spacing-xs);
+}
+
+.intro-req-card.expanded .intro-req-chevron {
+  transform: rotate(180deg);
+}
+
+/* Status badges */
+.intro-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.intro-status-badge.status-submitted,
+.intro-status-badge.status-sent {
+  background: var(--surface-muted);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.intro-status-badge.status-pending_property_claim {
+  background: var(--amber-100);
+  color: var(--amber-700);
+  border: 1px solid var(--amber-200);
+}
+
+.intro-status-badge.status-accepted,
+.intro-status-badge.status-intro_completed {
+  background: var(--color-success-50);
+  color: var(--color-success-700);
+  border: 1px solid var(--color-success-200);
+}
+
+.intro-status-badge.status-declined {
+  background: var(--color-error-50);
+  color: var(--color-error-700);
+  border: 1px solid var(--color-error-200);
+}
+
+.intro-status-badge.status-nudged {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 1px solid var(--blue-200);
+}
+
+.intro-status-badge.status-closed_no_response {
+  background: var(--surface-muted);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+}
+
+/* Reminder / close action row — shown inside expanded card detail */
+.intro-req-actions {
+  padding: var(--spacing-xl) 0 0;
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.intro-remind-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: 30px;
+  padding: 0 var(--spacing-lg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.intro-remind-btn:hover:not(:disabled) {
+  background: var(--accent-border);
+  border-color: var(--accent);
+}
+.intro-remind-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.intro-close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: 30px;
+  padding: 0 var(--spacing-lg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.12s, border-color 0.12s;
+}
+.intro-close-btn:hover:not(:disabled) {
+  color: var(--text-1);
+  border-color: var(--border-strong);
+}
+.intro-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.intro-action-note {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  flex: 1;
+}
+
+/* Expanded detail */
+.intro-req-card-detail {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: var(--spacing-3xl);
+}
+
+.intro-req-card.expanded .intro-req-card-detail {
+  display: block;
+}
+
+.intro-detail-section {
+  margin-bottom: var(--spacing-4xl);
+}
+
+.intro-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.intro-detail-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+}
+
+.intro-detail-message {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Timeline */
+.intro-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.intro-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+  position: relative;
+}
+
+.intro-timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.intro-timeline-marker {
+  width: 24px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.intro-timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  flex-shrink: 0;
+}
+
+.intro-timeline-item:first-child .intro-timeline-dot {
+  background: var(--accent);
+}
+
+.intro-timeline-item.event-accepted .intro-timeline-dot,
+.intro-timeline-item.event-intro_emails_sent .intro-timeline-dot {
+  background: var(--color-success-500, #17B26A);
+}
+
+.intro-timeline-item.event-declined .intro-timeline-dot {
+  background: var(--negative);
+}
+
+.intro-timeline-line {
+  width: 1px;
+  flex: 1;
+  min-height: 16px;
+  background: var(--border);
+  margin-top: 4px;
+}
+
+.intro-timeline-item:last-child .intro-timeline-line {
+  display: none;
+}
+
+.intro-timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.intro-timeline-event {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.intro-timeline-time {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.intro-timeline-loading {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* Empty state */
+.intro-empty-state {
+  padding: var(--spacing-8xl) var(--spacing-5xl);
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.intro-empty-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: var(--spacing-sm);
+}
+
+.intro-empty-desc {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  max-width: 320px;
+  margin: 0 auto var(--spacing-3xl);
+  line-height: 1.6;
+}
+
+.intro-empty-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px var(--spacing-xl);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.intro-empty-link:hover {
+  background: var(--accent-hover);
+}
+
+/* Error / info banners */
+.intro-error-banner {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--negative);
+}
+
+/* Dark mode */
+/* ── Dark mode overrides ─────────────────────────────────────────────────── */
+
+[data-theme="dark"] .account-sidebar {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .account-status-badge.complete {
+  background: rgba(7, 148, 85, 0.12);
+  color: #4ade80;
+  border-color: rgba(7, 148, 85, 0.3);
+}
+
+[data-theme="dark"] .completeness-fill.complete {
+  background: #4ade80;
+}
+
+[data-theme="dark"] .completeness-item.done {
+  color: #4ade80;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .account-shell {
+    flex-direction: column;
+  }
+  .account-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .account-sidebar-header {
+    display: none;
+  }
+  .account-nav {
+    flex-direction: row;
+    padding: 0;
+    gap: 4px;
+  }
+  .account-nav-item {
+    white-space: nowrap;
+  }
+  .account-status-badge {
+    margin: 0 0 0 auto;
+  }
+  .account-main {
+    padding: var(--spacing-3xl) var(--spacing-xl);
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .overview-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<!-- ─────────────────── APP HEADER ─────────────────────────────────────── -->
+<header class="app-header" role="banner">
+  <button class="bar-btn" id="menu-btn"
+    onclick="toggleNavMenu()"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="nav-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <g filter="url(#filter0_i_18_100)">
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+        <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+          <feOffset dy="1"/>
+          <feGaussianBlur stdDeviation="0.5"/>
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+          <feBlend mode="normal" in2="shape" result="effect1_innerShadow_18_100"/>
+        </filter>
+      </defs>
+    </svg>
+  </button>
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
+      <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
+      <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
+      <path d="M358.475 136C355.808 136 353.875 135.4 352.675 134.2C351.475 133 350.875 131.2 350.875 128.8V45.4C350.875 43.4 351.208 42 351.875 41.2C352.542 40.4 353.942 40 356.075 40H367.475C370.408 40 371.942 41.3333 372.075 44L372.475 52C381.542 42 394.542 37 411.475 37C422.275 37 430.942 39.9333 437.475 45.8C444.142 51.5333 447.475 60.2 447.475 71.8V128.8C447.475 131.2 446.875 133 445.675 134.2C444.608 135.4 442.742 136 440.075 136H429.475C426.808 136 424.875 135.4 423.675 134.2C422.475 133 421.875 131.2 421.875 128.8V73.4C421.875 66.8667 420.342 62.2267 417.275 59.6C414.342 56.8 409.542 55.4 402.875 55.4C395.808 55.4 389.608 57.3333 384.275 61.2C379.075 64.9333 376.475 69.8 376.475 75.8V128.8C376.475 131.2 375.875 133 374.675 134.2C373.608 135.4 371.675 136 368.875 136H358.475Z" fill="#494F4D"/>
+      <path d="M276.856 139C259.523 139 246.123 134.467 236.656 125.4C227.323 116.2 222.656 103.733 222.656 88C222.656 72.2667 227.323 59.8667 236.656 50.8C246.123 41.6 259.523 37 276.856 37C294.19 37 307.59 41.6 317.056 50.8C326.523 59.8667 331.256 72.2667 331.256 88C331.256 103.733 326.523 116.2 317.056 125.4C307.59 134.467 294.19 139 276.856 139ZM276.856 120.2C286.323 120.2 293.523 117.467 298.456 112C303.39 106.533 305.856 98.5333 305.856 88C305.856 77.6 303.39 69.7333 298.456 64.4C293.523 58.9333 286.323 56.2 276.856 56.2C267.523 56.2 260.323 58.9333 255.256 64.4C250.323 69.7333 247.856 77.6 247.856 88C247.856 98.4 250.323 106.4 255.256 112C260.323 117.467 267.523 120.2 276.856 120.2Z" fill="#494F4D"/>
+      <path d="M115.697 176.4C113.03 176.4 111.097 175.8 109.897 174.6C108.83 173.4 108.297 171.6 108.297 169.2V49.6C113.364 46 120.097 43 128.497 40.6C137.03 38.2 145.564 37 154.097 37C192.764 37 212.097 54.0667 212.097 88.2C212.097 103.933 207.83 116.333 199.297 125.4C190.897 134.467 179.297 139 164.497 139C151.03 139 140.697 135.133 133.497 127.4V169.2C133.497 171.733 132.897 173.533 131.697 174.6C130.63 175.8 128.697 176.4 125.897 176.4H115.697ZM158.497 120.8C167.964 120.8 175.03 117.933 179.697 112.2C184.364 106.467 186.697 98.2 186.697 87.4C186.697 75.8 183.964 67.6 178.497 62.8C173.03 57.8667 164.63 55.4 153.297 55.4C144.897 55.4 138.297 56.6667 133.497 59.2V98.6C133.497 105.4 135.897 110.8 140.697 114.8C145.497 118.8 151.43 120.8 158.497 120.8Z" fill="#494F4D"/>
+      <path d="M45.6 139C37.6 139 29.8 138.133 22.2 136.4C14.6 134.8 8.06667 132.333 2.6 129C0.866667 128.067 0 127.067 0 126C0 125.2 0.266667 124.467 0.8 123.8L6.4 114C7.06667 112.8 7.73333 112.2 8.4 112.2C9.06667 112.2 9.93333 112.533 11 113.2C15 115.6 19.9333 117.6 25.8 119.2C31.6667 120.8 37.0667 121.6 42 121.6C49.6 121.6 55 120.867 58.2 119.4C61.5333 117.8 63.2 115 63.2 111C63.2 108.733 62.5333 106.933 61.2 105.6C60 104.133 58.1333 102.867 55.6 101.8C53.0667 100.733 48.8667 99.2667 43 97.4C43 97.4 40.8 96.6667 36.4 95.2C28.8 92.6667 22.7333 90.2 18.2 87.8C13.6667 85.4 10.1333 82.4 7.6 78.8C5.2 75.0667 4 70.4 4 64.8C4 55.7333 7.8 48.8667 15.4 44.2C23.1333 39.4 33.1333 37 45.4 37C60.3333 37 73.2 40.2 84 46.6C85.7333 47.5333 86.6 48.5333 86.6 49.6C86.6 50.2667 86.2667 51.1333 85.6 52.2L80.2 60.8C79.4 62 78.7333 62.6 78.2 62.6C77.6667 62.6 76.8667 62.2667 75.8 61.6C72.3333 59.4667 68.1333 57.8 63.2 56.6C58.4 55.2667 53.5333 54.6 48.6 54.6C41.9333 54.6 37 55.3333 33.8 56.8C30.7333 58.1333 29.2 60.8 29.2 64.8C29.2 68.2667 31 71 34.6 73C38.3333 75 44.7333 77.4 53.8 80.2L60.4 82.2C70.8 85.5333 78.0667 89.4667 82.2 94C86.4667 98.5333 88.6 104.2 88.6 111C88.6 119.267 84.9333 126 77.6 131.2C70.4 136.4 59.7333 139 45.6 139Z" fill="#494F4D"/>
+      <path d="M921.461 23.4C918.261 23.4 915.794 22.4667 914.061 20.6C912.328 18.7333 911.461 16.4667 911.461 13.8V9.59999C911.461 6.93333 912.328 4.66666 914.061 2.8C915.794 0.933329 918.261 0 921.461 0H930.061C933.261 0 935.728 0.933329 937.461 2.8C939.328 4.66666 940.261 6.93333 940.261 9.59999V13.8C940.261 16.4667 939.328 18.7333 937.461 20.6C935.728 22.4667 933.261 23.4 930.061 23.4H921.461ZM920.661 136C917.994 136 916.061 135.4 914.861 134.2C913.661 133 913.061 131.2 913.061 128.8V47.4C913.061 44.8667 913.661 43 914.861 41.8C916.061 40.6 917.994 40 920.661 40H931.061C933.728 40 935.661 40.6 936.861 41.8C938.061 43 938.661 44.8667 938.661 47.4V128.8C938.661 131.2 938.061 133 936.861 134.2C935.794 135.4 933.861 136 931.061 136H920.661Z" fill="url(#paint0_linear_21_11)"/>
+      <path d="M765.405 136C763.138 136 762.005 135 762.005 133C762.005 132.2 762.205 131.333 762.605 130.4L815.405 5.2C816.205 3.19999 817.072 1.83334 818.005 1.1C818.938 0.366663 820.272 0 822.005 0H833.005C834.872 0 836.238 0.366663 837.105 1.1C837.972 1.83334 838.805 3.19999 839.605 5.2L892.405 130.4C892.805 131.333 893.005 132.2 893.005 133C893.005 135 891.872 136 889.605 136H872.205C870.472 136 869.238 135.767 868.505 135.3C867.772 134.833 867.072 133.867 866.405 132.4L855.005 104.4H799.805L788.605 132.4C787.938 133.867 787.238 134.833 786.505 135.3C785.772 135.767 784.538 136 782.805 136H765.405Z" fill="url(#paint1_linear_21_11)"/>
+      <path d="M868.405 139.4L827.405 33.3999L786.405 139.4H868.405Z" fill="white" stroke="white" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="paint0_linear_21_11" x1="896.852" y1="-3.47314" x2="1022.3" y2="36.2326" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_21_11" x1="756.685" y1="39.2091" x2="836.717" y2="183.766" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FD7E14"/>
+          <stop offset="1" stop-color="#BE4BDB"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  <div class="bar-divider"></div>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="navigateTo('explore.html')">Explore</button>
+    <button class="chip" onclick="navigateTo('portfolio.html')">Portfolio</button>
+    <button class="chip" onclick="navigateTo('compare.html')">Compare</button>
+    <button class="chip" onclick="navigateTo('watchlist.html')">Watchlist</button>
+    <button class="chip" onclick="navigateTo('board.html')">Board</button>
+    <button class="chip" onclick="navigateTo('opportunities.html')">Opportunities</button>
+  </nav>
+  <div class="app-header-right">
+    <div class="bar-divider-v" aria-hidden="true"></div>
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      <span id="header-initials">--</span>
+    </button>
+  </div>
+</header>
+
+<!-- Nav dropdown -->
+<nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
+  <div class="menu-cols">
+    <div class="menu-col">
+      <button class="menu-item" data-nav="Explore" onclick="navigateTo('explore.html'); closeNavMenu()">Explore</button>
+      <button class="menu-item" data-nav="Portfolio" onclick="navigateTo('portfolio.html'); closeNavMenu()">Portfolio</button>
+      <button class="menu-item" data-nav="Compare" onclick="navigateTo('compare.html'); closeNavMenu()">Compare</button>
+    </div>
+    <div class="menu-col">
+      <div class="menu-col-divider"></div>
+      <button class="menu-item" data-nav="Watchlist" onclick="navigateTo('watchlist.html'); closeNavMenu()">Watchlist</button>
+      <button class="menu-item" data-nav="Board" onclick="navigateTo('board.html'); closeNavMenu()">Board</button>
+      <button class="menu-item" data-nav="Opportunities" onclick="navigateTo('opportunities.html'); closeNavMenu()">Opportunities</button>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-theme-row">
+    <span class="menu-theme-label">Appearance</span>
+    <div class="theme-toggle-pill" role="group" aria-label="Theme">
+      <button class="theme-opt" id="theme-light" onclick="setTheme('light')" aria-label="Light mode" title="Light">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="2.2"/>
+          <line x1="6.5" y1="1"    x2="6.5" y2="2.2"/>
+          <line x1="6.5" y1="10.8" x2="6.5" y2="12"/>
+          <line x1="1"   y1="6.5"  x2="2.2" y2="6.5"/>
+          <line x1="10.8" y1="6.5" x2="12"  y2="6.5"/>
+        </svg>
+      </button>
+      <button class="theme-opt" id="theme-dark" onclick="setTheme('dark')" aria-label="Dark mode" title="Dark">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M10.5 7.5A4.5 4.5 0 0 1 4.5 1.5c0-.27.03-.54.07-.8A4.5 4.5 0 1 0 10.8 8.43 4.5 4.5 0 0 1 10.5 7.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-model-label" id="nav-model-label">model v1.0</div>
+</nav>
+
+<!-- Profile dropdown -->
+<div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
+  <div class="profile-header">
+    <div class="profile-name" id="pm-name">--</div>
+    <div class="profile-email" id="pm-email">--</div>
+  </div>
+  <button class="profile-item" role="menuitem" onclick="showPanel('profile'); closeProfileMenu()">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="4.5" r="2.5"/>
+      <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+    </svg>
+    Brand profile
+  </button>
+  <div class="menu-divider"></div>
+  <button class="profile-item" role="menuitem" style="color:var(--negative)" onclick="signOut()">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <path d="M8.5 4.5L12 6.5l-3.5 2"/>
+      <line x1="12" y1="6.5" x2="5" y2="6.5"/>
+      <path d="M5 1.5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3"/>
+    </svg>
+    Sign out
+  </button>
+</div>
+
+<!-- ──────────────────────────── MAIN ───────────────────────────────────── -->
+<main id="main-content" tabindex="-1">
+
+  <!-- IDENTITY GATE (shown when not signed in) -->
+  <div id="identity-gate" class="identity-gate" style="display:none;">
+    <div class="identity-card">
+      <h1 class="identity-card-title">Brand account</h1>
+      <p class="identity-card-subtitle">Enter your email address to access your brand profile and manage introduction requests.</p>
+
+      <div class="form-field">
+        <label class="form-label" for="gate-email">Email address</label>
+        <input
+          type="email"
+          id="gate-email"
+          class="form-input"
+          placeholder="you@company.com"
+          autocomplete="email"
+          onkeydown="if(event.key==='Enter') submitGate()"
+        />
+        <div class="identity-error" id="gate-error"></div>
+      </div>
+
+      <div style="margin-top: var(--spacing-3xl);">
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="submitGate()" id="gate-btn">
+          Continue
+        </button>
+      </div>
+
+      <p class="identity-card-note">
+        No password required. Your profile is looked up by email address.<br>
+        A new profile will be created if this is your first visit.
+      </p>
+    </div>
+  </div>
+
+  <!-- ACCOUNT SHELL (shown when signed in) -->
+  <div id="account-shell" class="account-shell" style="display:none;">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar" aria-label="Account navigation">
+      <div class="account-sidebar-header">
+        <div class="account-sidebar-label">Brand account</div>
+        <div class="account-sidebar-org" id="sidebar-org">--</div>
+        <div class="account-sidebar-email" id="sidebar-email">--</div>
+      </div>
+
+      <nav class="account-nav" aria-label="Account sections">
+        <button class="account-nav-item active" id="nav-overview" onclick="showPanel('overview')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="1" y="1" width="5" height="5" rx="1"/>
+            <rect x="8" y="1" width="5" height="5" rx="1"/>
+            <rect x="1" y="8" width="5" height="5" rx="1"/>
+            <rect x="8" y="8" width="5" height="5" rx="1"/>
+          </svg>
+          Overview
+        </button>
+        <button class="account-nav-item" id="nav-profile" onclick="showPanel('profile')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="7" cy="5" r="3"/>
+            <path d="M1 13c0-3.31 2.69-6 6-6s6 2.69 6 6"/>
+          </svg>
+          Profile
+        </button>
+        <button class="account-nav-item" id="nav-introductions" onclick="showPanel('introductions')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 3h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5l-3 2V4a1 1 0 0 1 1-1z"/>
+          </svg>
+          Introductions
+        </button>
+        <button class="account-nav-item" id="nav-settings" onclick="showPanel('settings')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="7" cy="7" r="2"/>
+            <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.9 2.9l1.1 1.1M10 10l1.1 1.1M10 4l1.1-1.1M3.9 10l-1 1"/>
+          </svg>
+          Settings
+        </button>
+      </nav>
+
+      <!-- Profile status badge -->
+      <div class="account-status-badge draft" id="sidebar-status-badge">
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="4"/></svg>
+        <span id="sidebar-status-text">Draft</span>
+      </div>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="account-main">
+
+      <!-- OVERVIEW PANEL -->
+      <div class="account-panel active" id="panel-overview">
+        <div class="account-panel-header">
+          <div class="account-panel-header-titles">
+            <h2 class="account-panel-title">Overview</h2>
+            <p class="account-panel-subtitle">Your brand account at a glance.</p>
+          </div>
+        </div>
+
+        <!-- Completeness indicator -->
+        <div class="completeness-bar-wrap" id="overview-completeness">
+          <div class="completeness-header">
+            <span class="completeness-label">Profile completeness</span>
+            <span class="completeness-pct" id="overview-pct">0%</span>
+          </div>
+          <div class="completeness-track">
+            <div class="completeness-fill" id="overview-bar" style="width:0%"></div>
+          </div>
+          <div class="completeness-items" id="overview-items"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="overview-stats">
+          <div class="overview-stat">
+            <div class="overview-stat-value" id="stat-intros">0</div>
+            <div class="overview-stat-label">Introduction requests</div>
+          </div>
+          <div class="overview-stat">
+            <div class="overview-stat-value" id="stat-accepted">0</div>
+            <div class="overview-stat-label">Accepted</div>
+          </div>
+          <div class="overview-stat">
+            <div class="overview-stat-value" id="stat-status">Draft</div>
+            <div class="overview-stat-label">Profile status</div>
+          </div>
+        </div>
+
+        <!-- Quick action if incomplete -->
+        <div id="overview-cta" style="display:none; margin-top: var(--spacing-3xl); padding: var(--spacing-3xl); background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: var(--radius-md);">
+          <div style="font-size: var(--text-sm); font-weight: 500; color: var(--accent); margin-bottom: var(--spacing-xs);">Complete your profile</div>
+          <div style="font-size: var(--text-sm); color: var(--text-2); margin-bottom: var(--spacing-xl);">A complete profile is required before sending introduction requests.</div>
+          <button class="btn-primary" onclick="showPanel('profile')">Go to profile</button>
+        </div>
+      </div>
+
+      <!-- PROFILE PANEL -->
+      <div class="account-panel" id="panel-profile">
+        <div class="account-panel-header">
+          <div class="account-panel-header-titles">
+            <h2 class="account-panel-title">Brand profile</h2>
+            <p class="account-panel-subtitle">This information is shared with properties when you request an introduction.</p>
+          </div>
+        </div>
+
+        <!-- Completeness indicator (profile panel) -->
+        <div class="completeness-bar-wrap" id="profile-completeness">
+          <div class="completeness-header">
+            <span class="completeness-label">Profile completeness</span>
+            <span class="completeness-pct" id="profile-pct">0%</span>
+          </div>
+          <div class="completeness-track">
+            <div class="completeness-fill" id="profile-bar" style="width:0%"></div>
+          </div>
+          <div class="completeness-items" id="profile-items"></div>
+        </div>
+
+        <!-- Section 1: Brand basics -->
+        <div class="form-section">
+          <div class="form-section-title">Brand basics</div>
+          <div class="form-section-desc">Core information about your brand or organisation.</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="f-org-name">
+                Organisation name <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <input type="text" id="f-org-name" class="form-input" placeholder="Acme Corporation" autocomplete="organization" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="f-website">Website</label>
+              <input type="url" id="f-website" class="form-input" placeholder="https://acme.com" autocomplete="url" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="f-country">Country</label>
+              <input type="text" id="f-country" class="form-input" placeholder="United Kingdom" autocomplete="country-name" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="f-linkedin">LinkedIn</label>
+              <input type="url" id="f-linkedin" class="form-input" placeholder="https://linkedin.com/company/acme" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Primary contact -->
+        <div class="form-section">
+          <div class="form-section-title">Primary contact</div>
+          <div class="form-section-desc">Who should properties contact after an introduction is accepted?</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="f-contact-name">
+                Contact name <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <input type="text" id="f-contact-name" class="form-input" placeholder="Jane Smith" autocomplete="name" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="f-email">
+                Email address <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <input type="email" id="f-email" class="form-input" placeholder="jane@acme.com" autocomplete="email" readonly />
+              <div class="form-hint">Email is used to identify your account and cannot be changed here.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Sponsorship interests -->
+        <div class="form-section">
+          <div class="form-section-title">Sponsorship interests</div>
+          <div class="form-section-desc">What types of properties or sport categories are you focused on?</div>
+          <div class="form-row single">
+            <div class="form-field">
+              <label class="form-label" for="f-interests">Interests</label>
+              <input type="text" id="f-interests" class="form-input" placeholder="e.g. motorsport, rugby, stadium naming rights, grassroots" />
+              <div class="form-hint">Comma-separated list of sport categories, property types, or focus areas.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Introduction settings -->
+        <div class="form-section">
+          <div class="form-section-title">Introduction settings</div>
+          <div class="form-section-desc">Default note included with your introduction requests.</div>
+          <div class="form-row single">
+            <div class="form-field">
+              <label class="form-label" for="f-intro-note">Default introduction note</label>
+              <textarea id="f-intro-note" class="form-textarea" placeholder="Brief context about your brand and what you are looking for in a sponsorship partner..."></textarea>
+              <div class="form-hint">This is pre-filled in the introduction request modal. You can edit it per request.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form actions -->
+        <div class="form-actions">
+          <div class="form-save-status" id="save-status"></div>
+          <button class="btn-primary" id="save-btn" onclick="saveProfile()">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 6.5L5 9.5L10 3"/>
+            </svg>
+            Save profile
+          </button>
+        </div>
+      </div>
+
+      <!-- INTRODUCTIONS PANEL -->
+      <div class="account-panel" id="panel-introductions">
+        <div class="account-panel-header">
+          <div class="account-panel-header-titles">
+            <h2 class="account-panel-title">Introductions</h2>
+            <p class="account-panel-subtitle">Requests you've sent to properties on SponsorAI.</p>
+          </div>
+          <button class="panel-action-btn" id="intros-refresh-btn" onclick="refreshIntroductions()" title="Reload introduction requests">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 2.5A4.5 4.5 0 1 0 11 6"/>
+              <polyline points="10,0 10,3 7,3"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Status summary stats -->
+        <div class="intro-stats-row" id="intro-stats-row">
+          <div class="intro-stat-card">
+            <div class="intro-stat-value" id="istat-total">--</div>
+            <div class="intro-stat-label">Requests sent</div>
+          </div>
+          <div class="intro-stat-card">
+            <div class="intro-stat-value" id="istat-accepted">--</div>
+            <div class="intro-stat-label">Accepted</div>
+          </div>
+          <div class="intro-stat-card">
+            <div class="intro-stat-value" id="istat-declined">--</div>
+            <div class="intro-stat-label">Declined</div>
+          </div>
+          <div class="intro-stat-card">
+            <div class="intro-stat-value" id="istat-pending">--</div>
+            <div class="intro-stat-label">Pending</div>
+          </div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="intros-loading" style="padding: var(--spacing-5xl); text-align: center; color: var(--text-3); font-size: var(--text-sm);">
+          <div class="spinner" style="margin: 0 auto var(--spacing-lg);"></div>
+          Loading introductions...
+        </div>
+
+        <!-- Error state -->
+        <div id="intros-error" class="intro-error-banner" style="display:none;"></div>
+
+        <!-- Empty state -->
+        <div id="intros-empty" class="intro-empty-state" style="display:none;">
+          <div class="intro-empty-title">No introduction requests yet</div>
+          <p class="intro-empty-desc">When you request an introduction to a property, it will appear here.</p>
+          <a class="intro-empty-link" href="explore.html">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 6h8M7 3l3 3-3 3"/>
+            </svg>
+            Browse properties
+          </a>
+        </div>
+
+        <!-- Request list -->
+        <div id="intros-list" class="intro-req-list" style="display:none;"></div>
+
+      </div>
+
+      <!-- SETTINGS PANEL (stub) -->
+      <div class="account-panel" id="panel-settings">
+        <div class="account-panel-header">
+          <div class="account-panel-header-titles">
+            <h2 class="account-panel-title">Settings</h2>
+            <p class="account-panel-subtitle">Account preferences and notifications.</p>
+          </div>
+        </div>
+        <div class="stub-panel">
+          <div class="stub-panel-title">Coming soon</div>
+          <div class="stub-panel-desc">Account settings and notification preferences will be available in a future update.</div>
+        </div>
+      </div>
+
+    </div><!-- /.account-main -->
+  </div><!-- /#account-shell -->
+
+</main>
+
+<!-- ─────────────────────────── SCRIPTS ────────────────────────────────── -->
+<script src="config.js"></script>
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="ui.js"></script>
+<script src="ui-helpers.js"></script>
+<script>
+
+/* ── Constants ────────────────────────────────────────────────────────────── */
+var SESSION_KEY    = 'sai_account_v1';
+var PROFILES_URL   = API_URL + '/profiles';
+
+var REQUIRED_FIELDS = ['contact_name', 'organisation_name', 'email'];
+var OPTIONAL_FIELDS = ['website', 'linkedin', 'country', 'interests', 'intro_note'];
+var ALL_FIELD_LABELS = {
+  contact_name:      'Contact name',
+  organisation_name: 'Organisation name',
+  email:             'Email address',
+  website:           'Website',
+  linkedin:          'LinkedIn',
+  country:           'Country',
+  interests:         'Interests',
+  intro_note:        'Introduction note'
+};
+
+/* ── State ────────────────────────────────────────────────────────────────── */
+var currentProfile = null;
+var currentEmail   = null;
+
+/* ── Boot ─────────────────────────────────────────────────────────────────── */
+SAI_UIH.initTheme();
+SAI_UIH.initMenuListeners();
+
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem(SESSION_KEY);
+  if (saved) {
+    currentEmail = saved;
+    loadProfile(saved);
+  } else {
+    showGate();
+  }
+});
+
+/* ── Identity gate ────────────────────────────────────────────────────────── */
+function showGate() {
+  document.getElementById('identity-gate').style.display = 'flex';
+  document.getElementById('account-shell').style.display = 'none';
+  setTimeout(function() {
+    document.getElementById('gate-email').focus();
+  }, 50);
+}
+
+function submitGate() {
+  var emailEl  = document.getElementById('gate-email');
+  var errorEl  = document.getElementById('gate-error');
+  var btn      = document.getElementById('gate-btn');
+  var email    = emailEl.value.trim().toLowerCase();
+
+  errorEl.textContent = '';
+
+  if (!email || !email.includes('@')) {
+    errorEl.textContent = 'Please enter a valid email address.';
+    emailEl.focus();
+    return;
+  }
+
+  btn.disabled      = true;
+  btn.textContent   = 'Loading...';
+
+  localStorage.setItem(SESSION_KEY, email);
+  currentEmail = email;
+  loadProfile(email);
+}
+
+function signOut() {
+  localStorage.removeItem(SESSION_KEY);
+  currentEmail       = null;
+  currentProfile     = null;
+  introductionsLoaded = false;
+  introEventsCache   = {};
+  /* Reset intro panel to loading state for next login */
+  showIntrosState('loading');
+  document.getElementById('profile-menu') && (document.getElementById('profile-menu').style.display = '');
+  showGate();
+  var emailEl = document.getElementById('gate-email');
+  if (emailEl) emailEl.value = '';
+}
+
+/* ── Profile load ─────────────────────────────────────────────────────────── */
+function loadProfile(email) {
+  var url = PROFILES_URL +
+    '?profile_type=eq.brand' +
+    '&email=eq.' + encodeURIComponent(email) +
+    '&limit=1';
+
+  fetch(url, {
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    var profile = (rows && rows.length > 0) ? rows[0] : null;
+    if (!profile) {
+      /* New user — create a stub profile with just the email */
+      return createProfile(email);
+    }
+    return profile;
+  })
+  .then(function(profile) {
+    currentProfile = profile;
+    showShell(profile);
+  })
+  .catch(function(err) {
+    console.error('loadProfile error:', err);
+    /* Allow gate submit button to recover */
+    var btn = document.getElementById('gate-btn');
+    if (btn) {
+      btn.disabled    = false;
+      btn.textContent = 'Continue';
+    }
+    var errEl = document.getElementById('gate-error');
+    if (errEl) errEl.textContent = 'Could not connect. Please check your network and try again.';
+  });
+}
+
+function createProfile(email) {
+  return fetch(PROFILES_URL + '?select=*', {
+    method: 'POST',
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation'
+    },
+    body: JSON.stringify({
+      profile_type: 'brand',
+      email:        email,
+      contact_name: '',
+      status:       'draft'
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    return rows[0] || { profile_type: 'brand', email: email, contact_name: '', status: 'draft' };
+  });
+}
+
+/* ── Shell render ─────────────────────────────────────────────────────────── */
+function showShell(profile) {
+  document.getElementById('identity-gate').style.display  = 'none';
+  document.getElementById('account-shell').style.display  = 'flex';
+
+  /* Header initials */
+  var initials = getInitials(profile.contact_name || profile.email);
+  var initialsEl = document.getElementById('header-initials');
+  if (initialsEl) initialsEl.textContent = initials;
+
+  /* Profile menu */
+  var pmName = document.getElementById('pm-name');
+  var pmEmail = document.getElementById('pm-email');
+  if (pmName)  pmName.textContent  = profile.contact_name || profile.email;
+  if (pmEmail) pmEmail.textContent = profile.email;
+
+  /* Sidebar */
+  var sideOrg   = document.getElementById('sidebar-org');
+  var sideEmail = document.getElementById('sidebar-email');
+  if (sideOrg)   sideOrg.textContent   = profile.organisation_name || 'New brand account';
+  if (sideEmail) sideEmail.textContent = profile.email;
+
+  /* Fill form fields */
+  setField('f-org-name',     profile.organisation_name || '');
+  setField('f-contact-name', profile.contact_name      || '');
+  setField('f-email',        profile.email             || '');
+  setField('f-website',      profile.website           || '');
+  setField('f-linkedin',     profile.linkedin          || '');
+  setField('f-country',      profile.country           || '');
+  setField('f-interests',    profile.interests         || '');
+  setField('f-intro-note',   profile.intro_note        || '');
+
+  /* Update completeness UI */
+  updateCompleteness(profile);
+
+  /* Stats */
+  var statStatus = document.getElementById('stat-status');
+  if (statStatus) {
+    statStatus.textContent = capitalise(profile.status || 'draft');
+  }
+
+  /* Show overview by default */
+  showPanel('overview');
+}
+
+/* ── Panel navigation ─────────────────────────────────────────────────────── */
+var introductionsLoaded = false;
+
+function showPanel(panelId) {
+  var panels   = document.querySelectorAll('.account-panel');
+  var navItems = document.querySelectorAll('.account-nav-item');
+
+  panels.forEach(function(p) { p.classList.remove('active'); });
+  navItems.forEach(function(n) { n.classList.remove('active'); });
+
+  var target = document.getElementById('panel-' + panelId);
+  var navBtn = document.getElementById('nav-' + panelId);
+  if (target) target.classList.add('active');
+  if (navBtn) navBtn.classList.add('active');
+
+  /* Lazy-load introductions on first visit */
+  if (panelId === 'introductions' && currentProfile && currentProfile.id && !introductionsLoaded) {
+    introductionsLoaded = true;
+    loadIntroductions(currentProfile.id);
+  }
+}
+
+/* ── Introductions data ───────────────────────────────────────────────────── */
+
+var INTRO_REQS_URL    = API_URL + '/introduction_requests';
+var INTRO_EVENTS_URL  = API_URL + '/introduction_events';
+var introEventsCache  = {};   /* requestId → events array */
+
+var INTRO_STATUS_LABELS = {
+  submitted:              'Submitted',
+  pending_property_claim: 'Pending claim',
+  sent:                   'Sent',
+  nudged:                 'Reminder sent',
+  accepted:               'Accepted',
+  declined:               'Declined',
+  intro_completed:        'Completed',
+  closed_no_response:     'Closed'
+};
+
+var INTRO_EVENT_LABELS = {
+  request_submitted:      'Request submitted',
+  property_claim_invited: 'Property invited to claim profile',
+  recipient_notified:     'Property notified',
+  reminder_sent:          'Reminder sent to property',
+  request_accepted:       'Request accepted',
+  request_declined:       'Request declined',
+  intro_emails_sent:      'Introduction emails sent',
+  closed_no_response:     'Closed — no response'
+};
+
+var INTRO_REMIND_URL = 'https://kyjpxxyaebxvpprugmof.supabase.co/functions/v1/introduction-remind';
+
+function refreshIntroductions() {
+  if (!currentProfile || !currentProfile.id) return;
+  var btn = document.getElementById('intros-refresh-btn');
+  if (btn) btn.disabled = true;
+  introductionsLoaded = false;
+  introEventsCache    = {};
+  showIntrosState('loading');
+  /* Re-collapse any open cards */
+  var list = document.getElementById('intros-list');
+  if (list) list.innerHTML = '';
+  renderIntroStats([]);
+  introductionsLoaded = true;
+  loadIntroductions(currentProfile.id, function() {
+    if (btn) btn.disabled = false;
+  });
+}
+
+function loadIntroductions(profileId, onComplete) {
+  var url = INTRO_REQS_URL +
+    '?from_profile_id=eq.' + encodeURIComponent(profileId) +
+    '&order=created_at.desc';
+
+  fetch(url, {
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY
+    }
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(requests) {
+    if (!requests || requests.length === 0) {
+      showIntrosState('empty');
+      renderIntroStats([]);
+      if (onComplete) onComplete();
+      return;
+    }
+
+    /* Batch fetch property names */
+    var slugs = requests
+      .map(function(r) { return r.to_property_slug; })
+      .filter(function(s, i, a) { return s && a.indexOf(s) === i; }); /* unique */
+
+    var propUrl = API_URL + '/properties' +
+      '?slug=in.(' + slugs.map(encodeURIComponent).join(',') + ')' +
+      '&select=name,slug';
+
+    fetch(propUrl, {
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': 'Bearer ' + API_KEY
+      }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(props) {
+      var propMap = {};
+      (props || []).forEach(function(p) { propMap[p.slug] = p.name; });
+      renderIntroStats(requests);
+      renderIntroList(requests, propMap);
+      showIntrosState('list');
+      if (onComplete) onComplete();
+    })
+    .catch(function() {
+      /* Property name lookup failed — render with slug only */
+      renderIntroStats(requests);
+      renderIntroList(requests, {});
+      showIntrosState('list');
+      if (onComplete) onComplete();
+    });
+  })
+  .catch(function(err) {
+    console.error('loadIntroductions error:', err);
+    showIntrosState('error', 'Could not load introductions. Please try again.');
+    renderIntroStats([]);
+    if (onComplete) onComplete();
+  });
+}
+
+function showIntrosState(which, msg) {
+  var loading = document.getElementById('intros-loading');
+  var error   = document.getElementById('intros-error');
+  var empty   = document.getElementById('intros-empty');
+  var list    = document.getElementById('intros-list');
+
+  if (loading) loading.style.display = (which === 'loading') ? 'block' : 'none';
+  if (error)   error.style.display   = (which === 'error')   ? 'block' : 'none';
+  if (empty)   empty.style.display   = (which === 'empty')   ? 'block' : 'none';
+  if (list)    list.style.display    = (which === 'list')     ? 'flex'  : 'none';
+
+  if (which === 'error' && msg && error) {
+    error.textContent = msg;
+  }
+}
+
+function renderIntroStats(requests) {
+  var total    = requests.length;
+  var accepted = requests.filter(function(r) {
+    return r.status === 'accepted' || r.status === 'intro_completed';
+  }).length;
+  var declined = requests.filter(function(r) {
+    return r.status === 'declined';
+  }).length;
+  var pending  = requests.filter(function(r) {
+    return r.status === 'submitted' || r.status === 'sent' ||
+           r.status === 'pending_property_claim' || r.status === 'nudged';
+  }).length;
+
+  setEl('istat-total',    String(total));
+  setEl('istat-accepted', String(accepted));
+  setEl('istat-declined', String(declined));
+  setEl('istat-pending',  String(pending));
+
+  /* Also refresh the overview panel stats */
+  setEl('stat-intros',   String(total));
+  setEl('stat-accepted', String(accepted));
+}
+
+function renderIntroList(requests, propMap) {
+  var listEl = document.getElementById('intros-list');
+  if (!listEl) return;
+
+  listEl.innerHTML = requests.map(function(req) {
+    return renderIntroCard(req, propMap);
+  }).join('');
+
+  /* Attach click handlers */
+  requests.forEach(function(req) {
+    var cardEl = document.getElementById('intro-card-' + req.id);
+    if (cardEl) {
+      cardEl.querySelector('.intro-req-card-header')
+        .addEventListener('click', function() {
+          toggleIntroCard(req.id, cardEl);
+        });
+    }
+  });
+}
+
+function renderIntroCard(req, propMap) {
+  var propName   = propMap[req.to_property_slug] || slugToTitle(req.to_property_slug);
+  var dateStr    = formatIntroDate(req.created_at);
+  var preview    = (req.message || '').slice(0, 120);
+  if ((req.message || '').length > 120) preview += '...';
+  var statusHtml  = introStatusBadge(req.status);
+  var actionsHtml = renderIntroCardActions(req);
+
+  return '<div class="intro-req-card" id="intro-card-' + escAttr(req.id) + '">'
+    + '  <div class="intro-req-card-header">'
+    + '    <div class="intro-req-card-left">'
+    + '      <div class="intro-req-prop-name">' + escHtml(propName) + '</div>'
+    + '      <div class="intro-req-prop-slug">' + escHtml(req.to_property_slug) + '</div>'
+    + (preview ? '      <div class="intro-req-preview">' + escHtml(preview) + '</div>' : '')
+    + '    </div>'
+    + '    <div class="intro-req-card-right">'
+    + '      ' + statusHtml
+    + '      <div class="intro-req-date">' + escHtml(dateStr) + '</div>'
+    + '      <svg class="intro-req-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '        <path d="M3 5l4 4 4-4"/>'
+    + '      </svg>'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="intro-req-card-detail">'
+    + '    <div class="intro-detail-section">'
+    + '      <div class="intro-detail-label">Message sent</div>'
+    + '      <div class="intro-detail-message">' + escHtml(req.message || '') + '</div>'
+    + '    </div>'
+    + '    <div class="intro-detail-section" id="intro-timeline-wrap-' + escAttr(req.id) + '">'
+    + '      <div class="intro-detail-label">Timeline</div>'
+    + '      <div class="intro-timeline-loading">Loading timeline...</div>'
+    + '    </div>'
+    + (actionsHtml ? actionsHtml : '')
+    + '  </div>'
+    + '</div>';
+}
+
+function toggleIntroCard(reqId, cardEl) {
+  var wasExpanded = cardEl.classList.contains('expanded');
+  cardEl.classList.toggle('expanded');
+
+  /* Load events on first expand */
+  if (!wasExpanded && !introEventsCache[reqId]) {
+    loadIntroEvents(reqId);
+  }
+}
+
+function loadIntroEvents(reqId) {
+  var url = INTRO_EVENTS_URL +
+    '?introduction_request_id=eq.' + encodeURIComponent(reqId) +
+    '&order=created_at.asc';
+
+  fetch(url, {
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(events) {
+    introEventsCache[reqId] = events || [];
+    renderIntroTimeline(reqId, events || []);
+  })
+  .catch(function() {
+    var wrap = document.getElementById('intro-timeline-wrap-' + reqId);
+    if (wrap) {
+      var loading = wrap.querySelector('.intro-timeline-loading');
+      if (loading) loading.textContent = 'Could not load timeline.';
+    }
+  });
+}
+
+function renderIntroTimeline(reqId, events) {
+  var wrap = document.getElementById('intro-timeline-wrap-' + reqId);
+  if (!wrap) return;
+
+  if (!events.length) {
+    wrap.innerHTML = '<div class="intro-detail-label">Timeline</div>'
+      + '<div class="intro-timeline-loading">No events recorded.</div>';
+    return;
+  }
+
+  var itemsHtml = events.map(function(ev, i) {
+    var label    = INTRO_EVENT_LABELS[ev.event_type] || ev.event_type;
+    var timeStr  = formatIntroDate(ev.created_at);
+    var evClass  = 'intro-timeline-item';
+    if (ev.event_type === 'request_accepted' || ev.event_type === 'intro_emails_sent') {
+      evClass += ' event-accepted';
+    } else if (ev.event_type === 'request_declined') {
+      evClass += ' event-declined';
+    }
+
+    return '<div class="' + evClass + '">'
+      + '  <div class="intro-timeline-marker">'
+      + '    <div class="intro-timeline-dot"></div>'
+      + (i < events.length - 1 ? '    <div class="intro-timeline-line"></div>' : '')
+      + '  </div>'
+      + '  <div class="intro-timeline-content">'
+      + '    <div class="intro-timeline-event">' + escHtml(label) + '</div>'
+      + '    <div class="intro-timeline-time">' + escHtml(timeStr) + '</div>'
+      + '  </div>'
+      + '</div>';
+  }).join('');
+
+  wrap.innerHTML = '<div class="intro-detail-label">Timeline</div>'
+    + '<div class="intro-timeline">' + itemsHtml + '</div>';
+}
+
+function introStatusBadge(status) {
+  var label  = INTRO_STATUS_LABELS[status] || capitalise(status || 'unknown');
+  var cls    = 'intro-status-badge status-' + (status || 'unknown');
+  return '<span class="' + cls + '">' + escHtml(label) + '</span>';
+}
+
+/* ── Intro action helpers ─────────────────────────────────────────────────── */
+
+function daysSince(isoStr) {
+  if (!isoStr) return 0;
+  return (Date.now() - new Date(isoStr).getTime()) / (1000 * 60 * 60 * 24);
+}
+
+/* Returns the actions HTML to inject inside an expanded intro card.
+   Called from renderIntroCard — req must include nudged_at / closed_at fields. */
+function renderIntroCardActions(req) {
+  var status = req.status;
+
+  /* Reminder available: sent, 7+ days old, no reminder yet */
+  if (status === 'sent' && !req.nudged_at && daysSince(req.created_at) >= 7) {
+    return '<div class="intro-req-actions">'
+      + '<button class="intro-remind-btn" id="remind-btn-' + escAttr(req.id) + '" '
+      +   'onclick="sendReminder(' + JSON.stringify(req.id) + ', event)">'
+      +   'Send reminder'
+      + '</button>'
+      + '<span class="intro-action-note">One reminder allowed per request.</span>'
+      + '</div>';
+  }
+
+  /* Sent but 7-day window not yet reached */
+  if (status === 'sent' && !req.nudged_at) {
+    var daysLeft = Math.ceil(7 - daysSince(req.created_at));
+    return '<div class="intro-req-actions">'
+      + '<span class="intro-action-note">Reminder available in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>'
+      + '</div>';
+  }
+
+  /* Nudged — reminder already sent */
+  if (status === 'nudged') {
+    var nudgedDate = req.nudged_at ? formatIntroDate(req.nudged_at) : '';
+    var canClose   = daysSince(req.nudged_at) >= 14;
+    var html = '<div class="intro-req-actions">'
+      + '<span class="intro-action-note">Reminder sent' + (nudgedDate ? ' on ' + nudgedDate : '') + '.</span>';
+    if (canClose) {
+      html += '<button class="intro-close-btn" id="close-btn-' + escAttr(req.id) + '" '
+        + 'onclick="closeIntro(' + JSON.stringify(req.id) + ', event)">'
+        + 'Close — no response'
+        + '</button>';
+    } else {
+      var daysLeft = Math.ceil(14 - daysSince(req.nudged_at));
+      html += '<span class="intro-action-note" style="margin-left:auto">Closure available in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  /* Closed — passive note */
+  if (status === 'closed_no_response') {
+    var closedDate = req.closed_at ? formatIntroDate(req.closed_at) : '';
+    return '<div class="intro-req-actions">'
+      + '<span class="intro-action-note">Closed' + (closedDate ? ' on ' + closedDate : '') + ' after no response.</span>'
+      + '</div>';
+  }
+
+  return '';
+}
+
+function sendReminder(reqId, ev) {
+  if (ev) ev.stopPropagation();
+  if (!currentProfile || !currentProfile.email) return;
+  var btn = document.getElementById('remind-btn-' + reqId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+  fetch(INTRO_REMIND_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ request_id: reqId, brand_email: currentProfile.email, action: 'remind' })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+  .then(function(res) {
+    if (!res.ok) {
+      alert(res.data.error || 'Could not send reminder. Please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Send reminder'; }
+    } else {
+      refreshIntroductions();
+    }
+  })
+  .catch(function() {
+    alert('Network error. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Send reminder'; }
+  });
+}
+
+function closeIntro(reqId, ev) {
+  if (ev) ev.stopPropagation();
+  if (!currentProfile || !currentProfile.email) return;
+  if (!confirm('Mark this introduction request as closed due to no response?')) return;
+  var btn = document.getElementById('close-btn-' + reqId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Closing...'; }
+
+  fetch(INTRO_REMIND_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ request_id: reqId, brand_email: currentProfile.email, action: 'close' })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+  .then(function(res) {
+    if (!res.ok) {
+      alert(res.data.error || 'Could not close request. Please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Close — no response'; }
+    } else {
+      refreshIntroductions();
+    }
+  })
+  .catch(function() {
+    alert('Network error. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Close — no response'; }
+  });
+}
+
+/* ── Intro helpers ────────────────────────────────────────────────────────── */
+
+function slugToTitle(slug) {
+  if (!slug) return 'Unknown property';
+  return slug.split('-').map(function(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+
+function formatIntroDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    var d = new Date(isoStr);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch (e) {
+    return isoStr.slice(0, 10);
+  }
+}
+
+function escAttr(str) {
+  return String(str || '').replace(/"/g, '&quot;');
+}
+
+function setEl(id, text) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+/* ── Completeness ──────────────────────────────────────────────────────────── */
+function computeCompleteness(profile) {
+  var filled = REQUIRED_FIELDS.concat(OPTIONAL_FIELDS).filter(function(k) {
+    return profile[k] && String(profile[k]).trim() !== '';
+  });
+  var total  = REQUIRED_FIELDS.length + OPTIONAL_FIELDS.length;
+  var pct    = Math.round((filled.length / total) * 100);
+  var requiredDone = REQUIRED_FIELDS.every(function(k) {
+    return profile[k] && String(profile[k]).trim() !== '';
+  });
+  return { pct: pct, filled: filled, total: total, requiredDone: requiredDone };
+}
+
+function updateCompleteness(profile) {
+  var c = computeCompleteness(profile);
+
+  /* Update both completeness bars (overview + profile panel) */
+  ['overview', 'profile'].forEach(function(prefix) {
+    var pctEl  = document.getElementById(prefix + '-pct');
+    var barEl  = document.getElementById(prefix + '-bar');
+    var itemsEl = document.getElementById(prefix + '-items');
+
+    if (pctEl)  pctEl.textContent = c.pct + '%';
+    if (barEl) {
+      barEl.style.width = c.pct + '%';
+      barEl.classList.toggle('complete', c.requiredDone && c.pct >= 60);
+    }
+
+    if (itemsEl) {
+      var html = REQUIRED_FIELDS.concat(OPTIONAL_FIELDS).map(function(k) {
+        var done = profile[k] && String(profile[k]).trim() !== '';
+        var icon = done
+          ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5l2.5 2.5L8 3"/></svg>'
+          : '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="5" r="3.5"/></svg>';
+        return '<span class="completeness-item' + (done ? ' done' : '') + '">'
+          + icon
+          + '<span>' + ALL_FIELD_LABELS[k] + (REQUIRED_FIELDS.indexOf(k) >= 0 ? '' : '') + '</span>'
+          + '</span>';
+      }).join('');
+      itemsEl.innerHTML = html;
+    }
+  });
+
+  /* Sidebar badge */
+  var badgeEl  = document.getElementById('sidebar-status-badge');
+  var badgeText = document.getElementById('sidebar-status-text');
+  var status   = currentProfile ? currentProfile.status : 'draft';
+
+  if (badgeEl && badgeText) {
+    badgeEl.className = 'account-status-badge ' + status;
+    badgeText.textContent = capitalise(status);
+  }
+
+  /* Overview CTA */
+  var ctaEl = document.getElementById('overview-cta');
+  if (ctaEl) ctaEl.style.display = c.requiredDone ? 'none' : 'block';
+}
+
+/* ── Save profile ──────────────────────────────────────────────────────────── */
+function saveProfile() {
+  if (!currentProfile || !currentEmail) return;
+
+  var saveBtn = document.getElementById('save-btn');
+  var statusEl = document.getElementById('save-status');
+
+  var payload = {
+    organisation_name: getField('f-org-name'),
+    contact_name:      getField('f-contact-name'),
+    website:           getField('f-website') || null,
+    linkedin:          getField('f-linkedin') || null,
+    country:           getField('f-country') || null,
+    interests:         getField('f-interests') || null,
+    intro_note:        getField('f-intro-note') || null
+  };
+
+  /* Derive new status */
+  var requiredFilled = REQUIRED_FIELDS.every(function(k) {
+    var v = k === 'email' ? currentEmail : payload[k];
+    return v && String(v).trim() !== '';
+  });
+  if (currentProfile.status !== 'verified') {
+    payload.status = requiredFilled ? 'complete' : 'draft';
+  }
+
+  saveBtn.disabled = true;
+  setStatus(statusEl, 'saving', 'Saving...');
+
+  var upsertUrl = PROFILES_URL +
+    '?profile_type=eq.brand' +
+    '&email=eq.' + encodeURIComponent(currentEmail);
+
+  fetch(upsertUrl, {
+    method: 'PATCH',
+    headers: {
+      'apikey':        API_KEY,
+      'Authorization': 'Bearer ' + API_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(rows) {
+    var updated = (rows && rows.length > 0) ? rows[0] : Object.assign({}, currentProfile, payload);
+    currentProfile = updated;
+
+    /* Refresh sidebar org name */
+    var sideOrg = document.getElementById('sidebar-org');
+    if (sideOrg) sideOrg.textContent = updated.organisation_name || 'New brand account';
+
+    /* Refresh header initials */
+    var initialsEl = document.getElementById('header-initials');
+    if (initialsEl) initialsEl.textContent = getInitials(updated.contact_name || updated.email);
+
+    /* Refresh profile menu */
+    var pmName = document.getElementById('pm-name');
+    if (pmName) pmName.textContent = updated.contact_name || updated.email;
+
+    /* Update stat */
+    var statStatus = document.getElementById('stat-status');
+    if (statStatus) statStatus.textContent = capitalise(updated.status || 'draft');
+
+    updateCompleteness(updated);
+    setStatus(statusEl, 'saved', 'Saved');
+    setTimeout(function() { setStatus(statusEl, '', ''); }, 3000);
+  })
+  .catch(function(err) {
+    console.error('saveProfile error:', err);
+    setStatus(statusEl, 'error', 'Save failed. Please try again.');
+  })
+  .finally(function() {
+    saveBtn.disabled = false;
+  });
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
+function setField(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.value = value;
+}
+
+function getField(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function setStatus(el, cls, text) {
+  if (!el) return;
+  el.className = 'form-save-status' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+}
+
+function capitalise(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function getInitials(nameOrEmail) {
+  if (!nameOrEmail) return '--';
+  var name = nameOrEmail.split('@')[0];
+  var parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+window.navigateTo = SAI_UIH.navigateTo;
+
+</script>
+
+</body>
+</html>

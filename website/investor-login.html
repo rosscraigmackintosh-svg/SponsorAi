@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SponsorAI — Investor Access</title>
+  <title>SponsorAI — Partner Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -29,8 +29,8 @@
 
     <!-- Header -->
     <header class="header">
-      <a href="hub.html" class="header__logo"><img src="images/logo-whitesvg.svg" alt="SponsorAI" height="20" style="display:block;"></a>
-      <a class="header__badge" href="index.html">Investor Access</a>
+      <a href="index.html" class="header__logo"><img src="images/logo-white.svg" alt="SponsorAI" height="20" style="display:block;"></a>
+      <a class="header__badge" href="index.html">Partner Access</a>
     </header>
 
     <!-- Login -->
@@ -39,25 +39,38 @@
 
         <div class="login-card__eyebrow">
           <span class="eyebrow-dot"></span>
-          <span>Restricted area</span>
+          <span>SponsorAI Partner Access</span>
         </div>
 
-        <h1 class="login-card__heading">Investor login</h1>
-        <p class="login-card__sub">This area is for invited investors only. Enter your email address and we'll send you a sign-in link.</p>
+        <h1 class="login-card__heading">Partner login</h1>
+        <p class="login-card__sub">This area is for authorised partners only. Enter your credentials to access the partner portal.</p>
 
-        <!-- Magic link request form -->
-        <form class="login-form" id="loginForm" novalidate autocomplete="off">
+        <!-- Email + password form -->
+        <form class="login-form" id="loginForm" novalidate autocomplete="on">
 
           <div class="login-field">
-            <label class="login-label" for="emailInput">Email address</label>
+            <label class="login-label" for="usernameInput">Username</label>
             <input
               class="login-input"
-              type="email"
-              id="emailInput"
-              name="email"
-              placeholder="you@company.com"
-              autocomplete="email"
+              type="text"
+              id="usernameInput"
+              name="username"
+              placeholder="username"
+              autocomplete="username"
               spellcheck="false"
+              required
+            />
+          </div>
+
+          <div class="login-field">
+            <label class="login-label" for="passwordInput">Password</label>
+            <input
+              class="login-input"
+              type="password"
+              id="passwordInput"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
               required
             />
           </div>
@@ -65,30 +78,22 @@
           <p class="login-error" id="loginError" aria-live="polite"></p>
 
           <button class="login-btn" type="submit">
-            <span class="login-btn__text">Send sign-in link</span>
+            <span class="login-btn__text">Sign in</span>
             <span class="login-btn__arrow">→</span>
           </button>
 
         </form>
-
-        <!-- Sent confirmation (hidden until magic link dispatched) -->
-        <div class="login-sent" id="loginSent" style="display:none;" aria-live="polite">
-          <div class="login-card__eyebrow">
-            <span class="eyebrow-dot eyebrow-dot--success"></span>
-            <span>Link sent</span>
-          </div>
-          <p class="login-card__sub">Check your inbox. Click the link in the email to access the investor briefing.</p>
-          <p class="login-sent__note">The link expires after 1 hour. If you don't see it, check your spam folder.</p>
-        </div>
 
       </div>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
-      <span class="footer__copy">© 2026 SponsorAI</span>
+      <span class="footer__copy">© 2026 SponsorAI Ltd</span>
       <span class="footer__divider">·</span>
       <span class="footer__tagline">Intelligence for sponsorship decisions</span>
+      <span class="footer__divider">·</span>
+      <span class="footer__tagline"><a href="mailto:hello@sponsorai.com?subject=SponsorAI%20%E2%80%93%20Partner%20Briefing%20Enquiry&body=Hi%20SponsorAI%20team%2C%0A%0AI%20visited%20your%20partner%20briefing%20site%20and%20would%20be%20very%20interested%20in%20having%20a%20chat%20and%20exploring%20things%20further.%0A%0ABest%2C" style="color:inherit;">hello@sponsorai.com</a></span>
     </footer>
 
   </div>

@@ -20,6 +20,11 @@ var WEBSITE_SUPABASE_URL = 'https://your-project-ref.supabase.co';
    Found in: Supabase dashboard → Project Settings → API → Project URL */
 var WEBSITE_API_URL = 'https://your-project-ref.supabase.co/rest/v1';
 
+/* Partner portal login credentials.
+   Set these to control who can access investor-portal.html */
+var WEBSITE_PORTAL_USERNAME = 'your-username';
+var WEBSITE_PORTAL_PASSWORD = 'your-password';
+
 /* Supabase anon (public) key.
    Found in: Supabase dashboard → Project Settings → API → Project API keys → anon public
    Permissions enforced by RLS:

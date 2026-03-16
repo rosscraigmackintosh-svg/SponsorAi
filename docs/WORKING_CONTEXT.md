@@ -2,7 +2,7 @@
 
 SponsorAI — Working Context
 
-Last updated: 2026-03-15 (Cross-page workflow: navigation continuity + origin-aware back button)
+Last updated: 2026-03-15 (Introductions panel built in account.html: stat summary, lazy-loaded request list, expandable cards with full message + event timeline)
 
 ---
 
@@ -28,6 +28,316 @@ Default automation rule: if something can be safely automated, automate it.
 Balancing rule: where ambiguity or risk exists, keep a human in the loop rather than faking automation.
 
 Full mode definitions, prompt templates, and workflow sequences: `project-docs/AI_ENGINEERING_PLAYBOOK.md` Sections 11-14.
+
+---
+
+## Last Session — 2026-03-15 (Introductions panel built in account.html)
+
+### Task — Introductions panel (Build)
+
+Replaced the `#panel-introductions` stub in `account.html` with a fully functional request history view.
+
+**What was built:**
+
+| Component | Detail |
+|---|---|
+| Status summary row | 4 stat cards: Requests sent / Accepted / Declined / Pending. Counts derived from `introduction_requests.status`. Also updates `stat-intros` and `stat-accepted` on the Overview panel. |
+| Request list | Rendered in newest-first order. Each card: property name (from batch property lookup), slug, date, status badge, message preview (120 chars). |
+| Expandable cards | Click anywhere on the card header to expand. Chevron rotates 180deg. Expanded state: full message + event timeline. Events loaded lazily on first expand, cached in `introEventsCache`. |
+| Event timeline | Vertical marker-line layout. Each event shows label (human-readable) + date. Dot colour: accent for first event, green for accepted/intro_emails_sent, red for declined, grey otherwise. |
+| Status badges | Neutral (submitted/sent), amber (pending_property_claim), green (accepted/intro_completed), red (declined). All tokens from existing system. |
+| Empty state | "No introduction requests yet" + "Browse properties" CTA to explore.html. Shown when `introduction_requests` returns 0 rows. |
+| Loading / error states | Spinner while fetching. Error banner on network failure. |
+| Session reset | `signOut()` now resets `introductionsLoaded`, `introEventsCache`, and restores intro panel to loading state for the next login. |
+| Overview stats refreshed | `renderIntroStats()` calls `setEl('stat-intros', ...)` and `setEl('stat-accepted', ...)` so the Overview panel stays live. |
+
+**Data queries:**
+1. `GET /introduction_requests?from_profile_id=eq.{id}&order=created_at.desc` -- all requests for current brand
+2. Batch: `GET /properties?slug=in.(slug1,slug2,...)&select=name,slug` -- property names for display
+3. `GET /introduction_events?introduction_request_id=eq.{id}&order=created_at.asc` -- timeline for each expanded card (lazy, per-card)
+
+**Lazy load pattern:** `showPanel('introductions')` triggers `loadIntroductions()` on first call only (`introductionsLoaded` flag). Prevents redundant fetches on repeated panel switches.
+
+**Files changed:**
+- `app/account.html` -- CSS additions, stub HTML replaced, JS additions (loadIntroductions, renderIntroList, renderIntroCard, toggleIntroCard, loadIntroEvents, renderIntroTimeline, helpers)
+
+---
+
+### Recommended next step
+
+1. **Set Resend secrets** -- `RESEND_API_KEY` + `INTRO_FROM_EMAIL` required for intro emails to actually send.
+2. **Rate limiting** on the Edge Function -- no limit on requests per brand/property pair.
+3. **Property claim flow** -- admin path to activate `pending_property_claim` requests.
+4. **Refresh on return** -- if user sends a request from property.html and returns to account.html, the introductions panel won't refresh (already loaded). Add a manual refresh button or invalidate the cache on focus.
+
+---
+
+## Last Session — 2026-03-15 (Intro gating enforced on property.html)
+
+### Task — Introduction gating + form prefill (Build)
+
+Enforced brand profile completeness as a prerequisite for requesting an introduction. Three modal states now exist where there was previously one.
+
+**Gating logic added to `openIntroModal()`:**
+
+| Condition | Behaviour |
+|---|---|
+| No `sai_account_v1` in localStorage | Gate state: "Brand account required" + "Create account" button to `account.html` |
+| Session exists, profile missing or `status=draft` | Gate state: "Complete your brand profile first" + "Complete profile" button to `account.html` |
+| Network error fetching profile | Degrade gracefully: show blank form (fail open, not fail closed) |
+| Profile complete (`contact_name` + `organisation_name` + `email` all filled) | Show form with fields prefilled from profile; message field editable |
+
+**New modal states added to `#intro-modal-body`:**
+
+- `#intro-loading-state` -- spinner shown while profile is being fetched from Supabase
+- `#intro-gate-state` -- gate message with dynamic title/body/CTA depending on reason; Cancel dismisses modal
+
+**Form prefill behaviour:**
+- Name, Company, Email prefilled from `profiles` row; marked `readonly` with visual muted style + "from profile" badge on each label
+- Message pre-populated from `profile.intro_note` if set; remains fully editable
+- `submit` still reads all 4 field values from the DOM (no change to Edge Function payload)
+
+**New JS functions:**
+- `introProfileComplete(profile)` -- checks `contact_name`, `organisation_name`, `email` are non-empty
+- `showIntroState(which)` -- switches between `loading`, `gate`, `form`, `success` modal states
+- `showIntroGate(reason)` -- populates gate state copy (`no-account` vs `incomplete`)
+- `setIntroFieldReadOnly(id, readonly)` -- toggles `readonly` attr + `.intro-input--readonly` class
+- `setIntroFieldsBadge(show)` -- injects/removes "from profile" label badges
+
+**New CSS classes:**
+- `.intro-gate-state`, `.intro-gate-icon`, `.intro-gate-title`, `.intro-gate-body`, `.intro-gate-btn`, `.intro-gate-dismiss`
+- `.intro-loading-state`
+- `.intro-input--readonly`, `.intro-label-badge`
+
+**Files changed:**
+- `app/property.html` -- gating, 2 new modal states, prefill logic, new CSS
+
+**Unchanged:** `submitIntroForm`, `closeIntroModal`, modal HTML structure, Edge Function payload, all other property page behaviour.
+
+---
+
+### Recommended next step
+
+The intro system is now end-to-end from a UI perspective. Remaining gaps before production:
+
+1. **Resend secrets** -- `RESEND_API_KEY` + `INTRO_FROM_EMAIL` not yet set; emails are silently skipped. Required for intro emails to actually send.
+2. **Introductions panel** in `account.html` -- query `introduction_requests` by `from_profile_id` and show status/history. Currently stub.
+3. **Rate limiting** on the Edge Function -- no limit on how many intro requests a brand can send to the same property.
+4. **Property claim flow** -- properties in `pending_property_claim` status need an admin-triggered activation path. Currently manual.
+5. **Auth upgrade (V2)** -- email-only session has no revocation. Supabase Auth is the right successor.
+
+---
+
+## Last Session — 2026-03-15 (Account system V0: account.html + Brand Profile)
+
+### Task — Brand account shell + Brand Profile (Build)
+
+Built `app/account.html` as the first step of the brand account system.
+
+**What was built:**
+
+| Component | Detail |
+|---|---|
+| Identity gate | Email-only sign-in. Session stored in `localStorage` key `sai_account_v1`. New email = stub profile auto-created in DB. Email validated client-side. |
+| Account shell | Two-column layout: sticky 220px sidebar + scrollable main. Responsive: stacks to horizontal nav bar at 768px. |
+| Sidebar | Brand label, org name, email, 4 nav items (Overview, Profile, Introductions, Settings), profile status badge (Draft / Complete / Verified). |
+| Profile status badge | Derives from `profiles.status`. Draft = grey, Complete = green, Verified = accent. |
+| Overview panel | Completeness bar (% filled, colour-coded), 3 stat cards (intro count, accepted count, status), CTA block when profile incomplete. |
+| Brand Profile form | 4 sections: Brand basics (org name, website, country, LinkedIn), Primary contact (contact name, email read-only), Sponsorship interests (free-text), Introduction settings (default intro note textarea). |
+| Completeness logic | Required: `contact_name`, `organisation_name`, `email`. Optional: `website`, `linkedin`, `country`, `interests`, `intro_note`. % = filled / 8 total fields. `complete` status set when all 3 required fields present. |
+| Save / load | Load: GET `/profiles?profile_type=eq.brand&email=eq.{email}&limit=1`. Save: PATCH by (profile_type, email). Status auto-updates to `draft` or `complete` on save. |
+| Header initials | Derives 2-letter initials from contact_name or email prefix. Shown in top-right profile button. |
+| Nav integration | "Profile settings" button on all 7 existing pages renamed "My account" and wired to `account.html`. |
+
+**DB used:** `profiles` table via Supabase REST API (anon key). Unique index `profiles_email_type_uix` on (email, profile_type) enables correct PATCH targeting.
+
+**Session identity (V0):** `localStorage.sai_account_v1` = email string. No password. Cleared on sign-out.
+
+**V2 note:** Supabase Auth will replace the email-gate when auth is introduced. The profile table is already Supabase-native so migration path is clean.
+
+**Files changed:**
+- `app/account.html` — created (new file)
+- `app/board.html`, `compare.html`, `explore.html`, `opportunities.html`, `portfolio.html`, `property.html`, `watchlist.html` — "Profile settings" button renamed "My account" and wired to `account.html`
+
+---
+
+### Recommended next step
+
+1. Set Resend secrets so intro emails actually send:
+   ```
+   supabase secrets set RESEND_API_KEY=re_... --project-ref kyjpxxyaebxvpprugmof
+   supabase secrets set INTRO_FROM_EMAIL=introductions@yourdomain.com --project-ref kyjpxxyaebxvpprugmof
+   ```
+2. Introduction gating in `property.html`: before opening the intro modal, check `localStorage.sai_account_v1` and verify profile is `complete`. Redirect to `account.html` if not.
+3. Introductions panel in `account.html`: query `introduction_requests` by `from_profile_id` and display status/history.
+
+---
+
+## Last Session — 2026-03-15 (Priority 2 image migration: 12 rugby badge hotlinks to local assets)
+
+### Task — Priority 2 image migration (Build)
+
+Migrated all 12 remaining risky rugby badge images from third-party CDNs to locally hosted assets. The sources were `media-cdn.incrowdsports.com` (7 club badges) and `media-cdn.cortextech.io` (5 rugby/series logos), both B2B sports platform CDNs with no SLA for external consumers.
+
+**Files downloaded to `assets/logos/`:**
+
+| Slug | File | Size | Source |
+|---|---|---|---|
+| `premiership-rugby` | premiership-rugby.png | 19 KB, 4607x372 | cortextech-cdn (wordmark) |
+| `premiership-rugby-ltd` | premiership-rugby-ltd.png | 19 KB (copy of above) | cortextech-cdn |
+| `bath-rugby` | bath-rugby.png | 12 KB, 192x192 | incrowdsports-cdn |
+| `bristol-bears` | bristol-bears.png | 15 KB, 192x259 | incrowdsports-cdn |
+| `exeter-chiefs` | exeter-chiefs.png | 28 KB, 192x201 | incrowdsports-cdn |
+| `gloucester-rugby` | gloucester-rugby.png | 19 KB, 192x209 | incrowdsports-cdn |
+| `harlequins` | harlequins.png | 12 KB, 192x323 | incrowdsports-cdn |
+| `leicester-tigers` | leicester-tigers.png | 271 KB, 4961x3508 | cortextech-cdn (print-quality) |
+| `newcastle-falcons` | newcastle-falcons.png | 87 KB, 630x823 | cortextech-cdn |
+| `northampton-saints` | northampton-saints.png | 24 KB, 500x585 | incrowdsports-cdn |
+| `sale-sharks` | sale-sharks.png | 13 KB, 192x192 | incrowdsports-cdn |
+| `saracens` | saracens.png | 17 KB, 330x278 | Wikipedia (cortextech URL returned AccessDenied) |
+
+**Saracens note:** The cortextech CDN returned `AccessDenied` for the Saracens entry. Replaced with a Wikipedia-sourced PNG (Saracens_F.C._Logo.svg rendered at 330px). The `entity_images` DB entry for `saracens` takes rendering precedence over `images.js` at runtime, so this fallback is active only when the DB lookup fails.
+
+**`app/images.js` changes:**
+- All 12 `src` fields updated to `../assets/logos/[slug].png`.
+- `hosted: true` added to all 12.
+- Original CDN URL preserved in `// was:` or block comment on each entry.
+- Presentation settings (`kind`, `fit`, `pos`, `pad`, `bg`) unchanged throughout.
+
+**Audit result after migration:**
+```
+Total: 93  |  Local: 18  |  External: 75  |  Risky: 0
+local (18): silverstone-circuit, circuit-de-spa-francorchamps, barwell-motorsport,
+            emil-frey-racing, marco-varrone, maro-itoje,
+            premiership-rugby, premiership-rugby-ltd, bath-rugby, bristol-bears,
+            exeter-chiefs, gloucester-rugby, harlequins, leicester-tigers,
+            newcastle-falcons, northampton-saints, sale-sharks, saracens
+```
+
+Remaining external hosts are all stable CDNs or official media services: britishgt.com (46), gt-world-challenge-europe.com (9), wikimedia (7), msv-azure-cdn (4), plus 5 single-entry team/series sites at moderate risk.
+
+---
+
+### Recommended next step
+
+All `RISKY_HOSTS` entries are now cleared. The next image work is:
+- Priority 3: 11 rugby athlete portraits + Timur Boguslavskiy + Callum MacLeod (sourcing guide in `assets/IMAGE_MIGRATION.md`)
+- Priority 4: 8 rugby club venue images (not yet visible in Explore)
+- The 5 moderate-risk single-entry team sites (akkodisracing.com, boutsenvds.be, centurymotorsport.com, hauptracing.com, ironlynx.com) are lower priority since they are stable team websites with no observed breakage.
+
+---
+
+## Last Session — 2026-03-15 (Priority 1 image migration: 4 hotlinks to local assets)
+
+### Task — Priority 1 image migration (Build)
+
+Migrated the four highest-risk external image hotlinks to locally hosted assets. All four were on first-party website domains with no CDN SLA: two official circuit sites (`silverstone.co.uk`, `spa-francorchamps.be`) and two motorsport team sites (`barwellmotorsport.co.uk`, `emilfreyracing.com`).
+
+**Files downloaded:**
+- `assets/venues/silverstone-circuit.png` — 2.3 MB, PNG 1088x1088 (RGBA). Was: silverstone.co.uk default-files hotlink.
+- `assets/venues/circuit-de-spa-francorchamps.png` — 1.6 MB, PNG 1200x630 (RGBA). Was: spa-francorchamps.be Gatsby asset.
+- `assets/logos/barwell-motorsport.svg` — 22 KB, SVG. Was: barwellmotorsport.co.uk assets hotlink.
+- `assets/logos/emil-frey-racing.png` — 4 KB, PNG 290x120 (colormap). Was: emilfreyracing.com Gatsby content-hash path (would have silently broken on next site rebuild). `source_host` override removed; no longer needed.
+
+**`app/images.js` changes:**
+- All 4 `src` fields updated to relative local paths (`../assets/venues/` and `../assets/logos/`).
+- `hosted: true` added to all 4.
+- Old external URL preserved in an inline `// was:` comment on each entry for rollback reference.
+- `source_host: 'emilfreyracing.com'` removed from `emil-frey-racing` (no longer needed once hosted locally).
+
+**Audit result after migration:**
+```
+Total: 93  |  Local: 6  |  External: 87  |  Risky: 12
+local (6): silverstone-circuit, circuit-de-spa-francorchamps, barwell-motorsport, emil-frey-racing, marco-varrone, maro-itoje
+incrowdsports-cdn ⚠ (7): bath-rugby, bristol-bears, exeter-chiefs, gloucester-rugby, harlequins, northampton-saints, sale-sharks
+cortextech-cdn    ⚠ (5): premiership-rugby, premiership-rugby-ltd, leicester-tigers, newcastle-falcons, saracens
+```
+
+---
+
+### Recommended next step
+
+Priority 2 image migration: replace the 12 remaining risky rugby CDN badge entries (7 incrowdsports-cdn + 5 cortextech-cdn). Source badges locally into `assets/logos/` and update `images.js`. `SAI_IMAGES.risky()` gives the exact slug list.
+
+---
+
+## Last Session — 2026-03-15 (Image governance + card sparkline removal + portrait sourcing)
+
+### Task 1 — Explore card sparklines removed (Build)
+
+`app/components/card.js` — removed the IIFE block calling `renderSpark()` and wrapping output in `.card-spark`.
+`app/styles.css` — removed `.card-spark`, `.card-spark .spark-svg`, `.card-grid.list .card-spark`, and their comment header.
+`renderSpark()` in `data.js` retained — still used by property page, detail panel, and compare panel.
+
+---
+
+### Task 2 — Portrait sourcing pass (Build)
+
+`assets/portraits/nico-varrone-black-suit.jpg` — F2/VAR studio portrait for `marco-varrone`. Identity confirmed (N.VARRONE name tag, Argentine flag). Not a GT3-context image; note to update once stable GTWCE source confirmed.
+
+`assets/portraits/maro-itoje.jpg` — Official Saracens club portrait (black StoneX kit) confirmed for `maro-itoje`. A second image submitted as "Finn Russell" was actually Itoje and has been saved correctly.
+
+`assets/portraits/nico-varrone-white-suit.jpg` and `nico-varrone-ferrari-era.jpg` — also downloaded. White-suit image was identified as a different driver (does not match); ferrari-era is a candid celebration shot, not card-usable. Both sit unused in `assets/portraits/`.
+
+---
+
+### Task 3 — Image asset schema hardening + audit helper (Architecture + Build)
+
+**Audit findings — pre-change state:**
+
+`images.js` had 93 entries with no governance metadata. No way to distinguish local from external assets, or stable from unstable sources, without manually reading every `src` URL. Control Room could only check for presence of an entry, not its trust level.
+
+**Schema changes:**
+
+`app/images.js` header comment extended to document two new optional governance fields:
+- `hosted: true` — present only on local assets; omitted on all external entries
+- `source_host: string` — explicit host classification override; only needed where URL structure is ambiguous
+
+`marco-varrone` and `maro-itoje` entries annotated with `hosted: true`.
+`emil-frey-racing` entry annotated with `source_host: 'emilfreyracing.com'` — Gatsby content-hash URL looks like a CDN but is actually a team site.
+
+`resolveImageMeta()` in `data.js` reads only `{ src, kind, fit, pos, pad, bg }` — new fields are silently ignored by the renderer. No rendering changes.
+
+**Audit helper added:**
+
+`SAI_IMAGES` IIFE namespace appended to the bottom of `images.js`. Available in DevTools on any page that loads images.js.
+
+```
+SAI_IMAGES.audit()   — full stats grouped by source host; marks risky hosts with ⚠
+SAI_IMAGES.list()    — flat array suitable for console.table()
+SAI_IMAGES.risky()   — entries on known unstable hosts only
+```
+
+Risky hosts defined: `silverstone.co.uk`, `spa-francorchamps.be`, `barwellmotorsport.co.uk`, `emilfreyracing.com`, `incrowdsports-cdn`, `cortextech-cdn`.
+
+**Live audit output (2026-03-15):**
+
+```
+Total: 93  |  Local: 2  |  External: 91  |  Risky: 16
+
+britishgt.com          46  (series logo + car photos + driver portraits)
+gt-world-challenge-europe.com  9  (series logo + driver portraits)
+wikimedia              7  (GTWCE circuit aerials + Twickenham)
+incrowdsports-cdn  ⚠  7  (rugby club badges: Bath, Bristol, Exeter, Gloucester, Harlequins, Northampton, Sale)
+cortextech-cdn     ⚠  5  (rugby: Premiership logo x2, Leicester, Newcastle, Saracens)
+msv-azure-cdn          4  (British GT UK circuits: Brands Hatch, Snetterton, Oulton Park, Donington)
+local                  2  (marco-varrone, maro-itoje)
+silverstone.co.uk  ⚠  1
+spa-francorchamps.be ⚠ 1
+emilfreyracing.com ⚠  1  (Gatsby content-hash — will break on site rebuild)
+barwellmotorsport.co.uk ⚠ 1
++ akkodisracing.com, boutsenvds.be, centurymotorsport.com, hauptracing.com,
+  ironlynx.com, manthey-racing.com, sro-motorsports.com, squarespace-cdn,
+  w-racingteam.com  (1 each — moderate risk, team sites)
+```
+
+**Migration spec:** `assets/IMAGE_MIGRATION.md` — VA-ready sourcing guide covering all 4 priority tiers.
+
+---
+
+### Recommended next step
+
+Image migration — Priority 1 (currently broken / highest risk): replace `silverstone-circuit`, `circuit-de-spa-francorchamps`, `barwell-motorsport`, and `emil-frey-racing` with locally hosted or stable-CDN assets. These four are the most likely to silently break in production.
 
 ---
 

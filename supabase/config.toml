@@ -17,3 +17,11 @@ project_id = "sponsorai"
 # Browser must send: Authorization: Bearer <API_KEY>
 # API_KEY is the Supabase anon key, already in browser scope via config.js.
 verify_jwt = true
+
+[functions.introduction-request]
+# Public — no JWT required (contact form, anon brand submission)
+verify_jwt = false
+
+[functions.introduction-respond]
+# Public — no JWT required (accept/decline links from email)
+verify_jwt = false

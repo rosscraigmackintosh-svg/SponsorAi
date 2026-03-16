@@ -111,6 +111,52 @@ If a new helper belongs in ui-helpers.js, add it there and document it with a JS
 
 ---
 
+## Dev Navigation Menu
+
+The Dev menu (`app/ui-helpers.js`, self-executing IIFE at bottom of file) is the universal shortcut to every page that is not reachable through normal product navigation.
+
+**Flag:** `localStorage.sai_dev_nav = 'true'` — menu renders only when this flag is present. Never remove this gate.
+
+### Rule: add every hidden or gated page immediately
+
+Whenever a new page is created that is not linked from the standard product nav, Claude must add it to the Dev menu in the same task — not later, not as a follow-up.
+
+Pages that always qualify:
+
+- Admin pages (`admin.html`, `admin-*.html`)
+- Internal dashboards
+- Property claim panels
+- Brand dashboards
+- Moderation and review tools
+- Data inspection or debug pages
+- Feature experiments or prototype screens
+- Any page gated behind a role, token, or flag
+
+If in doubt, add it. The Dev menu is additive-only during active development. Entries are removed only when a page is promoted to the main nav or permanently deleted.
+
+### Where to edit
+
+File: `app/ui-helpers.js`
+Location: the `menu.innerHTML` block inside the dev nav self-executing IIFE.
+
+Add new entries as `<button>` elements using `.profile-item` class, with `onclick="navigateTo('page.html')"`.
+
+Insert above the `.dev-nav-divider` line. The "Disable dev nav" button must always remain last.
+
+### Current entries (as of 2026-03-15)
+
+| Label | Target |
+|---|---|
+| Account | `account.html` |
+| Properties | `explore.html` |
+| Property (example) | `property.html` |
+| Introductions test | `property.html?slug=test` |
+| Admin (future) | `admin.html` |
+
+Update this table whenever entries are added or removed.
+
+---
+
 ## Enforcement Rules
 
 Claude must:

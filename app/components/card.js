@@ -75,7 +75,7 @@ function renderCard(c, idx) {
     +'<div class="score-row">'
     +'<div class="score-main">'
     +'<div class="score-val-row">'
-    +'<div class="score-val'+(sup?' dim':'')+'"'+(sup?'':' style="color:'+cfg.scoreVar+'"')+'>'+( sup?'--':fmt(c.s30,1))+'</div>'
+    +'<div class="score-val'+(sup?' dim':'')+'"'+(sup?'':' style="color:'+cfg.scoreVar+'"')+'>'+( sup?'--':fmtScore(c.s30))+'</div>'
     +(!sup&&c.t30!=null?'<span class="score-trend-inline" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+Math.abs(c.t30).toFixed(1)+'</span>':'')
     +'</div>'
     +'<div class="score-lbl">FanScore &middot; 30d avg</div>'

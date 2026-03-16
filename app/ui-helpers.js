@@ -84,10 +84,11 @@ window.SAI_UIH = (function() {
      Returns '--' when suppressed, otherwise the formatted 30d avg score.
      Reads suppression_reason_30d and avg_score_30d from a property object.
      @param {object} prop   property data object
-     @param {number} [dp]   decimal places (default 1)                     */
+     @param {number} [dp]   decimal places (default 0 — whole number)      */
   function fanScoreText(prop, dp) {
     if (!prop || prop.suppression_reason_30d) return '--';
-    return fmt(prop.avg_score_30d, dp != null ? dp : 1);
+    if (dp != null) return fmt(prop.avg_score_30d, dp);
+    return fmtScore(prop.avg_score_30d);
   }
 
   /* ── Trend text ────────────────────────────────────────────────────────
@@ -148,6 +149,46 @@ window.SAI_UIH = (function() {
            escHtml(msg || 'Loading...') + '</div>';
   }
 
+  /* ── SponsorAI user-facing error message pattern ─────────────────────
+     All user-facing errors should follow this structure:
+       title       — what happened (plain language, no codes or JSON)
+       explanation — why it happened
+       nextStep    — how the user can fix it or what to do next
+       helpLine    — who to contact if the issue keeps happening
+       actions     — optional link buttons: [{ label, href }]
+
+     This helper renders the detail portion (explanation + nextStep +
+     helpLine + actions) as an HTML string for use via innerHTML.
+     The title is always set separately in the calling context (it
+     belongs in a heading element, not inside this block).
+
+     CSS classes produced: .user-err-explanation, .user-err-next-step,
+     .user-err-help-line, .user-err-actions, .user-err-action-link.
+     Add these to the page stylesheet where the output is used.
+
+     @param {{
+       explanation?: string,
+       nextStep?:    string,
+       helpLine?:    string,
+       actions?:     Array<{label:string, href:string}>
+     }} opts
+     @returns {string} HTML string safe for innerHTML                     */
+  function userErrorHtml(opts) {
+    var h = '';
+    if (opts.explanation) h += '<p class="user-err-explanation">' + escHtml(opts.explanation) + '</p>';
+    if (opts.nextStep)    h += '<p class="user-err-next-step">'   + escHtml(opts.nextStep)    + '</p>';
+    if (opts.helpLine)    h += '<p class="user-err-help-line">'   + escHtml(opts.helpLine)    + '</p>';
+    if (opts.actions && opts.actions.length) {
+      h += '<div class="user-err-actions">';
+      for (var i = 0; i < opts.actions.length; i++) {
+        h += '<a class="user-err-action-link" href="' + escHtml(opts.actions[i].href) + '">' +
+             escHtml(opts.actions[i].label) + '</a>';
+      }
+      h += '</div>';
+    }
+    return h;
+  }
+
   /* ── Public API ──────────────────────────────────────────────────────── */
   return {
     initTheme:          initTheme,
@@ -162,7 +203,8 @@ window.SAI_UIH = (function() {
     isInPortfolio:      isInPortfolio,
     isInCompare:        isInCompare,
     errorHtml:          errorHtml,
-    loadingHtml:        loadingHtml
+    loadingHtml:        loadingHtml,
+    userErrorHtml:      userErrorHtml
   };
 
 })();
@@ -172,3 +214,80 @@ window.SAI_UIH = (function() {
    handlers (e.g. onclick="navigateTo('explore.html')") work without
    change on pages that previously defined it locally.                     */
 window.navigateTo = SAI_UIH.navigateTo;
+
+/* ── Developer Navigation ────────────────────────────────────────────────
+   Injects a DEV button + dropdown into the header when
+   localStorage.sai_dev_nav === 'true'.
+
+   To enable:  localStorage.sai_dev_nav = 'true'; location.reload();
+   To disable: localStorage.removeItem('sai_dev_nav'); location.reload();
+
+   Self-executes at script load time (bottom of <body>, DOM is available).  */
+(function() {
+  if (localStorage.getItem('sai_dev_nav') !== 'true') return;
+
+  var headerRight = document.querySelector('.app-header-right');
+  if (!headerRight) return;
+
+  /* ── Button ─────────────────────────────────────────────────────────── */
+  var btn = document.createElement('button');
+  btn.id = 'dev-nav-btn';
+  btn.className = 'dev-nav-btn';
+  btn.setAttribute('aria-haspopup', 'true');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('title', 'Developer navigation (sai_dev_nav)');
+  btn.textContent = 'DEV';
+  headerRight.insertBefore(btn, headerRight.firstChild);
+
+  /* ── Menu ───────────────────────────────────────────────────────────── */
+  var menu = document.createElement('div');
+  menu.id = 'dev-nav-menu';
+  menu.className = 'dev-nav-menu';
+  menu.setAttribute('role', 'menu');
+  menu.innerHTML =
+    '<div class="dev-nav-heading">Dev pages</div>' +
+    '<button class="profile-item" onclick="navigateTo(\'account.html\')">Account</button>' +
+    '<button class="profile-item" onclick="navigateTo(\'explore.html\')">Properties</button>' +
+    '<button class="profile-item" onclick="navigateTo(\'property.html\')">Property (example)</button>' +
+    '<button class="profile-item" onclick="navigateTo(\'property.html?slug=test\')">Introductions test</button>' +
+    '<button class="profile-item" onclick="navigateTo(\'admin.html\')">Admin (future)</button>' +
+    '<div class="dev-nav-divider"></div>' +
+    '<button class="profile-item dev-nav-disable" ' +
+      'onclick="localStorage.removeItem(\'sai_dev_nav\'); location.reload();">' +
+      'Disable dev nav' +
+    '</button>';
+  document.body.appendChild(menu);
+
+  /* ── State ──────────────────────────────────────────────────────────── */
+  var devNavOpen = false;
+
+  function openDevNav() {
+    devNavOpen = true;
+    menu.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closeDevNav() {
+    devNavOpen = false;
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  /* ── Toggle ─────────────────────────────────────────────────────────── */
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    devNavOpen ? closeDevNav() : openDevNav();
+  });
+
+  /* ── Click-outside ──────────────────────────────────────────────────── */
+  document.addEventListener('click', function(e) {
+    if (devNavOpen && !menu.contains(e.target) && e.target !== btn) {
+      closeDevNav();
+    }
+  });
+
+  /* ── Escape key ─────────────────────────────────────────────────────── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && devNavOpen) closeDevNav();
+  });
+
+}());

@@ -127,12 +127,12 @@
     <div class="profile-name">Ross Mackintosh</div>
     <div class="profile-email">rosscraigmackintosh@gmail.com</div>
   </div>
-  <button class="profile-item" role="menuitem">
+  <button class="profile-item" role="menuitem" onclick="window.location.href='account.html'">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
       <circle cx="6.5" cy="4.5" r="2.5"/>
       <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
     </svg>
-    Profile settings
+    My account
   </button>
   <button class="profile-item" role="menuitem">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
@@ -408,7 +408,7 @@ function renderComparisonTable(props) {
   /* Comparison rows */
   var rows = [
     { label: 'FanScore (30d avg)',
-      fn: function(p) { return !!p.suppression_reason_30d ? '--' : fmt(p.avg_score_30d, 1); },
+      fn: function(p) { return !!p.suppression_reason_30d ? '--' : fmtScore(p.avg_score_30d); },
       isFanScore: true
     },
     { label: '30d Trend',
@@ -452,7 +452,7 @@ function renderComparisonTable(props) {
       }
     },
     { label: 'FanScore (90d avg)',
-      fn: function(p) { return fmt(p.avg_score_90d, 1); }
+      fn: function(p) { return fmtScore(p.avg_score_90d); }
     },
     { label: 'Sport',
       fn: function(p) { return p.sport ? escHtml(p.sport) : '--'; }

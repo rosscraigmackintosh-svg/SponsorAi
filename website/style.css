@@ -485,11 +485,12 @@ body {
   font-weight: 300;
   line-height: 1.75;
   color: rgba(255, 255, 255, 0.55);
-  max-width: 620px;
+  max-width: 440px;
   margin-bottom: 16px;
 }
 
 .hero__body--secondary {
+  font-weight: 400;
   color: rgba(255, 255, 255, 0.42);
   margin-bottom: 40px;
 }
@@ -501,7 +502,7 @@ body {
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.28);
   font-style: italic;
-  max-width: 580px;
+  max-width: 440px;
   margin-bottom: 56px;
 }
 

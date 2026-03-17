@@ -81,14 +81,62 @@ window.SAI_UIH = (function() {
   }
 
   /* ── FanScore text ─────────────────────────────────────────────────────
-     Returns '--' when suppressed, otherwise the formatted 30d avg score.
-     Reads suppression_reason_30d and avg_score_30d from a property object.
+     Returns a display string for FanScore. Never returns '0' or a number
+     when no valid social data exists — the trust rule requires explicit
+     no-data language instead of a fabricated or defaulted value.
+
+     Resolution order:
+       1. !prop                      → '--'  (graceful guard)
+       2. suppression_reason_30d set → 'Insufficient data'
+       3. avg_score_30d == null      → 'Not available'
+       4. otherwise                  → formatted numeric score
+
      @param {object} prop   property data object
      @param {number} [dp]   decimal places (default 0 — whole number)      */
   function fanScoreText(prop, dp) {
-    if (!prop || prop.suppression_reason_30d) return '--';
+    if (!prop) return '--';
+    if (prop.suppression_reason_30d) return 'Insufficient data';
+    if (prop.avg_score_30d == null)  return 'Not available';
     if (dp != null) return fmt(prop.avg_score_30d, dp);
     return fmtScore(prop.avg_score_30d);
+  }
+
+  /* ── No-data state HTML ────────────────────────────────────────────────
+     Renders a calm, explicit no-data state for where social metrics or
+     FanScore would normally appear. Must not suggest a value of zero or
+     imply the property is low-performing — absence of data is neutral.
+
+     Trust rule: properties without social data are never penalised.
+     Absence of a signal is not a negative signal.
+
+     @param {string} [msg]   Override message. Defaults to generic no-data
+                             text. Pass null to use default.
+     @param {string} [sub]   Optional secondary line (smaller, muted).
+     @returns {string} HTML string safe for innerHTML                      */
+  function noSocialDataHtml(msg, sub) {
+    var primary = msg || 'No public social media data available';
+    var html =
+      '<div class="no-data-state">' +
+        '<span class="no-data-primary">' + escHtml(primary) + '</span>';
+    if (sub) {
+      html += '<span class="no-data-secondary">' + escHtml(sub) + '</span>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  /* ── FanScore no-data HTML ─────────────────────────────────────────────
+     Inline-safe no-data display for FanScore slots. Use where a numeric
+     FanScore would normally render (cards, compare rows, property header).
+
+     @param {string} [reason]  'suppressed' | 'unavailable' | omit for auto
+     @returns {string} HTML string safe for innerHTML                      */
+  function fanScoreNoDataHtml(reason) {
+    var label = (reason === 'suppressed') ? 'Insufficient data' : 'Not available';
+    return '<span class="fanscore-no-data" ' +
+           'title="FanScore: ' + label + ' \u2014 no qualifying social data for this property">' +
+           label +
+           '</span>';
   }
 
   /* ── Trend text ────────────────────────────────────────────────────────
@@ -204,7 +252,9 @@ window.SAI_UIH = (function() {
     isInCompare:        isInCompare,
     errorHtml:          errorHtml,
     loadingHtml:        loadingHtml,
-    userErrorHtml:      userErrorHtml
+    userErrorHtml:      userErrorHtml,
+    noSocialDataHtml:   noSocialDataHtml,
+    fanScoreNoDataHtml: fanScoreNoDataHtml
   };
 
 })();

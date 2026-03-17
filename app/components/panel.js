@@ -31,8 +31,10 @@ function closeDetail() {
 
 function populateDetail(c) {
   var cfg = TYPE[c.type] || { label: c.type, bgVar: 'var(--surface-muted)', fgVar: 'var(--text-2)', scoreVar: 'var(--text-1)', softVar: 'var(--accent)' };
-  var sup = !!c.sup30;
-  var scoreColor = sup ? 'var(--text-3)' : (cfg.scoreVar || cfg.fgVar);
+  var sup    = !!c.sup30;
+  /* Trust rule: noData = no score and no suppression reason. Never show 0 or '--'. */
+  var noData = !sup && c.s30 == null;
+  var scoreColor = (sup || noData) ? 'var(--text-3)' : (cfg.scoreVar || cfg.fgVar);
 
   /* ── Hero image ── */
   var heroEl = document.getElementById('dp-hero');
@@ -74,8 +76,11 @@ function populateDetail(c) {
   ─────────────────────────────────────────────────────────────── */
   h += '<div class="dp-section">';
   h += '<div class="dp-section-label">FanScore</div>';
-  if (sup) {
-    h += '<div class="dp-score-primary"><span class="dp-score-val" style="color:var(--text-3)">--</span><span class="dp-score-label">Suppressed</span></div>';
+  if (noData) {
+    h += '<div class="dp-score-primary"><span class="dp-score-val fanscore-no-data" style="color:var(--text-3)">Not available</span><span class="dp-score-label">FanScore</span></div>';
+    h += '<div class="dp-conf" style="margin-top:var(--spacing-xs);color:var(--text-3)">No public social media data available</div>';
+  } else if (sup) {
+    h += '<div class="dp-score-primary"><span class="dp-score-val fanscore-no-data" style="color:var(--text-3)">Insufficient data</span><span class="dp-score-label">FanScore</span></div>';
     h += '<div class="dp-conf" style="margin-top:var(--spacing-xs)">' + escHtml(c.sup30) + '</div>';
   } else {
     h += '<div class="dp-score-primary">';
@@ -220,15 +225,19 @@ function populateDetail(c) {
   ─────────────────────────────────────────────────────────────── */
   h += '<div class="dp-section">';
   h += '<div class="dp-section-label">Score history</div>';
-  if (!sup && c.sparks && c.sparks.length >= 2) {
+  if (!sup && !noData && c.sparks && c.sparks.length >= 2) {
     h += '<div class="dp-spark-chart">' + renderSpark(c.sparks, scoreColor, 280, 64) + '</div>';
   }
-  h += '<div class="dp-windows">';
-  h += dpWindow(c.s30, '30d', scoreColor);
-  h += dpWindow(c.s60, '60d', null);
-  h += dpWindow(c.s90, '90d', null);
-  h += '</div>';
-  if (!sup && c.t30 != null) {
+  if (noData) {
+    h += '<div class="dp-conf" style="color:var(--text-3)">No social data available for this property</div>';
+  } else {
+    h += '<div class="dp-windows">';
+    h += dpWindow(c.s30, '30d', scoreColor);
+    h += dpWindow(c.s60, '60d', null);
+    h += dpWindow(c.s90, '90d', null);
+    h += '</div>';
+  }
+  if (!sup && !noData && c.t30 != null) {
     var note = c.t30 > 0.2 ? 'Fan engagement is tracking upward over the 30-day window.'
              : c.t30 < -0.2 ? 'Fan engagement is tracking downward over the 30-day window.'
              : 'Fan engagement is broadly stable over the 30-day window.';

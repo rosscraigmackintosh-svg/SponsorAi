@@ -288,7 +288,8 @@ function renderPortfolio() {
     var typeConfig = TYPE[row.type] || { label: row.type, fgVar: 'var(--text-3)' };
     var sup = !!row.sup30;
 
-    var scoreVal = sup ? '--' : fmtScore(row.s30);
+    /* Trust rule: never show 0 or '--' for no-data properties */
+    var scoreVal = sup ? 'Insufficient data' : (row.s30 != null ? fmtScore(row.s30) : 'Not available');
     var trendVal = row.t30 != null
       ? arr(row.t30) + ' ' + Math.abs(row.t30).toFixed(2) + '/d'
       : '--';

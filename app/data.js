@@ -278,20 +278,10 @@ function loadGrid() {
               region:r.region||null,
               city:r.city||null
             };
-            /* Demo fallback: ensure every visible card shows a FanScore.
-               Applies to null scores and the view-generated 'Insufficient data'
-               placeholder (properties with no fanscore_windows row at all).
-               Generates a deterministic 45–65 value from the property slug. */
-            if (card.s30 == null || card.sup30 === 'Insufficient data') {
-              var _seed = card.slug || card.name || card.id || '';
-              var _h = 0;
-              for (var _i = 0; _i < _seed.length; _i++) {
-                _h = (Math.imul(31, _h) + _seed.charCodeAt(_i)) | 0;
-              }
-              card.s30 = 45 + Math.abs(_h % 21);
-              card.conf30 = card.conf30 || 'Low';
-              card.sup30 = null; /* clear so the score renders, not '--' */
-            }
+            /* Trust rule: properties without social data are never penalised.
+               Absence of a signal is not a negative signal.
+               s30 == null and sup30 == null is a valid state — rendered as
+               "Not available" by the card and compare views. Do not fabricate. */
             return card;
           });
         });

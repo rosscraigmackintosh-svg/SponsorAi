@@ -335,6 +335,19 @@
             <h2 class="prop-block-title">Platform Data</h2>
             <div class="prop-signal-grid" id="prop-signal-grid"></div>
           </div>
+          <!-- X AUDIENCE GROWTH — shown only when real X rollup data exists -->
+          <div class="prop-content-block" id="x-audience-block" style="display:none">
+            <h2 class="prop-block-title">X Audience Growth
+              <span class="prop-data-source-badge">X profile snapshots</span>
+            </h2>
+            <div class="prop-signal-grid" id="x-signal-grid"></div>
+            <div id="x-follower-chart-wrap" style="margin-top:var(--spacing-lg)">
+              <div id="x-follower-chart"></div>
+              <p class="prop-notice" id="x-chart-unavail" style="display:none;color:var(--text-3)"></p>
+            </div>
+            <p class="x-data-notice">Based on daily account-level profile snapshots only. Post-level engagement data is not included in this phase.</p>
+          </div><!-- /#x-audience-block -->
+
           <div class="prop-content-block">
             <h2 class="prop-block-title">90-Day FanScore Trend</h2>
             <div id="momentum-chart-wrap" style="display:none">
@@ -355,6 +368,14 @@
             <h2 class="prop-block-title">Momentum Signals</h2>
             <div id="momentum-badges" class="prop-momentum-badges"></div>
           </div>
+          <!-- X AUDIENCE MOMENTUM — shown only when real X rollup data exists -->
+          <div class="prop-content-block" id="x-insights-block" style="display:none">
+            <h2 class="prop-block-title">X Audience Momentum
+              <span class="prop-data-source-badge">X profile snapshots</span>
+            </h2>
+            <div id="x-momentum-row"></div>
+          </div><!-- /#x-insights-block -->
+
           <div class="prop-content-block">
             <h2 class="prop-block-title">Score Movement</h2>
             <div id="momentum-metrics" style="display:none"></div>
@@ -411,6 +432,34 @@
             <p class="prop-block-desc">Public platform data collected for this property.</p>
             <ul class="sources-platform-list" id="sources-platforms"></ul>
           </div>
+
+          <!-- X DATA PROVENANCE — shown only when real X rollup data exists -->
+          <div class="prop-content-block" id="x-sources-block" style="display:none">
+            <h2 class="prop-block-title">X / Twitter Data</h2>
+            <div class="sources-prov-grid" id="x-sources-grid"></div>
+            <p class="sources-note">X audience data is derived from daily account-level profile snapshots collected via the X API v2. Only public profile metrics are stored: follower count, tweet count, and verification status. Post-level engagement data is not included in this phase.</p>
+          </div><!-- /#x-sources-block -->
+
+          <!-- INSTAGRAM DATA PROVENANCE — shown only when Instagram account is linked -->
+          <div class="prop-content-block" id="instagram-sources-block" style="display:none">
+            <h2 class="prop-block-title">Instagram Data</h2>
+            <div class="sources-prov-grid" id="instagram-sources-grid"></div>
+            <p class="sources-note">Instagram data is collected via a public web endpoint. Fields collected: follower count, following count, and post count. Private accounts return counts of zero. Engagement data is not collected without authentication. This data source may be restricted by Instagram without notice.</p>
+          </div><!-- /#instagram-sources-block -->
+
+          <!-- TIKTOK DATA PROVENANCE — shown only when TikTok account is linked -->
+          <div class="prop-content-block" id="tiktok-sources-block" style="display:none">
+            <h2 class="prop-block-title">TikTok Data</h2>
+            <div class="sources-prov-grid" id="tiktok-sources-grid"></div>
+            <p class="sources-note">TikTok data is collected by parsing the public profile page HTML. Fields collected: follower count, total likes (heartCount across all videos), and video count. TikTok actively restricts automated access and this source may fail periodically due to bot protection or page structure changes.</p>
+          </div><!-- /#tiktok-sources-block -->
+
+          <!-- YOUTUBE DATA PROVENANCE — shown only when YouTube channel is linked -->
+          <div class="prop-content-block" id="youtube-sources-block" style="display:none">
+            <h2 class="prop-block-title">YouTube Data</h2>
+            <div class="sources-prov-grid" id="youtube-sources-grid"></div>
+            <p class="sources-note">YouTube data is collected via the YouTube Data API v3. Fields collected: subscriber count, total view count, and video count. Some channels hide their subscriber count by choice; these snapshots are recorded with partial completeness.</p>
+          </div><!-- /#youtube-sources-block -->
 
           <div class="prop-content-block">
             <h2 class="prop-block-title">Engagement Methodology</h2>
@@ -650,6 +699,220 @@ function renderSignalCard(label, value, delta, isFollowers) {
   return html;
 }
 
+/* ── X Audience Data ──────────────────────────────────────────────── */
+/* Fetches the latest X rollup for this property, then loads snapshot  */
+/* history for the chart. All failures are silent — the blocks simply  */
+/* remain hidden if no X data exists for this property.                */
+
+function loadXAudienceData(propertyId) {
+  apiFetch('/social_rollups_daily?property_id=eq.' + propertyId +
+    '&order=as_of_date.desc&limit=1')
+    .then(function(rows) {
+      if (!rows || rows.length === 0) return; /* no X account linked */
+      var rollup = rows[0];
+      currentProperty.xRollup = rollup;
+
+      /* Render audience + insights + sources tabs immediately */
+      renderXAudienceSection(rollup);
+      renderXInsightsSection(rollup);
+      renderXSourcesSection(rollup);
+
+      /* Load 90-day snapshot history for the follower chart */
+      var ninetyDaysAgo = new Date(Date.now() - 90 * 86400000)
+        .toISOString().slice(0, 10);
+      return apiFetch(
+        '/social_account_snapshots' +
+        '?social_account_id=eq.' + rollup.social_account_id +
+        '&snapshot_date=gte.' + ninetyDaysAgo +
+        '&order=snapshot_date.asc' +
+        '&select=snapshot_date,followers_count' +
+        '&limit=200'
+      ).then(function(snapshots) {
+        renderXFollowerChart(snapshots || []);
+      });
+    })
+    .catch(function() {}); /* non-fatal */
+}
+
+/* ── Follower count formatter (reuses fmtFollowers, adds sign) ─────── */
+function fmtDelta(v) {
+  if (v == null) return null;
+  var abs = Math.abs(v);
+  var str = fmtFollowers(abs) || String(Math.round(abs));
+  return (v >= 0 ? '+' : '-') + str;
+}
+
+function fmtPct(v) {
+  if (v == null) return null;
+  return (v >= 0 ? '+' : '') + Number(v).toFixed(1) + '%';
+}
+
+/* ── Render X Audience section (Audience tab) ───────────────────────── */
+function renderXAudienceSection(rollup) {
+  var block = document.getElementById('x-audience-block');
+  if (!block) return;
+
+  var grid = document.getElementById('x-signal-grid');
+  if (grid) {
+    var cards = '';
+
+    /* Current followers */
+    var fol = rollup.followers_count != null
+      ? (fmtFollowers(rollup.followers_count) || String(rollup.followers_count))
+      : '--';
+    cards += '<div class="prop-signal-card">' +
+      '<div class="prop-signal-label">X Followers</div>' +
+      '<div class="prop-signal-val">' + escHtml(fol) + '</div>' +
+      '<div class="prop-signal-delta" style="color:var(--text-3)">' +
+        escHtml(rollup.as_of_date || '') + '</div>' +
+      '</div>';
+
+    /* 30d growth */
+    if (rollup.followers_delta_30d != null) {
+      var d30 = fmtDelta(rollup.followers_delta_30d) || '--';
+      var p30 = fmtPct(rollup.followers_growth_pct_30d) || '';
+      var c30 = rollup.followers_delta_30d >= 0 ? 'var(--positive)' : 'var(--negative)';
+      cards += '<div class="prop-signal-card">' +
+        '<div class="prop-signal-label">30d Follower Growth</div>' +
+        '<div class="prop-signal-val" style="color:' + c30 + '">' + escHtml(d30) + '</div>' +
+        '<div class="prop-signal-delta" style="color:' + c30 + '">' + escHtml(p30) + '</div>' +
+        '</div>';
+    }
+
+    /* 90d growth */
+    if (rollup.followers_delta_90d != null) {
+      var d90 = fmtDelta(rollup.followers_delta_90d) || '--';
+      var p90 = fmtPct(rollup.followers_growth_pct_90d) || '';
+      var c90 = rollup.followers_delta_90d >= 0 ? 'var(--positive)' : 'var(--negative)';
+      cards += '<div class="prop-signal-card">' +
+        '<div class="prop-signal-label">90d Follower Growth</div>' +
+        '<div class="prop-signal-val" style="color:' + c90 + '">' + escHtml(d90) + '</div>' +
+        '<div class="prop-signal-delta" style="color:' + c90 + '">' + escHtml(p90) + '</div>' +
+        '</div>';
+    }
+
+    /* Tweet activity */
+    if (rollup.tweet_count_delta_30d != null) {
+      cards += '<div class="prop-signal-card">' +
+        '<div class="prop-signal-label">Posts (30d)</div>' +
+        '<div class="prop-signal-val">' + escHtml(String(rollup.tweet_count_delta_30d)) + '</div>' +
+        '<div class="prop-signal-delta" style="color:var(--text-3)">new tweets</div>' +
+        '</div>';
+    }
+
+    grid.innerHTML = cards;
+  }
+
+  block.style.display = 'block';
+}
+
+/* ── Render X follower history chart ────────────────────────────────── */
+function renderXFollowerChart(snapshots) {
+  var chartEl  = document.getElementById('x-follower-chart');
+  var unavailEl = document.getElementById('x-chart-unavail');
+  if (!chartEl) return;
+
+  /* Need at least 2 points to draw a meaningful line */
+  var validPts = (snapshots || []).filter(function(s) {
+    return s.followers_count != null;
+  });
+
+  if (validPts.length < 2) {
+    if (unavailEl) {
+      unavailEl.textContent  = 'Insufficient history for chart';
+      unavailEl.style.display = 'block';
+    }
+    chartEl.style.display = 'none';
+    return;
+  }
+
+  if (unavailEl) unavailEl.style.display = 'none';
+  chartEl.style.display = 'block';
+
+  /* Convert to {date, value} format expected by SAI_CHARTS */
+  var chartData = validPts.map(function(s) {
+    return { date: s.snapshot_date, value: Number(s.followers_count) };
+  });
+
+  if (typeof SAI_CHARTS !== 'undefined') {
+    SAI_CHARTS.createAudienceGrowthChart('x-follower-chart', chartData);
+  }
+}
+
+/* ── Render X Insights section (Insights tab) ───────────────────────── */
+function renderXInsightsSection(rollup) {
+  var block = document.getElementById('x-insights-block');
+  var row   = document.getElementById('x-momentum-row');
+  if (!block || !row) return;
+
+  var label  = rollup.momentum_label  || '--';
+  var score  = rollup.momentum_score_30d != null ? Number(rollup.momentum_score_30d).toFixed(1) : '--';
+  var conf   = rollup.coverage_confidence || '--';
+
+  var labelColor =
+    label === 'Rising'  ? 'var(--positive)' :
+    label === 'Cooling' ? 'var(--negative)' :
+                          'var(--text-2)';
+
+  row.innerHTML =
+    '<div class="x-momentum-tiles">' +
+      '<div class="x-momentum-tile">' +
+        '<div class="x-momentum-tile-label">Audience Momentum</div>' +
+        '<div class="x-momentum-tile-val" style="color:' + labelColor + '">' + escHtml(label) + '</div>' +
+        '<div class="x-momentum-tile-sub">30d X profile signal</div>' +
+      '</div>' +
+      '<div class="x-momentum-tile">' +
+        '<div class="x-momentum-tile-label">Momentum Score</div>' +
+        '<div class="x-momentum-tile-val">' + escHtml(score) + '</div>' +
+        '<div class="x-momentum-tile-sub">0-100, growth + activity</div>' +
+      '</div>' +
+      '<div class="x-momentum-tile">' +
+        '<div class="x-momentum-tile-label">Data Coverage</div>' +
+        '<div class="x-momentum-tile-val" style="color:var(--text-2)">' + escHtml(conf) + '</div>' +
+        '<div class="x-momentum-tile-sub">snapshot history depth</div>' +
+      '</div>' +
+    '</div>' +
+    '<p class="x-data-notice" style="margin-top:var(--spacing-md)">' +
+      'Audience Momentum reflects follower growth rate and posting activity only. ' +
+      'It does not measure engagement quality or audience fit.' +
+    '</p>';
+
+  block.style.display = 'block';
+}
+
+/* ── Render X Sources section (Sources tab) ─────────────────────────── */
+function renderXSourcesSection(rollup) {
+  var block = document.getElementById('x-sources-block');
+  var grid  = document.getElementById('x-sources-grid');
+  if (!block || !grid) return;
+
+  var snapshotDate = rollup.as_of_date || '--';
+  try {
+    var d = new Date(snapshotDate);
+    snapshotDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch(e) { /* keep raw */ }
+
+  grid.innerHTML =
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Latest X Snapshot</div>' +
+      '<div class="sources-prov-val">' + escHtml(snapshotDate) + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Coverage</div>' +
+      '<div class="sources-prov-val">' + escHtml(rollup.coverage_confidence || '--') + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Data Source</div>' +
+      '<div class="sources-prov-val">X API v2 (profile only)</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Formula Version</div>' +
+      '<div class="sources-prov-val">' + escHtml(rollup.source_version || '--') + '</div>' +
+    '</div>';
+
+  block.style.display = 'block';
+}
+
 /* ── Load property ────────────────────────────────────────────────── */
 function loadProperty() {
   var urlParams = new URLSearchParams(window.location.search);
@@ -702,12 +965,19 @@ function loadProperty() {
           conf30: row.confidence_band_30d,
           sup30: row.suppression_reason_30d,
           imageMeta: imgMeta,
-          followers: n(row.total_followers_latest),
-          followersDelta: n(row.followers_net_30d),
-          posts30d: n(row.posts_30d),
-          interactions30d: n(row.total_interactions_30d),
-          engRate30d: n(row.engagement_rate_30d_pct),
-          platforms: row.platforms_active || null,
+          /* ── Synthetic-data suppression ─────────────────────────────
+             All social metrics below are derived from property_platform_daily_metrics,
+             which is confirmed synthetic seed data. These fields are intentionally
+             nulled here so no part of the UI renders them as real data.
+             Remove these null overrides once a real ingestion pipeline populates
+             the table for this property.                                        */
+          followers: null,
+          followersDelta: null,
+          posts30d: null,
+          interactions30d: null,
+          engRate30d: null,
+          platforms: null,
+          hasSyntheticData: true,   /* remove when real platform data exists */
           sport: row.sport || null,
           region: row.region || null,
           city: row.city || null
@@ -717,6 +987,12 @@ function loadProperty() {
 
         /* Load similar opportunities in parallel with sparkline */
         loadSimilarProperties();
+
+        /* Load X rollup + follower history in parallel (silent on no data) */
+        loadXAudienceData(currentProperty.id);
+
+        /* Load linked platform accounts for Sources tab */
+        loadPlatformAccounts(currentProperty.id);
 
         /* Load sparkline in parallel */
         return apiFetch('/fanscore_daily?select=metric_date,fanscore_value,suppression_reason' +
@@ -808,12 +1084,21 @@ function renderProperty() {
     bioCont.style.display = 'none';
   }
 
-  /* FanScore */
+  /* FanScore
+     Trust rule: never show 0 or a fabricated score.
+     When no valid data exists, show calm no-data state.
+     sup30 set → "Insufficient data" (suppressed by model)
+     s30 null  → "Not available" (no social accounts / no ingestion) */
   var fsContent = document.getElementById('fanscore-content');
   var fsSuppressed = document.getElementById('fanscore-suppressed');
-  if (currentProperty.sup30) {
+  var fsNoScore = !currentProperty.sup30 && currentProperty.s30 == null;
+  if (currentProperty.sup30 || fsNoScore) {
     fsContent.style.display = 'none';
     fsSuppressed.style.display = 'block';
+    var suppNotice = fsSuppressed.querySelector('.prop-notice');
+    if (suppNotice) {
+      suppNotice.textContent = currentProperty.sup30 ? 'Insufficient data' : 'FanScore: Not available';
+    }
   } else {
     fsContent.style.display = 'block';
     fsSuppressed.style.display = 'none';
@@ -846,25 +1131,19 @@ function renderProperty() {
     }
   }
 
-  /* Audience Signals */
-  var sigGrid = '';
-  if (currentProperty.followers != null) {
-    sigGrid += renderSignalCard('Followers', fmtFollowers(currentProperty.followers) || '0', currentProperty.followersDelta, true);
-  }
-  if (currentProperty.engRate30d != null) {
-    sigGrid += renderSignalCard('Engagement (30d)', currentProperty.engRate30d.toFixed(2) + '%', null, false);
-  }
-  if (currentProperty.posts30d != null) {
-    sigGrid += renderSignalCard('Posts (30d)', String(currentProperty.posts30d), null, false);
-  }
-  if (currentProperty.platforms && currentProperty.platforms.length > 0) {
-    sigGrid += renderSignalCard('Platforms', currentProperty.platforms.length + ' active', null, false);
-  }
-  document.getElementById('prop-signal-grid').innerHTML = sigGrid || '<div class="prop-notice">No audience data</div>';
+  /* Audience Signals
+     Social metrics are suppressed while property_platform_daily_metrics contains
+     synthetic seed data. The pending notice replaces all signal cards.
+     Once real X ingestion is running, the X Audience Growth block (rendered by
+     loadXAudienceData) will show live follower data directly above this section. */
+  var PENDING_SIGNAL = '<div class="prop-data-pending">' +
+    'No live platform data — connect X account and run ingestion to see real audience metrics.' +
+    '</div>';
+  document.getElementById('prop-signal-grid').innerHTML = PENDING_SIGNAL;
 
-  /* Overview signal summary (mirrors audience tab) */
+  /* Overview signal summary */
   var ovGrid = document.getElementById('overview-signal-grid');
-  if (ovGrid) ovGrid.innerHTML = sigGrid || '<div class="prop-notice">No audience data available</div>';
+  if (ovGrid) ovGrid.innerHTML = PENDING_SIGNAL;
 
   /* Momentum */
   var badges = computeMomentumScore(currentProperty);
@@ -1068,7 +1347,20 @@ function renderMomentumChart() {
   var unavailEl = document.getElementById('momentum-chart-unavail');
   if (!c || !wrap || !chartEl || !unavailEl) return;
 
-  /* Suppressed: no chart */
+  /* Synthetic data suppression: FanScore is computed from synthetic
+     property_platform_daily_metrics. Do not render the chart until
+     real platform data is ingested. */
+  if (c.hasSyntheticData) {
+    wrap.style.display = 'none';
+    var chartLoadEl = document.getElementById('audience-chart-loading');
+    if (chartLoadEl) {
+      chartLoadEl.textContent = 'FanScore trend not available — real platform data required.';
+      chartLoadEl.style.color = 'var(--text-3)';
+    }
+    return;
+  }
+
+  /* Suppressed by scoring system: no chart */
   if (c.sup30) {
     wrap.style.display = 'none';
     return;
@@ -1473,6 +1765,11 @@ function switchTab(tabName) {
     active.style.display = 'block';
     active.classList.add('prop-tab-panel--active');
   }
+  /* ECharts renders at zero dimensions when its container is hidden.
+     Resize all live instances now that the panel is visible. */
+  if (typeof SAI_CHARTS !== 'undefined') {
+    SAI_CHARTS.resizeAll();
+  }
 }
 
 /* ── Key metrics row ────────────────────────────────────────────────── */
@@ -1540,6 +1837,228 @@ function renderOverviewBio() {
     bioEl.textContent = 'No description available for this property.';
     bioEl.style.color = 'var(--text-3)';
   }
+}
+
+/* ── Platform account sources ────────────────────────────────────────── */
+/* Fetches the linked social accounts for this property and renders them  */
+/* as a structured list in the Sources tab. Silent on failure — the basic */
+/* platform list from renderSourcesTab() remains as a fallback.           */
+
+var PLATFORM_META = {
+  x:         { label: 'X / Twitter', prefix: '@', baseUrl: 'https://x.com/' },
+  instagram: { label: 'Instagram',   prefix: '@', baseUrl: 'https://instagram.com/' },
+  tiktok:    { label: 'TikTok',      prefix: '@', baseUrl: 'https://tiktok.com/@' },
+  youtube:   { label: 'YouTube',     prefix: '',  baseUrl: 'https://youtube.com/@' }
+};
+
+function loadPlatformAccounts(propertyId) {
+  /* Query property_social_accounts with the most recent snapshot embedded.
+     social_account_snapshots.limit=1 + order=desc gives us the latest row. */
+  apiFetch(
+    '/property_social_accounts?property_id=eq.' + propertyId +
+    '&status=not.in.(not_found,suspended)' +
+    '&select=id,platform,platform_user_id,username,display_name,status,status_detail,link_confidence' +
+    ',social_account_snapshots!social_account_snapshots_social_account_id_fkey' +
+    '(snapshot_date,followers_count,posts_count,likes_count,views_count,data_source,source_detail,completeness_pct,ingested_at)' +
+    '&order=platform.asc' +
+    '&social_account_snapshots.order=snapshot_date.desc' +
+    '&social_account_snapshots.limit=1'
+  ).then(function(rows) {
+    if (!rows || rows.length === 0) return;
+    renderPlatformAccounts(rows);
+    /* Render per-platform provenance blocks for scraper-backed platforms */
+    rows.forEach(function(acct) {
+      var snaps = acct.social_account_snapshots;
+      var snap = (snaps && snaps.length) ? snaps[0] : null;
+      renderScraperSourcesSection(acct.platform, acct, snap);
+    });
+  })
+  .catch(function() { /* silent — basic platform list remains */ });
+}
+
+function renderPlatformAccounts(accounts) {
+  var el = document.getElementById('sources-platforms');
+  if (!el) return;
+
+  var rows = accounts.map(function(a) {
+    var meta = PLATFORM_META[a.platform] || {
+      label: a.platform.charAt(0).toUpperCase() + a.platform.slice(1),
+      prefix: '@',
+      baseUrl: '#'
+    };
+
+    /* username is the canonical handle field in property_social_accounts */
+    var username = a.username || '';
+    var isPending = a.status === 'pending_resolution';
+    var isError   = a.status === 'error';
+
+    var displayHandle = isPending
+      ? '<span style="color:var(--text-3);font-style:italic">pending resolution</span>'
+      : meta.prefix + escHtml(username);
+
+    /* Build external URL */
+    var href = '';
+    if (!isPending && username) {
+      href = escHtml(meta.baseUrl + encodeURIComponent(username.replace(/^@/, '')));
+    }
+
+    /* Latest snapshot (may be null if not yet ingested) */
+    var snaps = a.social_account_snapshots;
+    var snap  = (snaps && snaps.length) ? snaps[0] : null;
+
+    /* Source state badge */
+    var badgeClass, badgeLabel;
+    if (isPending) {
+      badgeClass = 'sources-account-badge sources-account-badge--pending';
+      badgeLabel = 'Pending';
+    } else if (isError) {
+      badgeClass = 'sources-account-badge sources-account-badge--error';
+      badgeLabel = 'Ingest error';
+    } else if (snap && snap.data_source === 'api') {
+      badgeClass = 'sources-account-badge sources-account-badge--live';
+      badgeLabel = 'Live \u2014 API';
+    } else if (snap && snap.data_source === 'scraper') {
+      badgeClass = 'sources-account-badge sources-account-badge--scraper';
+      badgeLabel = 'Live \u2014 scraper';
+    } else if (snap && snap.data_source === 'scraper_failed') {
+      badgeClass = 'sources-account-badge sources-account-badge--error';
+      badgeLabel = 'Scraper failed';
+    } else {
+      badgeClass = 'sources-account-badge';
+      badgeLabel = 'Linked';
+    }
+
+    /* Meta line: last ingested + completeness */
+    var metaHtml = '';
+    if (snap && snap.ingested_at) {
+      try {
+        var d = new Date(snap.ingested_at);
+        var dStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        metaHtml = '<span class="sources-account-meta">Last ingested ' + dStr;
+        if (snap.completeness_pct != null) {
+          metaHtml += ' \u00b7 ' + snap.completeness_pct + '% complete';
+        }
+        metaHtml += '</span>';
+      } catch(e) { /* ignore */ }
+    } else if (isError && a.status_detail) {
+      metaHtml = '<span class="sources-account-meta sources-account-meta--error">' +
+        escHtml(a.status_detail.slice(0, 80)) + '</span>';
+    }
+
+    /* External link — disabled for pending accounts */
+    var linkHtml = (isPending || !username)
+      ? '<span class="sources-account-link sources-account-link--disabled">Not linked</span>'
+      : '<a class="sources-account-link" href="' + href + '"' +
+          ' target="_blank" rel="noopener noreferrer">' +
+          'View on ' + escHtml(meta.label) +
+          '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"' +
+            ' stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
+            '<path d="M2 8L8 2M4 2h4v4"/>' +
+          '</svg>' +
+        '</a>';
+
+    return '<li class="sources-account-row">' +
+      '<div class="sources-account-left">' +
+        '<span class="sources-account-platform">' + escHtml(meta.label) + '</span>' +
+        '<div class="sources-account-handle-wrap">' +
+          '<span class="sources-account-handle">' + displayHandle + '</span>' +
+          metaHtml +
+        '</div>' +
+      '</div>' +
+      '<div class="sources-account-right">' +
+        '<span class="' + badgeClass + '">' + badgeLabel + '</span>' +
+        linkHtml +
+      '</div>' +
+    '</li>';
+  }).join('');
+
+  /* Swap to account-list class to trigger the stacked-row layout */
+  el.className = 'sources-account-list';
+  el.innerHTML = rows;
+}
+
+/* ── Per-platform provenance sections (Instagram, TikTok, YouTube) ──── */
+/* Called once per linked account after loadPlatformAccounts resolves.   */
+/* For X, the existing renderXSourcesSection handles the rollup block.   */
+
+function renderScraperSourcesSection(platform, acct, snap) {
+  var blockId = platform + '-sources-block';
+  var gridId  = platform + '-sources-grid';
+  var block   = document.getElementById(blockId);
+  var grid    = document.getElementById(gridId);
+  if (!block || !grid) return;
+
+  /* Show the block */
+  block.style.display = '';
+
+  /* If no snapshot yet, show a waiting state */
+  if (!snap || snap.data_source === 'scraper_failed') {
+    var reason = (acct.status_detail || 'No data collected yet.');
+    grid.innerHTML =
+      '<div class="sources-prov-item" style="grid-column:1/-1">' +
+        '<div class="sources-prov-label">Status</div>' +
+        '<div class="sources-prov-val" style="color:var(--negative);font-size:var(--text-sm);font-weight:500">' +
+          escHtml(reason.slice(0, 120)) +
+        '</div>' +
+      '</div>';
+    return;
+  }
+
+  /* Format ingested date */
+  var ingestedStr = '--';
+  if (snap.ingested_at) {
+    try {
+      ingestedStr = new Date(snap.ingested_at).toLocaleDateString(
+        'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }
+      );
+    } catch(e) { ingestedStr = snap.ingested_at.slice(0, 10); }
+  }
+
+  /* Human-readable source label */
+  var sourceLabel = snap.data_source === 'api' ? 'Official API' : 'Public web scraper';
+  var sourceDetail = snap.source_detail ? escHtml(snap.source_detail) : '--';
+
+  /* Followers / primary metric */
+  var primaryLabel = platform === 'youtube' ? 'Subscribers' : 'Followers';
+  var primaryVal   = snap.followers_count != null
+    ? Number(snap.followers_count).toLocaleString()
+    : (platform === 'youtube' && snap.followers_count === null ? 'Hidden' : '--');
+
+  /* Secondary metric */
+  var secLabel = platform === 'tiktok' ? 'Total Likes' : (platform === 'youtube' ? 'Total Views' : 'Posts');
+  var secVal   = platform === 'tiktok'
+    ? (snap.likes_count  != null ? Number(snap.likes_count).toLocaleString()  : '--')
+    : platform === 'youtube'
+    ? (snap.views_count  != null ? Number(snap.views_count).toLocaleString()  : '--')
+    : (snap.posts_count  != null ? Number(snap.posts_count).toLocaleString()  : '--');
+
+  var completeness = snap.completeness_pct != null ? snap.completeness_pct + '%' : '--';
+
+  grid.innerHTML =
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Last Collected</div>' +
+      '<div class="sources-prov-val">' + ingestedStr + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">' + primaryLabel + '</div>' +
+      '<div class="sources-prov-val">' + primaryVal + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">' + secLabel + '</div>' +
+      '<div class="sources-prov-val">' + secVal + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Collection Method</div>' +
+      '<div class="sources-prov-val" style="font-size:var(--text-sm)">' + sourceLabel + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Endpoint</div>' +
+      '<div class="sources-prov-val" style="font-size:var(--text-xs)">' + sourceDetail + '</div>' +
+    '</div>' +
+    '<div class="sources-prov-item">' +
+      '<div class="sources-prov-label">Completeness</div>' +
+      '<div class="sources-prov-val">' + completeness + '</div>' +
+    '</div>';
 }
 
 /* ── Sources tab ────────────────────────────────────────────────────── */
@@ -3041,6 +3560,178 @@ function renderSponsorshipSignals(prop) {
   color: var(--text-2);
 }
 
+/* ── Platform account rows — Sources tab ─────────────────────────── */
+/* Replaces .sources-platform-list when account-level data is available */
+
+.sources-account-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.sources-account-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--surface);
+}
+
+.sources-account-row + .sources-account-row {
+  border-top: 1px solid var(--border);
+}
+
+.sources-account-left {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.sources-account-platform {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.sources-account-handle {
+  font-size: var(--text-sm);
+  font-family: var(--mono);
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sources-account-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.sources-account-badge {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.sources-account-badge--verified {
+  color: var(--positive);
+}
+
+.sources-account-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  white-space: nowrap;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.sources-account-link:hover {
+  color: var(--text-1);
+  border-color: var(--text-3);
+}
+
+.sources-account-link svg {
+  flex-shrink: 0;
+}
+
+/* ── Data-pending state ──────────────────────────────────────────── */
+/* Replaces signal cards when no real platform data is available.    */
+
+.prop-data-pending {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* ── Source state badge variants ─────────────────────────────────── */
+
+.sources-account-badge--placeholder {
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.sources-account-badge--live {
+  color: var(--positive);
+}
+
+.sources-account-badge--scraper {
+  color: var(--text-2);
+}
+
+.sources-account-badge--error {
+  color: var(--negative);
+}
+
+.sources-account-badge--pending {
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* Handle column: stacks handle + meta line vertically */
+.sources-account-handle-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Small secondary line under the handle in each account row */
+.sources-account-meta {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sources-account-meta--error {
+  color: var(--negative);
+  font-style: italic;
+}
+
+/* Disabled link shown when account handle is a placeholder */
+.sources-account-link--disabled {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  white-space: nowrap;
+  cursor: default;
+  font-style: italic;
+}
+
 .sources-body-text {
   font-size: var(--text-sm);
   color: var(--text-2);
@@ -3344,6 +4035,70 @@ function renderSponsorshipSignals(prop) {
 /* Full trend chart in Audience tab */
 #momentum-chart {
   height: 200px;
+}
+
+/* ── X Audience section ─────────────────────────────────────────────── */
+
+/* ECharts requires an explicit pixel height on its container */
+#x-follower-chart {
+  height: 200px;
+}
+
+/* Inline provenance badge shown next to block titles */
+.prop-data-source-badge {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  padding: 2px 6px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  letter-spacing: 0.01em;
+}
+
+/* Small muted disclaimer under X data blocks */
+.x-data-notice {
+  margin-top: var(--spacing-sm);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* Momentum tile row */
+.x-momentum-tiles {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.x-momentum-tile {
+  flex: 1 1 140px;
+  padding: var(--spacing-md);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.x-momentum-tile-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-bottom: var(--spacing-xs);
+}
+
+.x-momentum-tile-val {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.2;
+}
+
+.x-momentum-tile-sub {
+  margin-top: var(--spacing-xs);
+  font-size: var(--text-xs);
+  color: var(--text-3);
 }
 
 </style>

@@ -663,7 +663,7 @@ function buildCompareTable() {
   if (cards.length < 2) return;
 
   var rows = [
-    { label: 'FanScore (30d avg)', fn: function(c) { return !!c.sup30 ? '--' : fmtScore(c.s30); }, size: 'lg' },
+    { label: 'FanScore (30d avg)', fn: function(c) { return c.sup30 ? 'Insufficient data' : (c.s30 == null ? 'Not available' : fmtScore(c.s30)); }, size: 'lg' },
     { label: '30-day trend',       fn: function(c) { return c.t30 != null ? arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '/d' : '--'; }, color: function(c) { return c.t30 != null ? arrC(c.t30) : null; } },
     { label: 'Confidence',         fn: function(c) { return c.conf30 || '--'; } },
     { label: 'Followers',          fn: function(c) { return (c.followers && c.followers > 0) ? fmtFollowers(c.followers) : '--'; }, signal: true },
@@ -692,11 +692,12 @@ function buildCompareTable() {
     cards.forEach(function(c) {
       var cfg = TYPE[c.type] || {};
       var sup = !!c.sup30;
+      var noData = !sup && c.s30 == null;
       h += '<td class="compare-td-val">';
-      if (!sup && c.sparks && c.sparks.length >= 2) {
+      if (!sup && !noData && c.sparks && c.sparks.length >= 2) {
         h += '<div class="compare-spark">' + renderSpark(c.sparks, cfg.scoreVar || 'var(--text-3)', 120, 32) + '</div>';
       } else {
-        h += '<span style="color:var(--text-3)">--</span>';
+        h += '<span style="color:var(--text-3)">' + (sup ? 'Insufficient data' : 'Not available') + '</span>';
       }
       h += '</td>';
     });

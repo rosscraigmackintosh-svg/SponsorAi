@@ -220,7 +220,8 @@ function loadBridgeContent() {
       rows.forEach(function(r) {
         var sup = !!r.suppression_reason_30d;
         var score = sup ? null : n(r.avg_score_30d);
-        var scoreStr = score != null ? fmtScore(score) : '--';
+        /* Trust rule: never show 0 or '--' for no-data properties */
+        var scoreStr = sup ? 'Insufficient data' : (score != null ? fmtScore(score) : 'Not available');
         var typeConfig = TYPE[r.property_type] || { label: r.property_type, fgVar: 'var(--text-3)' };
 
         html += '<div class="bridge-card" onclick="navigateToProp(\'' + encodeURIComponent(r.slug) + '\')">';

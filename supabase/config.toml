@@ -25,3 +25,20 @@ verify_jwt = false
 [functions.introduction-respond]
 # Public — no JWT required (accept/decline links from email)
 verify_jwt = false
+
+[functions.resolve-x-account]
+# Operator tool — requires a valid JWT (anon or service role key).
+# Called manually when linking an X account to a property.
+verify_jwt = true
+
+[functions.ingest-x-profile-daily]
+# Internal scheduled job — called by pg_cron via net.http_post with the
+# service role key as the Authorization header.
+# JWT verification disabled so pg_cron can call it without a signed token.
+verify_jwt = false
+
+[functions.compute-x-rollups-daily]
+# Internal scheduled job — called by pg_cron 30 minutes after ingest.
+# Reads social_account_snapshots, writes social_rollups_daily.
+# No X API calls — pure DB computation.
+verify_jwt = false

@@ -14,6 +14,10 @@ var HERO_ICONS = {
 function renderCard(c, idx) {
   var cfg=TYPE[c.type]||{label:c.type,bgVar:'var(--surface-muted)',fgVar:'var(--text-2)',softVar:'var(--accent)'};
   var sup=!!c.sup30;
+  /* Trust rule: noData = no score and no suppression reason.
+     Absence of social data is neutral — never penalise with a 0 or '--'.
+     'Not available' is shown; 'Insufficient data' is shown when suppressed. */
+  var noData=!sup&&c.s30==null;
   var delayVal = idx > 0 ? 'animation-delay:' + (Math.min(idx, 24) * 0.022).toFixed(3) + 's;' : '';
   var delay = ' style="--card-type-fg:' + cfg.fgVar + ';--card-type-soft:' + (cfg.softVar||cfg.fgVar) + ';' + delayVal + '"';
 
@@ -75,18 +79,21 @@ function renderCard(c, idx) {
     +'<div class="score-row">'
     +'<div class="score-main">'
     +'<div class="score-val-row">'
-    +'<div class="score-val'+(sup?' dim':'')+'"'+(sup?'':' style="color:'+cfg.scoreVar+'"')+'>'+( sup?'--':fmtScore(c.s30))+'</div>'
-    +(!sup&&c.t30!=null?'<span class="score-trend-inline" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+Math.abs(c.t30).toFixed(1)+'</span>':'')
+    +(noData
+      ?'<div class="score-val dim fanscore-no-data" title="No qualifying social data for this property">Not available</div>'
+      :sup
+        ?'<div class="score-val dim fanscore-no-data" title="'+escHtml(String(c.sup30||''))+'">Insufficient data</div>'
+        :'<div class="score-val" style="color:'+cfg.scoreVar+'">'+fmtScore(c.s30)+'</div>'
+    )
+    +(!noData&&!sup&&c.t30!=null?'<span class="score-trend-inline" style="color:'+arrC(c.t30)+'">'+arr(c.t30)+Math.abs(c.t30).toFixed(1)+'</span>':'')
     +'</div>'
-    +'<div class="score-lbl">FanScore &middot; 30d avg</div>'
+    +'<div class="score-lbl">FanScore'+(noData||sup?'':' &middot; 30d avg')+'</div>'
     +(c.followers!=null&&c.followers>0?'<div class="follower-chip">'+fmtFollowers(c.followers)+' followers</div>':'')
     +'</div>'
     +'<div class="score-aside">'
-    +(c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
-    +(c.cov30!=null?'<div class="conf-line">'+Math.round(c.cov30)+'% coverage</div>':'')
+    +(!noData&&c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
+    +(!noData&&c.cov30!=null?'<div class="conf-line">'+Math.round(c.cov30)+'% coverage</div>':'')
     +'</div></div>'
-
-    +(sup?'<div class="sup-notice">'+c.sup30+'</div>':'')
 
     +'</div>'  // .card-body
     +'</div>';

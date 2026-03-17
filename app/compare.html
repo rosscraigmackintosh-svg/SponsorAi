@@ -946,9 +946,13 @@ function renderColumnHeaders(props, showAddSlot) {
     if (c.sport)  metaParts.push(c.sport);
     if (c.region) metaParts.push(c.region);
 
+    /* Trust rule: never show 0 or fabricated score.
+       sup30 set → "Insufficient data"; s30 null → "Not available" */
     var scoreHtml = c.sup30
-      ? '<span class="cmp-col-score-val cmp-col-score-val--suppressed">--</span>'
-      : '<span class="cmp-col-score-val">' + fmtScore(c.s30) + '</span>';
+      ? '<span class="cmp-col-score-val cmp-col-score-val--suppressed">Insufficient data</span>'
+      : (c.s30 == null
+        ? '<span class="cmp-col-score-val cmp-col-score-val--suppressed">Not available</span>'
+        : '<span class="cmp-col-score-val">' + fmtScore(c.s30) + '</span>');
 
     var confHtml = c.conf30
       ? '<div class="cmp-col-conf">' + escHtml(c.conf30) + ' confidence</div>'
@@ -1007,7 +1011,8 @@ var SECTIONS = [
       {
         label: 'FanScore',
         render: function(c) {
-          if (c.sup30) return '<span class="cmp-val-na">--</span>';
+          if (c.sup30)       return '<span class="cmp-val-na">Insufficient data</span>';
+          if (c.s30 == null) return '<span class="cmp-val-na">Not available</span>';
           return '<span class="cmp-val-score">' + fmtScore(c.s30) + '</span>';
         }
       },

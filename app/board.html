@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="page-board">
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 
@@ -350,19 +350,10 @@ document.addEventListener('click', function(e) {
     SAI_STORAGE.board.removeFromBoard(slug);
     delete boardCards[slug];
 
-    /* Surgical removal: remove the card wrapper, then the section if empty */
-    var item = document.querySelector('.brd-card-item[data-slug="' + CSS.escape(slug) + '"]');
-    if (item) {
-      var section = item.closest('.brd-stage');
-      item.remove();
-      if (section && section.querySelectorAll('.brd-card-item').length === 0) {
-        section.remove();
-      }
-    }
-
     var total = SAI_STORAGE.board.getAllSlugs().length;
     updateSubtitle(total);
-    if (total === 0) renderBoard();
+    /* Always re-render so all columns remain visible (even when one empties) */
+    renderBoard();
 
   } else if (action === 'watchlist') {
     if (!slug) return;
@@ -449,12 +440,12 @@ function renderBoard() {
     return;
   }
 
-  var html    = '';
+  /* ── Kanban columns ── */
+  var html    = '<div class="brd-kanban-cols">';
   var cardIdx = 0;
 
   STAGE_ORDER.forEach(function(stage) {
     var stageSlugs = (board[stage] || []).filter(function(s) { return boardCards[s]; });
-    if (!stageSlugs.length) return;
 
     var label    = STAGE_LABELS[stage] || stage;
     var count    = stageSlugs.length;
@@ -463,11 +454,13 @@ function renderBoard() {
 
     html += '<section class="brd-stage" data-stage="' + escHtml(stage) + '" aria-label="' + escHtml(label) + ' stage">';
 
-    /* Stage header row */
+    /* Column header */
     html += '<div class="brd-stage-hd">';
     html += '<div class="brd-stage-hd-left">';
     html += '<span class="brd-stage-name">' + escHtml(label) + '</span>';
-    html += '<span class="brd-stage-count" aria-label="' + count + ' properties">' + count + '</span>';
+    if (count > 0) {
+      html += '<span class="brd-stage-count" aria-label="' + count + ' properties">' + count + '</span>';
+    }
     html += '</div>';
     html += '<div class="brd-stage-hd-right">';
     if (canCmp) {
@@ -476,56 +469,88 @@ function renderBoard() {
             + escHtml(cmpLabel)
             + '<svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:4px"><path d="M2 5.5h7M6 2l3 3.5L6 9"/></svg>'
             + '</button>';
-    } else {
-      html += '<span class="brd-cmp-hint">Add 1 more to compare</span>';
     }
     html += '</div>';
     html += '</div>'; /* /brd-stage-hd */
 
-    /* Stage summary strip */
-    html += '<div class="brd-stage-summary" aria-label="Stage summary">'
-          + renderStageSummaryText(stageSlugs)
-          + '</div>';
+    /* Stage summary strip — only when cards are present */
+    if (count > 0) {
+      html += '<div class="brd-stage-summary" aria-label="Stage summary">'
+            + renderStageSummaryText(stageSlugs)
+            + '</div>';
+    }
 
-    /* Card grid */
-    html += '<div class="brd-stage-grid">';
+    /* Card stack or empty placeholder */
+    if (count === 0) {
+      html += '<div class="brd-col-empty">No properties here yet</div>';
+    } else {
+      html += '<div class="brd-col-cards">';
 
-    stageSlugs.forEach(function(slug) {
-      var c = boardCards[slug];
-      html += '<div class="brd-card-item" data-slug="' + escHtml(slug) + '">';
+      stageSlugs.forEach(function(slug) {
+        var c = boardCards[slug];
+        html += '<div class="brd-card-item" data-slug="' + escHtml(slug) + '" draggable="true">';
 
-      /* Shared property card — unchanged */
-      html += renderCard(c, cardIdx++);
+        /* Shared property card — unchanged */
+        html += renderCard(c, cardIdx++);
 
-      /* Board-specific stage control — sits below the card */
-      html += '<div class="brd-stage-ctrl" role="group" aria-label="Move ' + escHtml(c.name) + ' to stage">';
-      html += '<span class="brd-ctrl-label">Stage</span>';
-      html += '<div class="brd-ctrl-pills">';
-      STAGE_ORDER.forEach(function(s) {
-        var isCur = s === stage;
-        html += '<button class="brd-stage-pill' + (isCur ? ' brd-stage-pill--cur' : '') + '"'
-              + ' data-action="move-stage"'
-              + ' data-slug="' + escHtml(slug) + '"'
-              + ' data-stage="' + escHtml(s) + '"'
-              + ' title="' + (isCur ? 'Currently: ' : 'Move to ') + escHtml(STAGE_LABELS_SHORT[s]) + '"'
-              + (isCur ? ' aria-current="true"' : '')
-              + '>'
-              + escHtml(STAGE_LABELS_SHORT[s])
-              + '</button>';
+        html += '</div>'; /* /brd-card-item */
       });
-      html += '</div>'; /* /brd-ctrl-pills */
-      html += '</div>'; /* /brd-stage-ctrl */
 
-      html += '</div>'; /* /brd-card-item */
-    });
+      html += '</div>'; /* /brd-col-cards */
+    }
 
-    html += '</div>'; /* /brd-stage-grid */
     html += '</section>';
   });
 
+  html += '</div>'; /* /brd-kanban-cols */
   container.innerHTML = html;
   if (window.lucide) lucide.createIcons();
 }
+
+/* ── Drag and drop ─────────────────────────────────────────────────── */
+var _dragSlug   = null;  /* slug currently being dragged */
+var _dragTarget = null;  /* column <section> currently highlighted */
+
+document.addEventListener('dragstart', function(e) {
+  var item = e.target.closest('.brd-card-item[draggable]');
+  if (!item) return;
+  _dragSlug = item.dataset.slug;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _dragSlug);
+  /* Delay so browser captures snapshot before card dims */
+  setTimeout(function() { item.classList.add('brd-dragging'); }, 0);
+});
+
+document.addEventListener('dragend', function() {
+  _dragSlug = null;
+  if (_dragTarget) { _dragTarget.classList.remove('brd-col-over'); _dragTarget = null; }
+  document.querySelectorAll('.brd-dragging').forEach(function(el) { el.classList.remove('brd-dragging'); });
+});
+
+document.addEventListener('dragover', function(e) {
+  if (!_dragSlug) return;
+  var col = e.target.closest('.brd-stage[data-stage]');
+  if (!col) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (_dragTarget !== col) {
+    if (_dragTarget) _dragTarget.classList.remove('brd-col-over');
+    _dragTarget = col;
+    col.classList.add('brd-col-over');
+  }
+});
+
+document.addEventListener('drop', function(e) {
+  if (!_dragSlug) return;
+  var col = e.target.closest('.brd-stage[data-stage]');
+  if (!col) return;
+  e.preventDefault();
+  var newStage = col.dataset.stage;
+  SAI_STORAGE.board.moveToStage(_dragSlug, newStage);
+  _dragSlug = null;
+  if (_dragTarget) { _dragTarget.classList.remove('brd-col-over'); _dragTarget = null; }
+  renderBoard();
+});
 
 /* ── Menu listeners ────────────────────────────────────────────────── */
 SAI_UIH.initMenuListeners();
@@ -596,13 +621,29 @@ SAI_UIH.initMenuListeners();
   opacity: 0.75;
 }
 
-/* ── Stage sections ───────────────────────────────────────────────── */
-.brd-stage {
-  margin-bottom: var(--spacing-5xl, 56px);
+/* ── Board page: use full available width ─────────────────────────── */
+body.page-board .content {
+  padding-left: 32px;
+  padding-right: 32px;
 }
 
-.brd-stage:last-child {
-  margin-bottom: var(--spacing-4xl);
+/* ── Kanban column layout ─────────────────────────────────────────── */
+.brd-kanban-cols {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-xl);
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: var(--spacing-2xl);
+  width: 100%;
+}
+
+/* ── Stage column ─────────────────────────────────────────────────── */
+.brd-stage {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Stage header row */
@@ -684,16 +725,32 @@ SAI_UIH.initMenuListeners();
 .brd-stage-summary {
   font-size: var(--text-xs);
   color: var(--text-3);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
   line-height: 1.5;
   padding: var(--spacing-xs) 0;
 }
 
-/* ── Card grid ────────────────────────────────────────────────────── */
-.brd-stage-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+/* ── Card stack (vertical within column) ──────────────────────────── */
+.brd-col-cards {
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-xl);
+}
+
+/* ── Empty column placeholder ─────────────────────────────────────── */
+.brd-col-empty {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-2xl) var(--spacing-md);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
 }
 
 /* Card item — grid cell containing card + stage control */
@@ -707,76 +764,35 @@ SAI_UIH.initMenuListeners();
   flex: 1;
 }
 
-/* ── Stage movement control ───────────────────────────────────────── */
-.brd-stage-ctrl {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
+/* ── Drag and drop states ─────────────────────────────────────────── */
+.brd-card-item[draggable] {
+  cursor: grab;
+}
+
+.brd-card-item[draggable]:active {
+  cursor: grabbing;
+}
+
+.brd-card-item.brd-dragging {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Column drop target highlight */
+.brd-stage.brd-col-over {
+  background: var(--accent-soft, var(--surface-muted));
   border-radius: var(--radius-sm);
+  outline: 1px dashed var(--accent-border, var(--border));
+  outline-offset: 2px;
 }
 
-.brd-ctrl-label {
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-3);
-  white-space: nowrap;
-  flex-shrink: 0;
-  padding-right: var(--spacing-xs);
-  border-right: 1px solid var(--border);
+.brd-stage.brd-col-over .brd-stage-hd {
+  border-bottom-color: var(--accent-border, var(--border));
 }
 
-.brd-ctrl-pills {
-  display: flex;
-  gap: 2px;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  flex: 1;
-}
-
-/* Individual stage pill */
-.brd-stage-pill {
-  flex: 1;
-  min-width: 0;
-  padding: 3px var(--spacing-xs);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-3);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.1s, background 0.1s, border-color 0.1s;
-  text-align: center;
-}
-
-.brd-stage-pill:hover {
-  background: var(--surface);
-  border-color: var(--border);
+.brd-stage.brd-col-over .brd-col-empty {
+  border-color: var(--accent-border, var(--border));
   color: var(--text-2);
-}
-
-/* Active / current stage pill */
-.brd-stage-pill--cur {
-  background: var(--surface);
-  border-color: var(--border-strong, var(--border));
-  color: var(--text-1);
-  font-weight: 600;
-  cursor: default;
-}
-
-.brd-stage-pill--cur:hover {
-  background: var(--surface);
-  border-color: var(--border-strong, var(--border));
-  color: var(--text-1);
 }
 
 /* ── Empty state ──────────────────────────────────────────────────── */
@@ -876,14 +892,26 @@ SAI_UIH.initMenuListeners();
 }
 
 /* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  body.page-board .content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .brd-kanban-cols {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .brd-stage {
+    min-width: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .brd-page-hd {
     flex-direction: column;
     gap: var(--spacing-md);
-  }
-
-  .brd-stage-grid {
-    grid-template-columns: 1fr;
   }
 
   .brd-ctrl-pills {

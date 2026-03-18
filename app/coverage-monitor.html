@@ -11,13 +11,13 @@
 <script src="config.js"></script>
 <style>
 
-/* ── layout ──────────────────────────────────────────────────────────── */
-.cr-shell {
-  margin-left: 60px;
+/* ── page body ───────────────────────────────────────────────────────── */
+.cm-body {
+  padding-top: 56px; /* clear fixed app-header */
   min-height: 100vh;
   background: var(--bg);
 }
-.cr-container {
+.cm-container {
   max-width: 1440px;
   margin: 0 auto;
   padding: 32px 24px 64px;
@@ -25,28 +25,27 @@
 }
 
 /* ── page header ─────────────────────────────────────────────────────── */
-.cr-page-header {
+.cm-page-header {
   display: flex;
   align-items: baseline;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-4xl);
-  padding-bottom: var(--spacing-3xl);
+  gap: 12px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--border);
 }
-.cr-page-title {
+.cm-page-title {
   font-size: var(--text-xl);
   font-weight: 600;
   color: var(--text-1);
   letter-spacing: -0.3px;
   line-height: 1;
 }
-.cr-page-sub {
+.cm-page-sub {
   font-size: var(--text-sm);
   color: var(--text-3);
   line-height: 1;
 }
-.cr-internal-badge {
-  margin-left: auto;
+.cm-internal-badge {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -58,10 +57,16 @@
   padding: 3px 8px;
   line-height: 1.4;
 }
-[data-theme="dark"] .cr-internal-badge {
+[data-theme="dark"] .cm-internal-badge {
   color: var(--color-warning-300);
   background: rgba(181,71,8,0.15);
   border-color: rgba(181,71,8,0.3);
+}
+.cm-loaded-at {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  align-self: center;
 }
 .cm-refresh-btn {
   font-family: var(--font);
@@ -79,28 +84,23 @@
 }
 .cm-refresh-btn:hover { background: var(--surface-muted); color: var(--text-1); }
 .cm-refresh-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-.cm-loaded-at {
-  font-size: var(--text-xs);
-  color: var(--text-3);
-  align-self: center;
-}
 
 /* ── section ─────────────────────────────────────────────────────────── */
-.cr-section { margin-bottom: var(--spacing-4xl); }
-.cr-section-header {
+.cm-section { margin-bottom: 32px; }
+.cm-section-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  gap: 8px;
+  margin-bottom: 12px;
 }
-.cr-section-title {
+.cm-section-title {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-1);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
-.cr-section-count {
+.cm-section-count {
   font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text-3);
@@ -118,12 +118,12 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  margin-bottom: var(--spacing-3xl);
+  margin-bottom: 24px;
 }
 .cm-stat {
   flex: 1;
   background: var(--surface);
-  padding: var(--spacing-xl) var(--spacing-3xl);
+  padding: 16px 24px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -145,15 +145,14 @@
   width: 1px;
   background: var(--border);
   flex-shrink: 0;
-  align-self: stretch;
 }
 
 /* ── filter bar ──────────────────────────────────────────────────────── */
 .cm-filter-bar {
   display: flex;
-  gap: var(--spacing-md);
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: var(--spacing-3xl);
+  margin-bottom: 24px;
 }
 .cm-filter-btn {
   font-family: var(--font);
@@ -176,24 +175,24 @@
 }
 
 /* ── table ───────────────────────────────────────────────────────────── */
-.cr-table-wrap {
+.cm-table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
-.cr-table-scroll { overflow-x: auto; }
-.cr-table {
+.cm-table-scroll { overflow-x: auto; }
+.cm-table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-sm);
 }
-.cr-table thead tr {
+.cm-table thead tr {
   background: var(--surface-muted);
   border-bottom: 1px solid var(--border);
 }
-.cr-table th {
-  padding: var(--spacing-md) var(--spacing-lg);
+.cm-table th {
+  padding: 8px 12px;
   text-align: left;
   font-size: var(--text-xs);
   font-weight: 600;
@@ -202,16 +201,16 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-.cr-table td {
-  padding: var(--spacing-md) var(--spacing-lg);
+.cm-table td {
+  padding: 8px 12px;
   color: var(--text-1);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
-.cr-table tbody tr:last-child td { border-bottom: none; }
-.cr-table tbody tr:hover td { background: var(--surface-muted); }
+.cm-table tbody tr:last-child td { border-bottom: none; }
+.cm-table tbody tr:hover td { background: var(--surface-muted); }
 
-/* ── property name cell ──────────────────────────────────────────────── */
+/* ── property name ───────────────────────────────────────────────────── */
 .cm-prop-name {
   font-weight: 500;
   white-space: nowrap;
@@ -219,10 +218,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cm-prop-name a {
-  color: var(--text-1);
-  text-decoration: none;
-}
+.cm-prop-name a { color: var(--text-1); text-decoration: none; }
 .cm-prop-name a:hover { color: var(--accent); text-decoration: underline; }
 
 /* ── type badges ─────────────────────────────────────────────────────── */
@@ -264,7 +260,7 @@
 [data-theme="dark"] .plat-not-found { background: rgba(180,35,24,0.15);  color: var(--color-error-400);   }
 [data-theme="dark"] .plat-error     { background: rgba(180,35,24,0.15);  color: var(--color-error-400);   }
 
-/* ── score effect chips ──────────────────────────────────────────────── */
+/* ── score effect ────────────────────────────────────────────────────── */
 .cm-effect {
   display: inline-block;
   font-size: var(--text-xs);
@@ -300,14 +296,49 @@
 .cm-updated   { font-family: var(--mono); font-size: var(--text-xs); color: var(--text-3); white-space: nowrap; }
 .cm-state-row td { text-align: center; padding: 48px 16px; color: var(--text-3); font-size: var(--text-sm); }
 
+/* ── manage link ─────────────────────────────────────────────────────── */
+.cm-manage-link {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  background: var(--surface);
+  white-space: nowrap;
+  display: inline-block;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+}
+.cm-manage-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ── admin section label in profile menu ─────────────────────────────── */
+.profile-admin-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 4px 8px 2px;
+  margin-top: 2px;
+}
+.profile-item-current {
+  color: var(--accent) !important;
+  font-weight: 500;
+}
+
 </style>
 </head>
-<body>
+<body class="page-coverage-monitor">
 
-<a class="skip-link" href="#cm-main">Skip to content</a>
+<a class="skip-link" href="#cm-content">Skip to content</a>
 
-<!-- ── LEFT SIDEBAR ─────────────────────────────────────────────────── -->
-<div class="float-bar bar-left" role="banner">
+<!-- ── APP HEADER ────────────────────────────────────────────────────── -->
+<header class="app-header" role="banner">
 
   <button class="bar-btn" id="menu-btn"
     onclick="toggleNavMenu()"
@@ -316,7 +347,7 @@
     aria-controls="nav-menu">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <g filter="url(#filter0_i_18_100)">
-        <path d="M2 8H14M2 4H14M6 12H14" stroke="#9B8AFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 8H14M2 4H14M6 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </g>
       <defs>
         <filter id="filter0_i_18_100" x="0" y="0" width="16" height="17" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -333,7 +364,7 @@
     </svg>
   </button>
 
-  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SponsorAI">
+  <svg class="brand-logo" viewBox="0 0 941 177" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M703.202 136C700.535 136 698.602 135.4 697.402 134.2C696.202 133 695.602 131.2 695.602 128.8V45.4C695.602 43.4 695.935 42 696.602 41.2C697.268 40.4 698.668 40 700.802 40H712.202C713.668 40 714.735 40.3333 715.402 41C716.068 41.5333 716.468 42.5333 716.602 44L717.202 51.2C725.068 41.7333 735.402 37 748.202 37C754.068 37 758.535 38 761.602 40C762.402 40.5333 762.868 41.1333 763.002 41.8C763.268 42.3333 763.268 43 763.002 43.8L759.402 55.8C759.002 57.1333 758.268 57.8 757.202 57.8L755.602 57.4C752.402 55.9333 748.735 55.2 744.602 55.2C737.802 55.2 732.202 57.1333 727.802 61C723.402 64.7333 721.202 69.8667 721.202 76.4V128.8C721.202 131.2 720.602 133 719.402 134.2C718.335 135.4 716.402 136 713.602 136H703.202Z" fill="#494F4D"/>
     <path d="M621.583 139C604.249 139 590.849 134.467 581.383 125.4C572.049 116.2 567.383 103.733 567.383 88C567.383 72.2667 572.049 59.8667 581.383 50.8C590.849 41.6 604.249 37 621.583 37C638.916 37 652.316 41.6 661.783 50.8C671.25 59.8667 675.983 72.2667 675.983 88C675.983 103.733 671.25 116.2 661.783 125.4C652.316 134.467 638.916 139 621.583 139ZM621.583 120.2C631.049 120.2 638.249 117.467 643.183 112C648.116 106.533 650.583 98.5333 650.583 88C650.583 77.6 648.116 69.7333 643.183 64.4C638.249 58.9333 631.049 56.2 621.583 56.2C612.249 56.2 605.05 58.9333 599.983 64.4C595.05 69.7333 592.583 77.6 592.583 88C592.583 98.4 595.05 106.4 599.983 112C605.05 117.467 612.249 120.2 621.583 120.2Z" fill="#494F4D"/>
     <path d="M511.616 139C503.616 139 495.816 138.133 488.216 136.4C480.616 134.8 474.082 132.333 468.616 129C466.882 128.067 466.016 127.067 466.016 126C466.016 125.2 466.282 124.467 466.816 123.8L472.416 114C473.082 112.8 473.749 112.2 474.416 112.2C475.082 112.2 475.949 112.533 477.016 113.2C481.016 115.6 485.949 117.6 491.816 119.2C497.682 120.8 503.082 121.6 508.016 121.6C515.616 121.6 521.016 120.867 524.216 119.4C527.549 117.8 529.216 115 529.216 111C529.216 108.733 528.549 106.933 527.216 105.6C526.016 104.133 524.149 102.867 521.616 101.8C519.082 100.733 514.882 99.2667 509.016 97.4C509.016 97.4 506.816 96.6667 502.416 95.2C494.816 92.6667 488.749 90.2 484.216 87.8C479.682 85.4 476.149 82.4 473.616 78.8C471.216 75.0667 470.016 70.4 470.016 64.8C470.016 55.7333 473.816 48.8667 481.416 44.2C489.149 39.4 499.149 37 511.416 37C526.349 37 539.216 40.2 550.016 46.6C551.749 47.5333 552.616 48.5333 552.616 49.6C552.616 50.2667 552.282 51.1333 551.616 52.2L546.216 60.8C545.416 62 544.749 62.6 544.216 62.6C543.682 62.6 542.882 62.2667 541.816 61.6C538.349 59.4667 534.149 57.8 529.216 56.6C524.416 55.2667 519.549 54.6 514.616 54.6C507.949 54.6 503.016 55.3333 499.816 56.8C496.749 58.1333 495.216 60.8 495.216 64.8C495.216 68.2667 497.016 71 500.616 73C504.349 75 510.749 77.4 519.816 80.2L526.416 82.2C536.816 85.5333 544.082 89.4667 548.216 94C552.482 98.5333 554.616 104.2 554.616 111C554.616 119.267 550.949 126 543.616 131.2C536.416 136.4 525.749 139 511.616 139Z" fill="#494F4D"/>
@@ -355,22 +386,41 @@
   </svg>
 
   <div class="bar-divider"></div>
-  <span class="bar-page-title">Coverage Monitor</span>
 
-</div>
+  <nav class="bar-centre btn-group" aria-label="Primary navigation">
+    <button class="chip" onclick="window.location.href='explore.html'">Explore</button>
+    <button class="chip" onclick="window.location.href='portfolio.html'">Portfolio</button>
+    <button class="chip" onclick="window.location.href='compare.html'">Compare</button>
+    <button class="chip" onclick="window.location.href='watchlist.html'">Watchlist</button>
+    <button class="chip" onclick="window.location.href='board.html'">Board</button>
+    <button class="chip" onclick="window.location.href='opportunities.html'">Opportunities</button>
+  </nav>
+
+  <div class="app-header-right">
+    <button class="bar-btn-profile" id="profile-btn"
+      onclick="toggleProfileMenu()"
+      aria-label="Account menu"
+      aria-expanded="false"
+      aria-controls="profile-menu">
+      RM
+    </button>
+  </div>
+
+</header>
 
 <!-- ── NAV DROPDOWN ─────────────────────────────────────────────────── -->
 <nav class="nav-menu" id="nav-menu" aria-label="Primary navigation">
   <div class="menu-cols">
     <div class="menu-col">
-      <button class="menu-item" onclick="location.href='explore.html'; closeNavMenu()">Explore</button>
-      <button class="menu-item" onclick="location.href='portfolio.html'; closeNavMenu()">Portfolio</button>
-      <button class="menu-item" onclick="location.href='compare.html'; closeNavMenu()">Compare</button>
+      <button class="menu-item" onclick="window.location.href='explore.html'; closeNavMenu()">Explore</button>
+      <button class="menu-item" onclick="window.location.href='portfolio.html'; closeNavMenu()">Portfolio</button>
+      <button class="menu-item" onclick="window.location.href='compare.html'; closeNavMenu()">Compare</button>
     </div>
     <div class="menu-col">
       <div class="menu-col-divider"></div>
-      <button class="menu-item" onclick="location.href='control-room.html'; closeNavMenu()">Control Room</button>
-      <button class="menu-item active" aria-current="page">Coverage Monitor</button>
+      <button class="menu-item" onclick="window.location.href='watchlist.html'; closeNavMenu()">Watchlist</button>
+      <button class="menu-item" onclick="window.location.href='board.html'; closeNavMenu()">Board</button>
+      <button class="menu-item" onclick="window.location.href='opportunities.html'; closeNavMenu()">Opportunities</button>
     </div>
   </div>
   <div class="menu-divider"></div>
@@ -395,21 +445,69 @@
   <div class="menu-model-label">Coverage Monitor — internal</div>
 </nav>
 
-<!-- ── MAIN ──────────────────────────────────────────────────────────── -->
-<main id="cm-main" class="cr-shell" style="visibility:hidden">
-<div class="cr-container">
+<!-- ── PROFILE DROPDOWN ──────────────────────────────────────────────── -->
+<div class="profile-menu" id="profile-menu" role="menu" aria-label="Account options">
+  <div class="profile-header">
+    <div class="profile-name">Ross Mackintosh</div>
+    <div class="profile-email">rosscraigmackintosh@gmail.com</div>
+  </div>
+  <button class="profile-item" role="menuitem" onclick="window.location.href='account.html'">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="4.5" r="2.5"/>
+      <path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/>
+    </svg>
+    My account
+  </button>
+  <button class="profile-item" role="menuitem">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="2"/>
+      <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12M2.8 2.8l.85.85M9.35 9.35l.85.85M9.35 3.65l.85-.85M3.65 9.35l-.85.85"/>
+    </svg>
+    Workspace settings
+  </button>
+  <div class="menu-divider"></div>
+  <div class="profile-admin-label">Admin</div>
+  <button class="profile-item profile-item-current" role="menuitem" aria-current="page">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <rect x="1.5" y="2.5" width="10" height="8" rx="1"/>
+      <line x1="1.5" y1="5.5" x2="11.5" y2="5.5"/>
+      <line x1="4.5" y1="2.5" x2="4.5" y2="5.5"/>
+    </svg>
+    Coverage Monitor
+  </button>
+  <button class="profile-item" role="menuitem" onclick="window.location.href='control-room.html'">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="2"/>
+      <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12M2.8 2.8l.85.85M9.35 9.35l.85.85M9.35 3.65l.85-.85M3.65 9.35l-.85.85"/>
+    </svg>
+    Control Room
+  </button>
+  <div class="menu-divider"></div>
+  <button class="profile-item" role="menuitem" style="color:var(--negative)">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <path d="M8.5 4.5L12 6.5l-3.5 2"/>
+      <line x1="12" y1="6.5" x2="5" y2="6.5"/>
+      <path d="M5 1.5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3"/>
+    </svg>
+    Sign out
+  </button>
+</div>
+
+<!-- ── PAGE CONTENT ───────────────────────────────────────────────────── -->
+<div class="cm-body">
+<div class="cm-container" id="cm-content">
 
   <!-- PAGE HEADER -->
-  <div class="cr-page-header">
-    <h1 class="cr-page-title">Coverage Monitor</h1>
-    <span class="cr-page-sub">Ingestion status, platform coverage, and FanScore state</span>
-    <span class="cr-internal-badge">Internal</span>
+  <div class="cm-page-header">
+    <h1 class="cm-page-title">Coverage Monitor</h1>
+    <span class="cm-page-sub">Ingestion status, platform coverage, and FanScore state</span>
+    <span class="cm-internal-badge">Internal</span>
     <span class="cm-loaded-at" id="cm-loaded-at"></span>
     <button class="cm-refresh-btn" id="cm-refresh-btn" onclick="init()">Refresh</button>
   </div>
 
   <!-- SUMMARY STRIP -->
-  <div class="cm-summary" id="cm-summary">
+  <div class="cm-summary">
     <div class="cm-stat"><span class="cm-stat-value" id="s-total">--</span><span class="cm-stat-label">Properties</span></div>
     <div class="cm-stat"><span class="cm-stat-value" id="s-scored">--</span><span class="cm-stat-label">Scored today</span></div>
     <div class="cm-stat"><span class="cm-stat-value" id="s-suppressed">--</span><span class="cm-stat-label">Suppressed</span></div>
@@ -421,26 +519,27 @@
   </div>
 
   <!-- FILTER BAR -->
-  <div class="cm-filter-bar" id="cm-filter-bar">
-    <button class="cm-filter-btn active" data-filter="all"            onclick="setFilter(this)">All</button>
-    <button class="cm-filter-btn"        data-filter="team"           onclick="setFilter(this)">Teams</button>
-    <button class="cm-filter-btn"        data-filter="athlete"        onclick="setFilter(this)">Athletes</button>
-    <button class="cm-filter-btn"        data-filter="event"          onclick="setFilter(this)">Events</button>
-    <button class="cm-filter-btn"        data-filter="scored"         onclick="setFilter(this)">Scored</button>
-    <button class="cm-filter-btn"        data-filter="suppressed"     onclick="setFilter(this)">Suppressed</button>
-    <button class="cm-filter-btn"        data-filter="ingest-error"   onclick="setFilter(this)">Ingestion errors</button>
-    <button class="cm-filter-btn"        data-filter="no-social"      onclick="setFilter(this)">No social found</button>
+  <div class="cm-filter-bar">
+    <button class="cm-filter-btn"        data-filter="all"              onclick="setFilter(this)">All</button>
+    <button class="cm-filter-btn active" data-filter="needs-attention" onclick="setFilter(this)">Needs attention</button>
+    <button class="cm-filter-btn"        data-filter="team"             onclick="setFilter(this)">Teams</button>
+    <button class="cm-filter-btn"        data-filter="athlete"          onclick="setFilter(this)">Athletes</button>
+    <button class="cm-filter-btn"        data-filter="event"            onclick="setFilter(this)">Events</button>
+    <button class="cm-filter-btn"        data-filter="scored"           onclick="setFilter(this)">Scored</button>
+    <button class="cm-filter-btn"        data-filter="suppressed"       onclick="setFilter(this)">Suppressed</button>
+    <button class="cm-filter-btn"        data-filter="ingest-error"     onclick="setFilter(this)">Ingestion errors</button>
+    <button class="cm-filter-btn"        data-filter="no-social"        onclick="setFilter(this)">No social found</button>
   </div>
 
   <!-- MATRIX TABLE -->
-  <section class="cr-section" aria-labelledby="cm-section-label">
-    <div class="cr-section-header">
-      <h2 class="cr-section-title" id="cm-section-label">Property matrix</h2>
-      <span class="cr-section-count" id="cm-row-count">--</span>
+  <section class="cm-section" aria-labelledby="cm-section-label">
+    <div class="cm-section-header">
+      <h2 class="cm-section-title" id="cm-section-label">Property matrix</h2>
+      <span class="cm-section-count" id="cm-row-count">--</span>
     </div>
-    <div class="cr-table-wrap">
-      <div class="cr-table-scroll">
-        <table class="cr-table" id="cm-table">
+    <div class="cm-table-wrap">
+      <div class="cm-table-scroll">
+        <table class="cm-table" id="cm-table">
           <thead>
             <tr>
               <th>Property</th>
@@ -455,10 +554,11 @@
               <th>Confidence</th>
               <th>Score effect</th>
               <th>Last ingested</th>
+              <th>Manage</th>
             </tr>
           </thead>
           <tbody id="cm-tbody">
-            <tr class="cm-state-row"><td colspan="12">Loading data...</td></tr>
+            <tr class="cm-state-row"><td colspan="13">Loading data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -466,16 +566,13 @@
   </section>
 
 </div>
-</main>
+</div>
 
 <script>
-/* ── Theme / nav (mirrors other pages) ─────────────────────────────── */
+/* ── Theme ──────────────────────────────────────────────────────────── */
 (function() {
-  var saved = localStorage.getItem('sai-theme');
-  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var theme = saved || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-  document.documentElement.style.visibility = '';
+  var t = localStorage.getItem('sai-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
 })();
 
 function setTheme(t) {
@@ -485,45 +582,53 @@ function setTheme(t) {
   document.getElementById('theme-dark').classList.toggle('active',  t === 'dark');
 }
 
-var navMenuOpen = false;
-function toggleNavMenu() {
-  navMenuOpen ? closeNavMenu() : openNavMenu();
-}
+/* ── Nav menu ───────────────────────────────────────────────────────── */
+var navOpen = false;
+function toggleNavMenu() { navOpen ? closeNavMenu() : openNavMenu(); }
 function openNavMenu() {
-  navMenuOpen = true;
+  navOpen = true;
   document.getElementById('nav-menu').classList.add('open');
   document.getElementById('menu-btn').setAttribute('aria-expanded', 'true');
 }
 function closeNavMenu() {
-  navMenuOpen = false;
+  navOpen = false;
   document.getElementById('nav-menu').classList.remove('open');
   document.getElementById('menu-btn').setAttribute('aria-expanded', 'false');
 }
+
+/* ── Profile menu ───────────────────────────────────────────────────── */
+var profileOpen = false;
+function toggleProfileMenu() { profileOpen ? closeProfileMenu() : openProfileMenu(); }
+function openProfileMenu() {
+  profileOpen = true;
+  document.getElementById('profile-menu').classList.add('open');
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'true');
+}
+function closeProfileMenu() {
+  profileOpen = false;
+  document.getElementById('profile-menu').classList.remove('open');
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
+}
+
 document.addEventListener('click', function(e) {
   var nm = document.getElementById('nav-menu');
   var mb = document.getElementById('menu-btn');
-  if (navMenuOpen && nm && mb && !nm.contains(e.target) && !mb.contains(e.target)) closeNavMenu();
+  var pm = document.getElementById('profile-menu');
+  var pb = document.getElementById('profile-btn');
+  if (navOpen     && nm && mb && !nm.contains(e.target) && !mb.contains(e.target)) closeNavMenu();
+  if (profileOpen && pm && pb && !pm.contains(e.target) && !pb.contains(e.target)) closeProfileMenu();
 });
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && navMenuOpen) closeNavMenu();
+  if (e.key === 'Escape') { if (navOpen) closeNavMenu(); if (profileOpen) closeProfileMenu(); }
 });
 
 /* ── Data ───────────────────────────────────────────────────────────── */
 var ALL_ROWS = [];
-var ACTIVE_FILTER = 'all';
-
-var CHIP_LABELS = {
-  'live':       'Live',
-  'linked':     'Linked',
-  'pending':    'Pending',
-  'not-found':  'Not found',
-  'error':      'Error',
-  'not-linked': '--'
-};
+var ACTIVE_FILTER = 'needs-attention';
+var CHIP_LABELS = { 'live': 'Live', 'linked': 'Linked', 'pending': 'Pending', 'not-found': 'Not found', 'error': 'Error', 'not-linked': '--' };
 
 function isoDate(daysAgo) {
-  var d = new Date(Date.now() - daysAgo * 86400000);
-  return d.toISOString().slice(0, 10);
+  return new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
 }
 
 async function loadData() {
@@ -539,15 +644,13 @@ async function loadData() {
     fetch(API_URL + '/fanscore_daily?metric_date=eq.' + today + '&select=property_id,fanscore_value,confidence_band,suppression_reason,computed_at', { headers: h })
   ]);
 
-  if (!pr.ok || !ar.ok) throw new Error('Failed to load core data (' + pr.status + ')');
+  if (!pr.ok || !ar.ok) throw new Error('Failed to load data (' + pr.status + ')');
 
   var [properties, accounts, snapshots, rollups, fanscores] = await Promise.all([
     pr.json(), ar.json(), sr.json(), rr.json(), fr.json()
   ]);
 
-  /* Build lookup maps */
-  var acctsByPropId = {}; /* { prop_id: { platform: acct } } */
-  var acctById      = {}; /* { acct_id: acct } */
+  var acctsByPropId = {}, acctById = {};
   for (var i = 0; i < accounts.length; i++) {
     var a = accounts[i];
     acctById[a.id] = a;
@@ -555,24 +658,22 @@ async function loadData() {
     acctsByPropId[a.property_id][a.platform] = a;
   }
 
-  var snapsByAcctId = {}; /* { acct_id: [snap, ...] } */
+  var snapsByAcctId = {};
   for (var i = 0; i < snapshots.length; i++) {
     var s = snapshots[i];
     if (!snapsByAcctId[s.social_account_id]) snapsByAcctId[s.social_account_id] = [];
     snapsByAcctId[s.social_account_id].push(s);
   }
 
-  var rollupsByAcctId = {}; /* { acct_id: [rollup, ...] } */
+  var rollupsByAcctId = {};
   for (var i = 0; i < rollups.length; i++) {
     var r = rollups[i];
     if (!rollupsByAcctId[r.social_account_id]) rollupsByAcctId[r.social_account_id] = [];
     rollupsByAcctId[r.social_account_id].push(r);
   }
 
-  var fsByPropId = {}; /* { prop_id: fanscoreRow } */
-  for (var i = 0; i < fanscores.length; i++) {
-    fsByPropId[fanscores[i].property_id] = fanscores[i];
-  }
+  var fsByPropId = {};
+  for (var i = 0; i < fanscores.length; i++) fsByPropId[fanscores[i].property_id] = fanscores[i];
 
   return { properties, acctsByPropId, snapsByAcctId, rollupsByAcctId, fsByPropId };
 }
@@ -582,50 +683,33 @@ function platChipStatus(acct, snapsByAcctId) {
   if (acct.status === 'not_found') return 'not-found';
   if (acct.last_ingest_status === 'error') return 'error';
   if (acct.status === 'pending' || acct.status === 'pending_verification') return 'pending';
-  var snaps = snapsByAcctId[acct.id] || [];
-  return snaps.length > 0 ? 'live' : 'linked';
+  return (snapsByAcctId[acct.id] || []).length > 0 ? 'live' : 'linked';
 }
 
 function computeRow(prop, acctsByPropId, snapsByAcctId, rollupsByAcctId, fsByPropId) {
   var propAccts = acctsByPropId[prop.id] || {};
   var platforms = ['x', 'instagram', 'tiktok', 'youtube'];
-
   var chips = {};
-  for (var i = 0; i < platforms.length; i++) {
-    chips[platforms[i]] = platChipStatus(propAccts[platforms[i]], snapsByAcctId);
-  }
+  for (var i = 0; i < platforms.length; i++) chips[platforms[i]] = platChipStatus(propAccts[platforms[i]], snapsByAcctId);
 
-  /* Snapshot count across all platforms (7d) */
   var snapCount = 0;
   var acctList = Object.values(propAccts);
-  for (var i = 0; i < acctList.length; i++) {
-    snapCount += (snapsByAcctId[acctList[i].id] || []).length;
-  }
+  for (var i = 0; i < acctList.length; i++) snapCount += (snapsByAcctId[acctList[i].id] || []).length;
 
-  /* Rollup: any rollup in 7d? (any platform) */
-  var hasRollup = false;
-  var rollupConf = null;
+  var hasRollup = false, rollupConf = null;
   for (var i = 0; i < acctList.length; i++) {
     var rs = rollupsByAcctId[acctList[i].id] || [];
     if (rs.length > 0) { hasRollup = true; rollupConf = rs[0].coverage_confidence; break; }
   }
 
-  /* FanScore */
   var fs = fsByPropId[prop.id] || null;
-
-  /* Score effect */
   var effect, effectCls;
   if (fs && fs.fanscore_value != null) {
     effect = 'Contributing'; effectCls = 'cm-effect-contributing';
   } else if (fs && fs.suppression_reason) {
     var sr = fs.suppression_reason.toLowerCase();
-    if (sr.includes('social') || sr.includes('no data')) {
-      effect = 'No social data'; effectCls = 'cm-effect-suppressed';
-    } else if (sr.includes('rollup')) {
-      effect = 'No rollups'; effectCls = 'cm-effect-suppressed';
-    } else {
-      effect = fs.suppression_reason; effectCls = 'cm-effect-suppressed';
-    }
+    effect = (sr.includes('social') || sr.includes('no data')) ? 'No social data' : sr.includes('rollup') ? 'No rollups' : fs.suppression_reason;
+    effectCls = 'cm-effect-suppressed';
   } else if (hasRollup) {
     effect = 'Not contributing yet'; effectCls = 'cm-effect-pending';
   } else if (acctList.length === 0) {
@@ -634,99 +718,79 @@ function computeRow(prop, acctsByPropId, snapsByAcctId, rollupsByAcctId, fsByPro
     effect = 'No rollups yet'; effectCls = 'cm-effect-pending';
   }
 
-  /* Has ingestion error on any account */
-  var hasError = acctList.some(function(a) { return a.last_ingest_status === 'error'; });
+  var hasError  = acctList.some(function(a) { return a.last_ingest_status === 'error'; });
+  var noSocial  = acctList.length === 0 || acctList.every(function(a) { return a.status === 'not_found'; });
 
-  /* All linked accounts are not_found */
-  var allNotFound = acctList.length > 0 && acctList.every(function(a) { return a.status === 'not_found'; });
-  var noSocial    = acctList.length === 0 || allNotFound;
-
-  /* Most recent last_ingested_at */
   var lastIngested = null;
   for (var i = 0; i < acctList.length; i++) {
-    if (acctList[i].last_ingested_at) {
-      if (!lastIngested || acctList[i].last_ingested_at > lastIngested) {
-        lastIngested = acctList[i].last_ingested_at;
-      }
+    if (acctList[i].last_ingested_at && (!lastIngested || acctList[i].last_ingested_at > lastIngested)) {
+      lastIngested = acctList[i].last_ingested_at;
     }
   }
 
   return { prop, chips, snapCount, hasRollup, rollupConf, fs, effect, effectCls, hasError, noSocial, lastIngested };
 }
 
-/* ── Rendering helpers ──────────────────────────────────────────────── */
+/* ── Render helpers ─────────────────────────────────────────────────── */
 function chipHtml(status) {
   return '<span class="plat-chip plat-' + status + '">' + (CHIP_LABELS[status] || status) + '</span>';
 }
-
 function typeHtml(t) {
-  var map = { team: ['cm-type-team','Team'], athlete: ['cm-type-athlete','Athlete'],
-              event: ['cm-type-event','Event'], series: ['cm-type-series','Series'] };
+  var map = { team: ['cm-type-team','Team'], athlete: ['cm-type-athlete','Athlete'], event: ['cm-type-event','Event'], series: ['cm-type-series','Series'] };
   var cfg = map[t] || ['cm-type-other', t || 'Other'];
   return '<span class="cm-type ' + cfg[0] + '">' + cfg[1] + '</span>';
 }
-
 function confHtml(band) {
   if (!band) return '<span class="cm-score-none">--</span>';
   var cls = { High: 'cm-conf-high', Medium: 'cm-conf-medium', Low: 'cm-conf-low' }[band] || 'cm-score-none';
   return '<span class="' + cls + '">' + band + '</span>';
 }
-
 function fmtScore(v) {
-  if (v == null) return '<span class="cm-score-none">--</span>';
-  return '<span class="cm-score">' + Number(v).toFixed(1) + '</span>';
+  return v == null ? '<span class="cm-score-none">--</span>' : '<span class="cm-score">' + Number(v).toFixed(1) + '</span>';
 }
-
 function fmtDate(iso) {
   if (!iso) return '<span class="cm-updated">--</span>';
-  var d = new Date(iso);
-  var now = Date.now();
-  var diff = now - d.getTime();
+  var diff = Date.now() - new Date(iso).getTime();
   var h = Math.floor(diff / 3600000);
-  var text;
-  if (h < 1)        text = 'Just now';
-  else if (h < 24)  text = h + 'h ago';
-  else              text = Math.floor(h / 24) + 'd ago';
+  var text = h < 1 ? 'Just now' : h < 24 ? h + 'h ago' : Math.floor(h / 24) + 'd ago';
   return '<span class="cm-updated" title="' + iso + '">' + text + '</span>';
 }
-
-function snapHtml(count) {
-  if (count === 0) return '<span class="cm-snap-none">--</span>';
-  return '<span class="cm-snap-val">' + count + '</span>';
+function snapHtml(n) {
+  return n === 0 ? '<span class="cm-snap-none">--</span>' : '<span class="cm-snap-val">' + n + '</span>';
 }
-
 function rollupHtml(has, conf) {
-  if (!has) return '<span class="cm-rollup-no">No rollup</span>';
-  var label = 'Rolled' + (conf ? ' (' + conf + ')' : '');
-  return '<span class="cm-rollup-yes">' + label + '</span>';
+  return has ? '<span class="cm-rollup-yes">Rolled' + (conf ? ' (' + conf + ')' : '') + '</span>'
+             : '<span class="cm-rollup-no">No rollup</span>';
+}
+function manageLinkHtml(prop) {
+  var base = 'admin-source-manager.html';
+  var href = prop.property_type === 'team'
+    ? base + '?team=' + encodeURIComponent(prop.slug)
+    : base + '?focus=' + encodeURIComponent(prop.slug);
+  return '<a class="cm-manage-link" href="' + href + '" target="_blank">Manage source</a>';
 }
 
-/* ── Filter ─────────────────────────────────────────────────────────── */
+/* ── Filter / Summary ───────────────────────────────────────────────── */
 function setFilter(btn) {
   ACTIVE_FILTER = btn.dataset.filter;
-  document.querySelectorAll('.cm-filter-btn').forEach(function(b) {
-    b.classList.toggle('active', b === btn);
-  });
+  document.querySelectorAll('.cm-filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
   renderTable(ALL_ROWS);
 }
-
-function matchesFilter(row, filter) {
-  switch (filter) {
+function matchesFilter(row, f) {
+  switch (f) {
     case 'all':          return true;
     case 'team':         return row.prop.property_type === 'team';
     case 'athlete':      return row.prop.property_type === 'athlete';
     case 'event':        return row.prop.property_type === 'event';
     case 'scored':       return row.fs && row.fs.fanscore_value != null;
-    case 'suppressed':   return row.fs && !!row.fs.suppression_reason;
-    case 'ingest-error': return row.hasError;
-    case 'no-social':    return row.noSocial;
-    default:             return true;
+    case 'suppressed':       return row.fs && !!row.fs.suppression_reason;
+    case 'ingest-error':     return row.hasError;
+    case 'no-social':        return row.noSocial;
+    case 'needs-attention':  return row.hasError || row.noSocial || (row.fs && !!row.fs.suppression_reason);
+    default:                 return true;
   }
 }
-
-/* ── Summary ────────────────────────────────────────────────────────── */
 function updateSummary(rows) {
-  var total = rows.length;
   var scored = 0, suppressed = 0, xLive = 0, igLive = 0, ttLive = 0, ytLive = 0;
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
@@ -737,31 +801,28 @@ function updateSummary(rows) {
     if (r.chips.tiktok    === 'live') ttLive++;
     if (r.chips.youtube   === 'live') ytLive++;
   }
-  document.getElementById('s-total').textContent     = total;
-  document.getElementById('s-scored').textContent    = scored;
+  document.getElementById('s-total').textContent      = rows.length;
+  document.getElementById('s-scored').textContent     = scored;
   document.getElementById('s-suppressed').textContent = suppressed;
-  document.getElementById('s-x').textContent         = xLive;
-  document.getElementById('s-ig').textContent        = igLive;
-  document.getElementById('s-tt').textContent        = ttLive;
-  document.getElementById('s-yt').textContent        = ytLive;
+  document.getElementById('s-x').textContent          = xLive;
+  document.getElementById('s-ig').textContent         = igLive;
+  document.getElementById('s-tt').textContent         = ttLive;
+  document.getElementById('s-yt').textContent         = ytLive;
 }
 
 /* ── Table render ───────────────────────────────────────────────────── */
 function renderTable(rows) {
   var visible = rows.filter(function(r) { return matchesFilter(r, ACTIVE_FILTER); });
   document.getElementById('cm-row-count').textContent = visible.length;
-
   var tbody = document.getElementById('cm-tbody');
   if (visible.length === 0) {
-    tbody.innerHTML = '<tr class="cm-state-row"><td colspan="12">No properties match this filter.</td></tr>';
+    tbody.innerHTML = '<tr class="cm-state-row"><td colspan="13">No properties match this filter.</td></tr>';
     return;
   }
-
   var html = '';
   for (var i = 0; i < visible.length; i++) {
     var r = visible[i];
-    html +=
-      '<tr>' +
+    html += '<tr>' +
       '<td class="cm-prop-name"><a href="property.html?slug=' + r.prop.slug + '" target="_blank">' + r.prop.name + '</a></td>' +
       '<td>' + typeHtml(r.prop.property_type) + '</td>' +
       '<td>' + chipHtml(r.chips.x) + '</td>' +
@@ -774,6 +835,7 @@ function renderTable(rows) {
       '<td>' + confHtml(r.fs ? r.fs.confidence_band : null) + '</td>' +
       '<td><span class="cm-effect ' + r.effectCls + '">' + r.effect + '</span></td>' +
       '<td>' + fmtDate(r.lastIngested) + '</td>' +
+      '<td>' + manageLinkHtml(r.prop) + '</td>' +
       '</tr>';
   }
   tbody.innerHTML = html;
@@ -781,13 +843,10 @@ function renderTable(rows) {
 
 /* ── Init ───────────────────────────────────────────────────────────── */
 async function init() {
-  var refreshBtn = document.getElementById('cm-refresh-btn');
-  var loadedAt   = document.getElementById('cm-loaded-at');
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = 'Loading...';
-  document.getElementById('cm-tbody').innerHTML =
-    '<tr class="cm-state-row"><td colspan="12">Loading data...</td></tr>';
-
+  var btn = document.getElementById('cm-refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  document.getElementById('cm-tbody').innerHTML = '<tr class="cm-state-row"><td colspan="13">Loading data...</td></tr>';
   try {
     var data = await loadData();
     ALL_ROWS = data.properties.map(function(p) {
@@ -795,23 +854,21 @@ async function init() {
     });
     updateSummary(ALL_ROWS);
     renderTable(ALL_ROWS);
-    var now = new Date();
-    loadedAt.textContent = 'Loaded ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('cm-loaded-at').textContent =
+      'Loaded ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (err) {
     document.getElementById('cm-tbody').innerHTML =
-      '<tr class="cm-state-row"><td colspan="12" style="color:var(--color-error-700)">Failed to load data: ' + err.message + '</td></tr>';
+      '<tr class="cm-state-row"><td colspan="13" style="color:var(--color-error-700)">Failed to load: ' + err.message + '</td></tr>';
     console.error('[coverage-monitor]', err);
   }
-
-  refreshBtn.disabled = false;
-  refreshBtn.textContent = 'Refresh';
+  btn.disabled = false;
+  btn.textContent = 'Refresh';
 }
 
 /* ── Boot ───────────────────────────────────────────────────────────── */
 (function() {
   var t = localStorage.getItem('sai-theme') || 'light';
   setTheme(t);
-  document.getElementById('cm-main').style.visibility = '';
   init();
 })();
 </script>

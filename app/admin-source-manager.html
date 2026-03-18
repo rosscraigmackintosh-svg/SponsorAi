@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entity Source Manager — SponsorAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<style>
+
+/* ── page shell ──────────────────────────────────────────────────────── */
+.esm-body {
+  padding-top: 56px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.esm-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  box-sizing: border-box;
+}
+
+/* ── page header ─────────────────────────────────────────────────────── */
+.esm-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.esm-page-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.esm-page-sub {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  line-height: 1;
+}
+.esm-internal-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  line-height: 1.4;
+}
+[data-theme="dark"] .esm-internal-badge {
+  color: var(--color-warning-300);
+  background: rgba(181,71,8,0.15);
+  border-color: rgba(181,71,8,0.3);
+}
+
+/* ── two-column layout ───────────────────────────────────────────────── */
+.esm-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .esm-layout { grid-template-columns: 1fr; }
+}
+
+/* ── left column ─────────────────────────────────────────────────────── */
+.esm-left { min-width: 0; }
+
+/* ── team selector bar ───────────────────────────────────────────────── */
+.esm-team-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.esm-team-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.esm-select {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  padding: 7px 28px 7px 10px;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  min-width: 220px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.esm-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.esm-team-meta {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-left: auto;
+}
+.esm-btn-ghost {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.esm-btn-ghost:hover { background: var(--surface-muted); color: var(--text-1); }
+.esm-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* ── summary strip ───────────────────────────────────────────────────── */
+.esm-summary {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.esm-stat {
+  flex: 1;
+  background: var(--surface);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.esm-stat-value {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-1);
+  line-height: 1;
+}
+.esm-stat-value.esm-good  { color: var(--positive); }
+.esm-stat-value.esm-warn  { color: var(--color-warning-700); }
+.esm-stat-value.esm-muted { color: var(--text-3); }
+.esm-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* ── section header ──────────────────────────────────────────────────── */
+.esm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.esm-section-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.esm-pill {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
+/* ── roster table ────────────────────────────────────────────────────── */
+.esm-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.esm-table-scroll { overflow-x: auto; }
+.esm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.esm-table thead tr {
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+.esm-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.esm-table th.th-center { text-align: center; }
+.esm-table td {
+  padding: 7px 12px;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.esm-table tbody tr:last-child td { border-bottom: none; }
+.esm-table tbody tr:hover td { background: var(--surface-muted); }
+
+/* ── player identity cell ────────────────────────────────────────────── */
+.esm-player-cell { display: flex; align-items: center; gap: 10px; }
+.esm-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  object-position: center top;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.esm-thumb-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.esm-player-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.esm-player-slug {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── status badges ───────────────────────────────────────────────────── */
+.esm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.esm-badge-confirmed {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 25%, transparent);
+}
+.esm-badge-placeholder {
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+.esm-badge-review {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+}
+[data-theme="dark"] .esm-badge-review {
+  color: var(--color-warning-300);
+  background: rgba(181,71,8,0.12);
+  border-color: rgba(181,71,8,0.25);
+}
+.esm-badge-source {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+.esm-badge-api {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+[data-theme="dark"] .esm-badge-api {
+  color: #93c5fd;
+  background: rgba(29,78,216,0.12);
+  border-color: rgba(29,78,216,0.25);
+}
+
+/* ── empty / loading states ──────────────────────────────────────────── */
+.esm-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+.esm-empty strong { color: var(--text-2); display: block; margin-bottom: 4px; }
+.esm-no-team {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+/* ── manual search (fallback for teams without relationships) ─────────── */
+.esm-fallback-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+[data-theme="dark"] .esm-fallback-bar {
+  background: rgba(181,71,8,0.08);
+  border-color: rgba(181,71,8,0.2);
+}
+.esm-fallback-bar.visible { display: flex; }
+.esm-fallback-note {
+  font-size: var(--text-xs);
+  color: var(--color-warning-700);
+  flex: 1;
+}
+[data-theme="dark"] .esm-fallback-note { color: var(--color-warning-300); }
+.esm-fallback-input {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  outline: none;
+  width: 200px;
+  transition: border-color 0.12s;
+}
+.esm-fallback-input:focus { border-color: var(--accent); }
+.esm-fallback-input::placeholder { color: var(--text-3); }
+
+/* ── missing-image attention indicator ──────────────────────────────── */
+.esm-attention-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+.esm-attention-bar.visible { display: flex; }
+.esm-attention-text {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  flex: 1;
+}
+.esm-attention-link {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.esm-attention-link:hover { opacity: 0.75; }
+
+/* ── right column (panel) ────────────────────────────────────────────── */
+.esm-right { min-width: 0; }
+.esm-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.esm-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+.esm-panel-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.esm-panel-body { padding: 16px; }
+
+/* ── source panel fields ─────────────────────────────────────────────── */
+.esm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.esm-field:last-child { margin-bottom: 0; }
+.esm-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+.esm-input, .esm-textarea {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.12s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.esm-input:focus, .esm-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.esm-input::placeholder, .esm-textarea::placeholder { color: var(--text-3); }
+.esm-textarea { resize: vertical; min-height: 80px; font-size: 12px; }
+.esm-note {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* ── source type selector ─────────────────────────────────────────────── */
+.esm-source-tabs {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.esm-source-tab {
+  flex: 1;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--bg);
+  border: none;
+  padding: 7px 4px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.esm-source-tab:last-child { border-right: none; }
+.esm-source-tab:hover { background: var(--surface-muted); color: var(--text-1); }
+.esm-source-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── fetch button ────────────────────────────────────────────────────── */
+.esm-btn-primary {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.1s;
+  width: 100%;
+  text-align: center;
+}
+.esm-btn-primary:hover { background: var(--accent-hover); }
+.esm-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+/* ── inline alert ────────────────────────────────────────────────────── */
+.esm-alert {
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: none;
+}
+.esm-alert.visible { display: block; }
+.esm-alert-warn {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+}
+[data-theme="dark"] .esm-alert-warn {
+  color: var(--color-warning-300);
+  background: rgba(181,71,8,0.1);
+  border-color: rgba(181,71,8,0.2);
+}
+.esm-alert-info {
+  color: var(--text-2);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+.esm-alert-success {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 20%, transparent);
+}
+
+/* ── approval queue ──────────────────────────────────────────────────── */
+.esm-queue-bulk {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.esm-btn-small {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.esm-btn-approve-bulk {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 20%, transparent);
+}
+.esm-btn-approve-bulk:hover { background: color-mix(in srgb, var(--positive) 16%, transparent); }
+.esm-btn-reject-bulk {
+  color: var(--negative);
+  background: color-mix(in srgb, var(--negative) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--negative) 20%, transparent);
+}
+.esm-btn-reject-bulk:hover { background: color-mix(in srgb, var(--negative) 16%, transparent); }
+.esm-bulk-note {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-left: auto;
+  align-self: center;
+}
+
+/* ── queue item ──────────────────────────────────────────────────────── */
+.esm-queue-list { max-height: 600px; overflow-y: auto; }
+.esm-queue-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.esm-queue-item:last-child { border-bottom: none; }
+.esm-queue-item.status-approved { opacity: 0.5; }
+.esm-queue-item.status-rejected { opacity: 0.35; }
+.esm-queue-player {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.esm-queue-slug {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+.esm-queue-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.esm-queue-img-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.esm-queue-img-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-align: center;
+}
+.esm-queue-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 96px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  object-position: center top;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+.esm-queue-thumb-empty {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 96px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 20px;
+}
+.esm-queue-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.esm-conf-bar {
+  height: 3px;
+  background: var(--surface-muted);
+  border-radius: 2px;
+  flex: 1;
+  min-width: 40px;
+  overflow: hidden;
+}
+.esm-conf-fill {
+  height: 100%;
+  background: var(--positive);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.esm-conf-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.esm-queue-actions {
+  display: flex;
+  gap: 6px;
+}
+.esm-btn-approve {
+  flex: 1;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 20%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 5px 0;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.esm-btn-approve:hover { background: color-mix(in srgb, var(--positive) 16%, transparent); }
+.esm-btn-reject {
+  flex: 1;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 0;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.esm-btn-reject:hover { color: var(--negative); border-color: color-mix(in srgb, var(--negative) 30%, transparent); }
+.esm-queue-status-line {
+  font-size: 11px;
+  padding: 2px 0;
+  font-weight: 500;
+}
+.esm-queue-status-line.approved { color: var(--positive); }
+.esm-queue-status-line.rejected { color: var(--text-3); }
+.esm-queue-status-line.error    { color: var(--negative); }
+
+/* ── commit strip (bottom of queue) ─────────────────────────────────── */
+.esm-commit-strip {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.esm-commit-strip.visible { display: block; }
+.esm-commit-meta {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+.esm-commit-meta strong { color: var(--text-1); }
+
+/* ── write result banner ─────────────────────────────────────────────── */
+.esm-write-result {
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-top: 10px;
+  line-height: 1.5;
+  display: none;
+}
+.esm-write-result.visible { display: block; }
+.esm-write-result-ok {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 20%, transparent);
+}
+.esm-write-result-warn {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+}
+[data-theme="dark"] .esm-write-result-warn {
+  color: var(--color-warning-300);
+  background: rgba(181,71,8,0.1);
+  border-color: rgba(181,71,8,0.2);
+}
+
+/* ── roster filter bar ───────────────────────────────────────────────── */
+.esm-roster-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.esm-filter-btn {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  white-space: nowrap;
+}
+.esm-filter-btn:hover { background: var(--surface-muted); color: var(--text-1); }
+.esm-filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── image count badge ───────────────────────────────────────────────── */
+.esm-img-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  margin-left: 4px;
+}
+
+/* ── confidence label ────────────────────────────────────────────────── */
+.esm-conf-label {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.esm-conf-label-high { color: var(--positive); }
+.esm-conf-label-med  { color: var(--color-warning-700); }
+.esm-conf-label-low  { color: var(--text-3); }
+[data-theme="dark"] .esm-conf-label-high { color: var(--color-success-300); }
+[data-theme="dark"] .esm-conf-label-med  { color: var(--color-warning-300); }
+
+/* ── queue source labels ─────────────────────────────────────────────── */
+.esm-queue-src-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 2px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="esm-body">
+<div class="esm-container">
+
+  <!-- Page header -->
+  <div class="esm-page-header">
+    <span class="esm-page-title">Entity Source Manager</span>
+    <span class="esm-page-sub">Image and source enrichment per team</span>
+    <span class="esm-internal-badge">Internal</span>
+  </div>
+
+  <div class="esm-layout">
+
+    <!-- ── LEFT: team selector + roster ───────────────────────── -->
+    <div class="esm-left">
+
+      <!-- Team selector bar -->
+      <div class="esm-team-bar">
+        <span class="esm-team-label">Team</span>
+        <select class="esm-select" id="teamSelect" onchange="onTeamChange()">
+          <option value="">-- select a team --</option>
+        </select>
+        <span class="esm-team-meta" id="teamMeta"></span>
+        <button class="esm-btn-ghost" id="reloadBtn" onclick="reloadRoster()" disabled>Reload</button>
+      </div>
+
+      <!-- Fallback bar (shown when no relationship data exists) -->
+      <div class="esm-fallback-bar" id="fallbackBar">
+        <span class="esm-fallback-note">
+          This team's roster is currently inferred from image and source records,
+          because no direct team-player relationships were found.
+          This is expected during early setup.
+        </span>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="esm-summary" id="summaryStrip">
+        <div class="esm-stat">
+          <span class="esm-stat-value esm-muted" id="statTotal">--</span>
+          <span class="esm-stat-label">Entities</span>
+        </div>
+        <div class="esm-stat">
+          <span class="esm-stat-value esm-good" id="statConfirmed">--</span>
+          <span class="esm-stat-label">Confirmed images</span>
+        </div>
+        <div class="esm-stat">
+          <span class="esm-stat-value" id="statPlaceholder">--</span>
+          <span class="esm-stat-label">Placeholders</span>
+        </div>
+        <div class="esm-stat">
+          <span class="esm-stat-value esm-warn" id="statReview">--</span>
+          <span class="esm-stat-label">Needs review</span>
+        </div>
+      </div>
+
+      <!-- Roster table -->
+      <div class="esm-section-header">
+        <span class="esm-section-title">Roster</span>
+        <span class="esm-pill" id="rosterCount">0 entities</span>
+      </div>
+
+      <!-- Missing-image attention indicator (shown once a team is loaded) -->
+      <div class="esm-attention-bar" id="attentionBar">
+        <span class="esm-attention-text" id="attentionText"></span>
+        <button class="esm-attention-link" onclick="activateMissingFilter()">View</button>
+      </div>
+
+      <!-- Roster filter bar (shown once a team is loaded) -->
+      <div class="esm-roster-filters" id="rosterFilters" style="display:none">
+        <button class="esm-filter-btn active" data-rfilter="all"      onclick="setRosterFilter(this)">All</button>
+        <button class="esm-filter-btn"        data-rfilter="confirmed" onclick="setRosterFilter(this)">Confirmed</button>
+        <button class="esm-filter-btn"        data-rfilter="missing"   onclick="setRosterFilter(this)">Missing image</button>
+        <button class="esm-filter-btn"        data-rfilter="review"    onclick="setRosterFilter(this)">Needs review</button>
+        <button class="esm-filter-btn"        data-rfilter="approved"  onclick="setRosterFilter(this)">Approved queue</button>
+        <button class="esm-filter-btn"        data-rfilter="rejected"  onclick="setRosterFilter(this)">Rejected queue</button>
+      </div>
+
+      <div id="rosterState">
+        <div class="esm-no-team">
+          <strong style="color:var(--text-2);display:block;margin-bottom:4px;">Select a team to begin</strong>
+          Choose a team from the selector above to load its roster and image coverage.
+        </div>
+      </div>
+
+    </div><!-- /esm-left -->
+
+    <!-- ── RIGHT: source panel + queue ───────────────────────── -->
+    <div class="esm-right">
+
+      <!-- Source panel -->
+      <div class="esm-panel">
+        <div class="esm-panel-header">
+          <span class="esm-panel-title">Candidate Sources</span>
+        </div>
+        <div class="esm-panel-body">
+
+          <!-- Source type tabs -->
+          <div class="esm-field">
+            <span class="esm-label">Source type</span>
+            <div class="esm-source-tabs">
+              <button class="esm-source-tab active" data-source="redbull_api" onclick="setSourceType('redbull_api')">API</button>
+              <button class="esm-source-tab" data-source="manual" onclick="setSourceType('manual')">Site</button>
+              <button class="esm-source-tab" data-source="other" onclick="setSourceType('other')">URL list</button>
+            </div>
+          </div>
+
+          <!-- API mode -->
+          <div id="mode-redbull_api">
+            <div class="esm-field">
+              <label class="esm-label" for="apiUrl">API endpoint</label>
+              <input class="esm-input" type="url" id="apiUrl"
+                placeholder="https://..."
+                oninput="clearFetchAlert()" />
+              <span class="esm-note">JSON feed endpoint. For Red Bull teams, the known CMS feed is pre-filled on team select.</span>
+            </div>
+            <div class="esm-field">
+              <label class="esm-label">Transform string (for Red Bull CDN)</label>
+              <input class="esm-input" id="apiTransform" value="c_fill,g_auto,w_300,h_300/q_auto,f_auto" />
+            </div>
+            <div class="esm-alert esm-alert-warn" id="corsAlert">
+              Direct fetch was blocked (likely CORS). Paste the raw JSON API response below, then click Fetch candidates again.
+            </div>
+            <div class="esm-field" id="pasteJsonField" style="display:none">
+              <label class="esm-label">Paste API response JSON</label>
+              <textarea class="esm-textarea" id="pasteJson" rows="5"
+                placeholder='{"data":[...]}'></textarea>
+            </div>
+          </div>
+
+          <!-- Site mode -->
+          <div id="mode-manual" style="display:none">
+            <div class="esm-field">
+              <label class="esm-label" for="siteUrl">Team site URL</label>
+              <input class="esm-input" type="url" id="siteUrl" placeholder="https://..." />
+            </div>
+            <div class="esm-field">
+              <label class="esm-label">Slug-to-image map (CSV: slug,image_url)</label>
+              <textarea class="esm-textarea" id="siteCsv" rows="5"
+                placeholder="player-slug,https://site.com/player.jpg"></textarea>
+              <span class="esm-note">One row per player. First column = slug matching the SponsorAI property slug. Second column = full image URL.</span>
+            </div>
+          </div>
+
+          <!-- URL list mode -->
+          <div id="mode-other" style="display:none">
+            <div class="esm-field">
+              <label class="esm-label">URL list</label>
+              <textarea class="esm-textarea" id="urlList" rows="6"
+                placeholder="player-slug:::https://cdn.example.com/photo.jpg&#10;(one per line, slug:::url format)"></textarea>
+              <span class="esm-note">Format: <code style="font-family:var(--mono);font-size:10px">slug:::https://url</code> one per line. Slug must match a property in the roster.</span>
+            </div>
+          </div>
+
+          <div class="esm-alert esm-alert-info" id="fetchAlert"></div>
+
+          <button class="esm-btn-primary" id="fetchBtn" onclick="fetchCandidates()">
+            Fetch candidates
+          </button>
+
+        </div>
+      </div><!-- /source panel -->
+
+      <!-- Approval queue (hidden until candidates loaded) -->
+      <div class="esm-panel" id="queuePanel" style="display:none">
+        <div class="esm-panel-header">
+          <span class="esm-panel-title">Approval queue</span>
+          <span class="esm-pill" id="queueCountBadge">0</span>
+        </div>
+
+        <div class="esm-queue-bulk">
+          <button class="esm-btn-small esm-btn-approve-bulk" onclick="bulkApprove()">
+            Approve high-confidence
+          </button>
+          <button class="esm-btn-small esm-btn-reject-bulk" onclick="bulkReject()">
+            Reject low-confidence
+          </button>
+          <span class="esm-bulk-note" id="bulkNote">threshold: 0.85</span>
+        </div>
+
+        <div class="esm-queue-list" id="queueList"></div>
+
+        <!-- Commit strip -->
+        <div class="esm-commit-strip" id="commitStrip">
+          <div class="esm-commit-meta" id="commitMeta"></div>
+          <button class="esm-btn-primary" id="commitBtn" onclick="commitApproved()">
+            Write approved to database
+          </button>
+          <div class="esm-write-result" id="writeResult"></div>
+        </div>
+
+      </div><!-- /queue panel -->
+
+    </div><!-- /esm-right -->
+  </div><!-- /esm-layout -->
+</div><!-- /esm-container -->
+</div><!-- /esm-body -->
+
+<script src="ui-helpers.js"></script>
+<script>
+
+/* ══════════════════════════════════════════════════════════════════════
+   Entity Source Manager — page script
+   Uses: Supabase REST via apiFetch (same pattern as data.js)
+   Writes: entity_images (INSERT, no DELETE, no UPDATE of existing rows)
+   Rules: human-in-the-loop only; no blind auto-apply
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Supabase REST helper ────────────────────────────────────────────── */
+function apiFetch(path, opts) {
+  opts = opts || {};
+  var headers = Object.assign({
+    'apikey'       : API_KEY,
+    'Authorization': 'Bearer ' + API_KEY,
+    'Content-Type' : 'application/json'
+  }, opts.headers || {});
+  return fetch(API_URL + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body
+  }).then(function(r) {
+    if (r.status === 204) return null;
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.message || r.statusText); });
+    return r.json();
+  });
+}
+
+/* ── Known canonical API endpoints per team slug ─────────────────────── */
+var KNOWN_APIS = {
+  'newcastle-red-bulls': 'https://www.newcastleredbulls.com/v3/api/graphql/v1/v3/feed/en-INT?filter[type]=person-profiles&page[limit]=60&rb3Schema=v1:cardList'
+};
+
+/* ── State ───────────────────────────────────────────────────────────── */
+var ESM = {
+  teams          : [],
+  selectedTeam   : null,
+  roster         : [],       /* array of { id, slug, name, property_type } */
+  imageMap       : {},       /* property_id → entity_images row (most recent winner) */
+  imageCountMap  : {},       /* property_id → total row count */
+  sourceType     : 'redbull_api',
+  queue          : [],       /* array of queue items (see matchCandidates) */
+  loading        : false,
+  rosterFilter   : 'all',    /* active roster client-side filter */
+  focusSlug      : null,     /* slug to highlight after roster loads (URL param) */
+  pendingTeamSlug: null      /* team slug to auto-select after teams load (URL param) */
+};
+
+/* ── Init ────────────────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', function() {
+  /* Read URL context params from Coverage Monitor handoff links */
+  var params = new URLSearchParams(window.location.search);
+  var teamParam  = params.get('team');
+  var focusParam = params.get('focus');
+  if (teamParam)  ESM.pendingTeamSlug = teamParam;
+  if (focusParam) ESM.focusSlug = focusParam;
+
+  updateSummary(null);
+
+  if (focusParam && !teamParam) {
+    /* ?focus= without ?team= — look up which team this athlete belongs to,
+       then auto-select it so the roster loads correctly */
+    lookupTeamForFocus(focusParam).then(function() { loadTeams(); });
+  } else {
+    loadTeams();
+  }
+});
+
+/* ── Team loading ────────────────────────────────────────────────────── */
+function loadTeams() {
+  apiFetch('/properties?select=id,slug,name,property_type&property_type=eq.team&order=name.asc')
+    .then(function(rows) {
+      ESM.teams = rows || [];
+      renderTeamSelect();
+      /* Auto-select team if ?team= param was supplied */
+      if (ESM.pendingTeamSlug) {
+        var match = ESM.teams.find(function(t) { return t.slug === ESM.pendingTeamSlug; });
+        if (match) {
+          document.getElementById('teamSelect').value = match.id;
+          onTeamChange();
+        }
+        ESM.pendingTeamSlug = null;
+      }
+    })
+    .catch(function(e) {
+      console.warn('[ESM] loadTeams error:', e);
+    });
+}
+
+function renderTeamSelect() {
+  var sel = document.getElementById('teamSelect');
+  /* Keep placeholder option */
+  while (sel.options.length > 1) sel.remove(1);
+  ESM.teams.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+}
+
+function onTeamChange() {
+  var sel = document.getElementById('teamSelect');
+  var id  = sel.value;
+  if (!id) { clearRoster(); return; }
+  ESM.selectedTeam = ESM.teams.find(function(t) { return t.id === id; }) || null;
+  if (!ESM.selectedTeam) return;
+  prefillApiSource(ESM.selectedTeam.slug);
+  loadRoster(ESM.selectedTeam);
+  /* Reset queue when team changes */
+  ESM.queue = [];
+  renderQueue();
+}
+
+function reloadRoster() {
+  if (!ESM.selectedTeam) return;
+  loadRoster(ESM.selectedTeam);
+}
+
+/* ── Focus team auto-lookup ──────────────────────────────────────────── */
+/* Called when ?focus=SLUG arrives without ?team=. Queries property_relationships
+   to discover which team has a team_has_athlete edge to this athlete, then sets
+   ESM.pendingTeamSlug so loadTeams() can auto-select it. */
+function lookupTeamForFocus(athleteSlug) {
+  return apiFetch('/properties?select=id&slug=eq.' + encodeURIComponent(athleteSlug) + '&limit=1')
+    .then(function(rows) {
+      if (!rows || !rows.length) return null;
+      var athleteId = rows[0].id;
+      return apiFetch(
+        '/property_relationships?select=from_property:from_id(id,slug,name)' +
+        '&to_id=eq.' + athleteId +
+        '&relationship_type=eq.team_has_athlete' +
+        '&limit=1'
+      );
+    })
+    .then(function(rels) {
+      if (!rels || !rels.length) return;
+      var team = rels[0].from_property;
+      if (team && team.slug) {
+        ESM.pendingTeamSlug = team.slug;
+      }
+    })
+    .catch(function(e) {
+      console.warn('[ESM] lookupTeamForFocus error:', e);
+    });
+}
+
+/* ── Roster loading ──────────────────────────────────────────────────── */
+function loadRoster(team) {
+  setLoading(true);
+  hideFallbackBar();
+
+  /* Step 1: try property_relationships */
+  apiFetch('/property_relationships?select=to_property:to_id(id,slug,name,property_type)' +
+    '&from_id=eq.' + team.id + '&relationship_type=eq.team_has_athlete')
+    .then(function(rels) {
+      var athletes = (rels || []).map(function(r) { return r.to_property; }).filter(Boolean);
+
+      if (athletes.length > 0) {
+        return { athletes: athletes, source: 'relationships' };
+      }
+
+      /* Step 2: athlete_belongs_to_team reverse (to_id = team.id) — secondary, no warning */
+      return apiFetch(
+        '/property_relationships?select=from_property:from_id(id,slug,name,property_type)' +
+        '&to_id=eq.' + team.id +
+        '&relationship_type=eq.athlete_belongs_to_team'
+      ).then(function(rels2) {
+        var athletes2 = (rels2 || []).map(function(r) { return r.from_property; }).filter(Boolean);
+        if (athletes2.length > 0) {
+          return { athletes: athletes2, source: 'relationships_reverse' };
+        }
+
+        /* Step 3: fallback — infer from entity_images.note */
+        /* Look for notes like "Prem Rugby {TeamNamePart} - ..." or "{TeamName} - ..." */
+        var namePart = team.name.replace(' Red Bulls', '').replace(' RFC', '').replace(' FC', '');
+        var encoded  = encodeURIComponent('%' + namePart + '%');
+        return apiFetch(
+          '/entity_images?select=property_id,properties(id,slug,name,property_type)' +
+          '&note=like.' + encoded +
+          '&verified=eq.true&limit=200'
+        ).then(function(rows) {
+          var seen = {}, players = [];
+          (rows || []).forEach(function(r) {
+            var p = r.properties;
+            if (p && !seen[p.id]) { seen[p.id] = true; players.push(p); }
+          });
+          return { athletes: players, source: 'image_notes' };
+        });
+      });
+    })
+    .then(function(result) {
+      var athletes = result.athletes;
+      var src      = result.source;
+
+      if (src === 'image_notes') showFallbackBar();
+
+      if (!athletes.length) {
+        ESM.roster   = [];
+        ESM.imageMap = {};
+        setLoading(false);
+        renderRoster();
+        return;
+      }
+
+      /* Final: load entity_images for all athletes in one query */
+      var ids = athletes.map(function(a) { return a.id; });
+      /* PostgREST IN filter — safe for up to a few hundred ids */
+      return apiFetch(
+        '/entity_images?select=property_id,image_url,source_type,verified,status,match_confidence,created_at' +
+        '&property_id=in.(' + ids.join(',') + ')' +
+        '&verified=eq.true' +
+        '&order=created_at.asc' +
+        '&limit=2000'
+      ).then(function(images) {
+        /* newest row per player wins (asc order means last write wins) */
+        var imgMap   = {};
+        var countMap = {};
+        (images || []).forEach(function(img) {
+          imgMap[img.property_id] = img; /* later row overwrites — newest wins */
+          countMap[img.property_id] = (countMap[img.property_id] || 0) + 1;
+        });
+        ESM.imageMap      = imgMap;
+        ESM.imageCountMap = countMap;
+        ESM.roster        = athletes;
+        setLoading(false);
+        renderRoster();
+      });
+    })
+    .catch(function(e) {
+      console.error('[ESM] loadRoster error:', e);
+      setLoading(false);
+      setRosterState('<div class="esm-empty"><strong>Failed to load roster</strong>' + escHtml(e.message) + '</div>');
+    });
+}
+
+function clearRoster() {
+  ESM.selectedTeam   = null;
+  ESM.roster         = [];
+  ESM.imageMap       = {};
+  ESM.imageCountMap  = {};
+  hideFallbackBar();
+  updateSummary(null);
+  document.getElementById('teamMeta').textContent = '';
+  document.getElementById('reloadBtn').disabled = true;
+  setRosterState(
+    '<div class="esm-no-team">' +
+    '<strong style="color:var(--text-2);display:block;margin-bottom:4px;">Select a team to begin</strong>' +
+    'Choose a team from the selector above to load its roster and image coverage.' +
+    '</div>'
+  );
+}
+
+/* ── Roster filter ───────────────────────────────────────────────────── */
+function setRosterFilter(btn) {
+  ESM.rosterFilter = btn.dataset.rfilter;
+  document.querySelectorAll('.esm-filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b === btn);
+  });
+  renderRoster();
+}
+
+function activateMissingFilter() {
+  var btn = document.querySelector('.esm-filter-btn[data-rfilter="missing"]');
+  if (btn) setRosterFilter(btn);
+}
+
+function matchesRosterFilter(player, filter) {
+  var hasImg = !!(ESM.imageMap[player.id] && ESM.imageMap[player.id].image_url);
+  var playerQueue = ESM.queue.filter(function(q) { return q.player.id === player.id; });
+  switch (filter) {
+    case 'confirmed':  return hasImg;
+    case 'missing':    return !hasImg;
+    case 'review':     return playerQueue.some(function(q) { return q.status === 'pending'; });
+    case 'approved':   return playerQueue.some(function(q) { return q.status === 'approved'; });
+    case 'rejected':   return playerQueue.some(function(q) { return q.status === 'rejected'; });
+    default:           return true;
+  }
+}
+
+/* ── Roster rendering ────────────────────────────────────────────────── */
+function renderRoster() {
+  document.getElementById('reloadBtn').disabled = false;
+  var r = ESM.roster;
+
+  if (!r.length) {
+    document.getElementById('rosterFilters').style.display = 'none';
+    document.getElementById('attentionBar').classList.remove('visible');
+    setRosterState(
+      '<div class="esm-empty">' +
+      '<strong>No entities found</strong>' +
+      'No athlete relationships or image history found for this team. ' +
+      'Populate property_relationships or import images with a team-name note prefix.' +
+      '</div>'
+    );
+    updateSummary({ total: 0, confirmed: 0, placeholder: 0, review: 0 });
+    return;
+  }
+
+  /* Show filter bar now that a roster is loaded */
+  document.getElementById('rosterFilters').style.display = '';
+
+  var confirmed   = 0;
+  var placeholder = 0;
+  var review      = 0;
+
+  /* Count summary across full roster before filtering */
+  r.forEach(function(player) {
+    var img = ESM.imageMap[player.id] || null;
+    if (img && img.image_url) { confirmed++; } else { placeholder++; }
+  });
+
+  /* Attention indicator: surface missing images with a quick-filter shortcut */
+  var attentionBar  = document.getElementById('attentionBar');
+  var attentionText = document.getElementById('attentionText');
+  if (placeholder > 0) {
+    attentionText.textContent = placeholder + ' ' + (placeholder === 1 ? 'athlete' : 'athletes') + ' missing images';
+    attentionBar.classList.add('visible');
+  } else {
+    attentionBar.classList.remove('visible');
+  }
+
+  /* Apply client-side filter */
+  var visible = r.filter(function(p) { return matchesRosterFilter(p, ESM.rosterFilter); });
+
+  if (!visible.length) {
+    setRosterState(
+      '<div class="esm-empty"><strong>No matches</strong>' +
+      'No entities match the current filter. Try a different filter above.</div>'
+    );
+    document.getElementById('rosterCount').textContent = '0 of ' + r.length + ' entities';
+    updateSummary({ total: r.length, confirmed: confirmed, placeholder: placeholder, review: review });
+    return;
+  }
+
+  var rows = visible.map(function(player) {
+    var img    = ESM.imageMap[player.id] || null;
+    var hasImg = !!(img && img.image_url);
+    var count  = ESM.imageCountMap[player.id] || 0;
+
+    /* Image cell */
+    var thumbHtml = hasImg
+      ? '<img class="esm-thumb" src="' + escHtml(img.image_url) + '" alt="" ' +
+        'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+        '<span class="esm-thumb-placeholder" style="display:none">&#128247;</span>'
+      : '<span class="esm-thumb-placeholder">&#128247;</span>';
+
+    /* Status badge */
+    var statusHtml = hasImg
+      ? '<span class="esm-badge esm-badge-confirmed">confirmed</span>'
+      : '<span class="esm-badge esm-badge-placeholder">placeholder</span>';
+
+    /* Source badge + image count */
+    var srcHtml = '';
+    if (img) {
+      var srcType = img.source_type || 'manual';
+      var isApi   = srcType === 'redbull_api';
+      srcHtml = '<span class="esm-badge-source' + (isApi ? ' esm-badge-api' : '') + '">' +
+                  escHtml(srcType) + '</span>';
+      if (count > 1) {
+        srcHtml += '<span class="esm-img-count" title="' + count + ' source rows in DB">' + count + ' rows</span>';
+      }
+    }
+
+    /* Entity name as property link */
+    var nameHtml = '<a href="property.html?slug=' + escHtml(player.slug) + '" target="_blank" ' +
+      'style="color:var(--text-1);text-decoration:none" ' +
+      'onmouseover="this.style.color=\'var(--accent)\'" onmouseout="this.style.color=\'var(--text-1)\'">' +
+      escHtml(player.name) + '</a>';
+
+    return '<tr data-slug="' + escHtml(player.slug) + '">' +
+      '<td><div class="esm-player-cell">' + thumbHtml +
+        '<div><div class="esm-player-name">' + nameHtml + '</div>' +
+        '<div class="esm-player-slug">' + escHtml(player.slug) + '</div></div></div></td>' +
+      '<td>' + statusHtml + '</td>' +
+      '<td>' + srcHtml + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--text-3)">' +
+        (img ? imgConfText(img.match_confidence) : '--') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  var tableHtml =
+    '<div class="esm-table-wrap"><div class="esm-table-scroll">' +
+    '<table class="esm-table">' +
+    '<thead><tr>' +
+    '<th>Entity</th>' +
+    '<th>Image status</th>' +
+    '<th>Source</th>' +
+    '<th>Conf.</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table></div></div>';
+
+  setRosterState(tableHtml);
+
+  var countLabel = ESM.rosterFilter === 'all'
+    ? r.length + ' ' + (r.length === 1 ? 'entity' : 'entities')
+    : visible.length + ' of ' + r.length + ' entities';
+  document.getElementById('rosterCount').textContent = countLabel;
+  document.getElementById('teamMeta').textContent = r.length + ' loaded';
+  updateSummary({ total: r.length, confirmed: confirmed, placeholder: placeholder, review: review });
+
+  /* Apply focus highlight if arriving from Coverage Monitor link */
+  if (ESM.focusSlug) {
+    applyFocus(ESM.focusSlug);
+    ESM.focusSlug = null; /* only apply once */
+  }
+}
+
+function applyFocus(slug) {
+  var tr = document.querySelector('#rosterState tbody tr[data-slug="' + escHtml(slug) + '"]');
+  if (!tr) return;
+  tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  tr.style.transition = 'background 0.3s';
+  tr.style.background = 'var(--accent-soft)';
+  setTimeout(function() { tr.style.background = ''; }, 2500);
+}
+
+function imgConfText(v) {
+  if (v == null) return '--';
+  return (Number(v) * 100).toFixed(0) + '%';
+}
+
+/* ── Summary strip ───────────────────────────────────────────────────── */
+function updateSummary(data) {
+  var blank = '--';
+  if (!data) {
+    ['statTotal','statConfirmed','statPlaceholder','statReview'].forEach(function(id) {
+      document.getElementById(id).textContent = blank;
+    });
+    return;
+  }
+  document.getElementById('statTotal').textContent       = data.total;
+  document.getElementById('statConfirmed').textContent   = data.confirmed;
+  document.getElementById('statPlaceholder').textContent = data.placeholder;
+  document.getElementById('statReview').textContent      = data.review;
+
+  /* Colour the placeholder stat */
+  var ph = document.getElementById('statPlaceholder');
+  ph.className = 'esm-stat-value' + (data.placeholder > 0 ? ' esm-warn' : ' esm-good');
+}
+
+/* ── Source type UI ──────────────────────────────────────────────────── */
+function setSourceType(type) {
+  ESM.sourceType = type;
+  document.querySelectorAll('.esm-source-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.source === type);
+  });
+  ['redbull_api','manual','other'].forEach(function(t) {
+    document.getElementById('mode-' + t).style.display = t === type ? '' : 'none';
+  });
+  clearFetchAlert();
+}
+
+function prefillApiSource(teamSlug) {
+  var known = KNOWN_APIS[teamSlug];
+  if (known) {
+    document.getElementById('apiUrl').value = known;
+  }
+  /* Switch to API tab for known teams */
+  if (known && ESM.sourceType !== 'redbull_api') {
+    setSourceType('redbull_api');
+  }
+}
+
+/* ── Fetch candidates ────────────────────────────────────────────────── */
+function fetchCandidates() {
+  if (!ESM.roster.length) {
+    showFetchAlert('Load a team roster first before fetching candidates.', 'info');
+    return;
+  }
+  clearFetchAlert();
+  hideCorsAlert();
+
+  if (ESM.sourceType === 'redbull_api') {
+    fetchApiCandidates();
+  } else if (ESM.sourceType === 'manual') {
+    fetchSiteCandidates();
+  } else {
+    fetchUrlListCandidates();
+  }
+}
+
+/* ── Red Bull API fetch ──────────────────────────────────────────────── */
+function fetchApiCandidates() {
+  var apiUrl   = document.getElementById('apiUrl').value.trim();
+  var transform= document.getElementById('apiTransform').value.trim();
+  if (!apiUrl) { showFetchAlert('Enter an API endpoint URL.', 'warn'); return; }
+
+  /* Check if user has pasted JSON (CORS fallback) */
+  var pasteField = document.getElementById('pasteJsonField');
+  var pasteVal   = document.getElementById('pasteJson').value.trim();
+  if (pasteField.style.display !== 'none' && pasteVal) {
+    parseApiResponse(pasteVal, transform);
+    return;
+  }
+
+  /* Try direct fetch */
+  showFetchAlert('Fetching...', 'info');
+  document.getElementById('fetchBtn').disabled = true;
+
+  fetch(apiUrl)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      clearFetchAlert();
+      document.getElementById('fetchBtn').disabled = false;
+      parseApiResponse(JSON.stringify(data), transform);
+    })
+    .catch(function(e) {
+      document.getElementById('fetchBtn').disabled = false;
+      /* Likely CORS — show paste fallback */
+      showCorsAlert();
+      clearFetchAlert();
+    });
+}
+
+function parseApiResponse(jsonStr, transform) {
+  var data;
+  try { data = JSON.parse(jsonStr); }
+  catch(e) { showFetchAlert('Could not parse JSON: ' + e.message, 'warn'); return; }
+
+  /* Handle both {"data":[...]} and bare [...] */
+  var items = Array.isArray(data) ? data : (data.data || []);
+  if (!items.length) { showFetchAlert('No items found in API response.', 'warn'); return; }
+
+  var TRANSFORM = transform || 'c_fill,g_auto,w_300,h_300/q_auto,f_auto';
+
+  /* Build slug→candidate map from API */
+  var apiMap = {};
+  items.forEach(function(item) {
+    var slug = (item.reference || {}).uriSlug || item.slug || '';
+    var name = (item.content  || {}).title   || item.name || '';
+    var rawUrl = (((item.media || {}).mainImage || {}).imageEssence || {}).imageURL || '';
+    /* Also check top-level imageUrl for simpler schemas */
+    if (!rawUrl) rawUrl = ((item.media || {}).mainImage || {}).imageUrl || '';
+    var url = rawUrl.replace('{op}', TRANSFORM).replace('{transform}', TRANSFORM);
+    if (slug && url) { apiMap[slug] = { slug: slug, name: name, url: url }; }
+  });
+
+  /* Match against roster */
+  matchCandidates(apiMap, 'redbull_api');
+}
+
+/* ── Site CSV fetch ──────────────────────────────────────────────────── */
+function fetchSiteCandidates() {
+  var csv = document.getElementById('siteCsv').value.trim();
+  if (!csv) { showFetchAlert('Enter CSV data (slug,image_url).', 'warn'); return; }
+
+  var map = {};
+  csv.split('\n').forEach(function(line) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    var parts = line.split(',');
+    if (parts.length < 2) return;
+    var slug = parts[0].trim();
+    var url  = parts.slice(1).join(',').trim();
+    if (slug && url) { map[slug] = { slug: slug, name: slug, url: url }; }
+  });
+
+  matchCandidates(map, 'manual');
+}
+
+/* ── URL list fetch ──────────────────────────────────────────────────── */
+function fetchUrlListCandidates() {
+  var text = document.getElementById('urlList').value.trim();
+  if (!text) { showFetchAlert('Enter a URL list (slug:::url per line).', 'warn'); return; }
+
+  var map = {};
+  text.split('\n').forEach(function(line) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    if (line.indexOf(':::') !== -1) {
+      var parts = line.split(':::');
+      var slug  = parts[0].trim();
+      var url   = parts.slice(1).join(':::').trim();
+      if (slug && url) { map[slug] = { slug: slug, name: slug, url: url }; }
+    } else {
+      /* Try to extract slug from URL filename */
+      try {
+        var u    = new URL(line);
+        var slug = u.pathname.split('/').filter(Boolean).pop().replace(/\.[^.]+$/, '');
+        if (slug) { map[slug] = { slug: slug, name: slug, url: line }; }
+      } catch(e) { /* ignore */ }
+    }
+  });
+
+  matchCandidates(map, 'other');
+}
+
+/* ── Candidate matching and queue building ───────────────────────────── */
+function matchCandidates(apiMap, sourceType) {
+  if (!Object.keys(apiMap).length) {
+    showFetchAlert('No valid candidate URLs extracted.', 'warn');
+    return;
+  }
+
+  var slugToPlayer = {};
+  ESM.roster.forEach(function(p) { slugToPlayer[p.slug] = p; });
+
+  var matches     = 0;
+  var unmatched   = [];
+  var newQueue    = [];
+
+  Object.keys(apiMap).forEach(function(slug) {
+    var cand   = apiMap[slug];
+    var player = slugToPlayer[slug];
+
+    if (!player) {
+      unmatched.push(slug);
+      return;
+    }
+
+    /* Skip if this exact URL already exists for this player */
+    var existing = ESM.imageMap[player.id];
+    if (existing && existing.image_url === cand.url) {
+      return; /* no-op: already the winning image */
+    }
+
+    /* Confidence: exact slug match + api source = 0.95 */
+    var conf = sourceType === 'redbull_api' ? 0.95
+             : sourceType === 'manual'      ? 0.80
+             : 0.65;
+
+    newQueue.push({
+      player            : player,
+      candidateUrl      : cand.url,
+      currentUrl        : (existing ? existing.image_url : null),
+      currentSourceType : (existing ? (existing.source_type || 'manual') : null),
+      sourceType        : sourceType,
+      confidence        : conf,
+      name              : cand.name || player.name,
+      status            : 'pending'   /* pending | approved | rejected | written | error */
+    });
+    matches++;
+  });
+
+  /* Prepend new queue items (keep existing approved/rejected ones) */
+  /* Deduplicate by player.id + candidateUrl */
+  var existingKeys = {};
+  ESM.queue.forEach(function(q) { existingKeys[q.player.id + '::' + q.candidateUrl] = true; });
+  newQueue = newQueue.filter(function(q) {
+    return !existingKeys[q.player.id + '::' + q.candidateUrl];
+  });
+  ESM.queue = newQueue.concat(ESM.queue);
+
+  var msg = matches + ' candidate' + (matches === 1 ? '' : 's') + ' matched to roster.';
+  if (unmatched.length) {
+    msg += ' ' + unmatched.length + ' slug' + (unmatched.length === 1 ? '' : 's') +
+           ' not found in roster (check property slugs match).';
+  }
+  showFetchAlert(msg, matches > 0 ? 'info' : 'warn');
+  renderQueue();
+}
+
+/* ── Queue rendering ─────────────────────────────────────────────────── */
+function confLabel(conf) {
+  if (conf >= 0.85) return '<span class="esm-conf-label esm-conf-label-high">High</span>';
+  if (conf >= 0.65) return '<span class="esm-conf-label esm-conf-label-med">Medium</span>';
+  return '<span class="esm-conf-label esm-conf-label-low">Low</span>';
+}
+
+function renderQueue() {
+  var panel = document.getElementById('queuePanel');
+  if (!ESM.queue.length) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+
+  var pending  = ESM.queue.filter(function(q) { return q.status === 'pending'; }).length;
+  var approved = ESM.queue.filter(function(q) { return q.status === 'approved'; }).length;
+  var rejected = ESM.queue.filter(function(q) { return q.status === 'rejected'; }).length;
+
+  document.getElementById('queueCountBadge').textContent = pending + ' pending';
+
+  var html = ESM.queue.map(function(item, i) {
+    var confPct  = Math.round(item.confidence * 100);
+    var confFill = confPct + '%';
+
+    /* Current image slot with source label */
+    var currentSrcLabel = item.currentSourceType
+      ? '<div class="esm-queue-src-label">' + escHtml(item.currentSourceType) + '</div>'
+      : '<div class="esm-queue-src-label">none</div>';
+    var currentHtml = item.currentUrl
+      ? '<img class="esm-queue-thumb" src="' + escHtml(item.currentUrl) + '" alt="" ' +
+        'onerror="this.parentNode.innerHTML=\'<div class=esm-queue-thumb-empty>&#128247;</div>\'">'
+      : '<div class="esm-queue-thumb-empty">&#128247;</div>';
+
+    /* Candidate image slot with source label */
+    var candidateSrcIsApi = item.sourceType === 'redbull_api';
+    var candidateSrcLabel =
+      '<div class="esm-queue-src-label' + (candidateSrcIsApi ? ' esm-badge-api" style="color:#1d4ed8' : '') + '">' +
+      escHtml(item.sourceType) + '</div>';
+    var candidateHtml =
+      '<img class="esm-queue-thumb" src="' + escHtml(item.candidateUrl) + '" alt="" ' +
+      'onerror="this.parentNode.innerHTML=\'<div class=esm-queue-thumb-empty>&#10007;</div>\'">';
+
+    var actionsHtml;
+    if (item.status === 'pending') {
+      actionsHtml =
+        '<div class="esm-queue-actions">' +
+        '<button class="esm-btn-approve" onclick="approveItem(' + i + ')">Approve</button>' +
+        '<button class="esm-btn-reject"  onclick="rejectItem(' + i + ')">Reject</button>' +
+        '</div>';
+    } else if (item.status === 'approved') {
+      actionsHtml = '<div class="esm-queue-status-line approved">Queued for write</div>';
+    } else if (item.status === 'written') {
+      actionsHtml = '<div class="esm-queue-status-line approved">Written to database</div>';
+    } else if (item.status === 'rejected') {
+      actionsHtml = '<div class="esm-queue-status-line rejected">Rejected</div>';
+    } else if (item.status === 'error') {
+      actionsHtml = '<div class="esm-queue-status-line error">Write failed — retry</div>';
+    }
+
+    return '<div class="esm-queue-item status-' + item.status + '" id="qi-' + i + '">' +
+      '<div class="esm-queue-player">' +
+        escHtml(item.player.name) +
+        '<span class="esm-queue-slug">' + escHtml(item.player.slug) + '</span>' +
+      '</div>' +
+      '<div class="esm-queue-images">' +
+        '<div class="esm-queue-img-slot">' +
+          '<div class="esm-queue-img-label">Current</div>' +
+          currentSrcLabel +
+          currentHtml +
+        '</div>' +
+        '<div class="esm-queue-img-slot">' +
+          '<div class="esm-queue-img-label">Candidate</div>' +
+          candidateSrcLabel +
+          candidateHtml +
+        '</div>' +
+      '</div>' +
+      '<div class="esm-queue-meta">' +
+        confLabel(item.confidence) +
+        '<div class="esm-conf-bar"><div class="esm-conf-fill" style="width:' + confFill + '"></div></div>' +
+        '<span class="esm-conf-text">' + confPct + '%</span>' +
+      '</div>' +
+      actionsHtml +
+    '</div>';
+  }).join('');
+
+  document.getElementById('queueList').innerHTML = html;
+
+  /* Commit strip */
+  var strip = document.getElementById('commitStrip');
+  if (approved > 0) {
+    strip.classList.add('visible');
+    var summaryParts = ['<strong>' + approved + ' approved</strong>'];
+    if (rejected > 0) summaryParts.push(rejected + ' rejected');
+    if (pending > 0)  summaryParts.push(pending + ' still pending');
+    document.getElementById('commitMeta').innerHTML =
+      summaryParts.join(' &middot; ') +
+      ' &mdash; approved rows will be inserted into <code style="font-family:var(--mono)">entity_images</code>. ' +
+      'Existing rows are not modified.';
+    document.getElementById('commitBtn').disabled = false;
+  } else {
+    strip.classList.remove('visible');
+  }
+}
+
+/* ── Queue actions ───────────────────────────────────────────────────── */
+function approveItem(i) {
+  ESM.queue[i].status = 'approved';
+  renderQueue();
+}
+
+function rejectItem(i) {
+  ESM.queue[i].status = 'rejected';
+  renderQueue();
+}
+
+function bulkApprove() {
+  var HIGH = 0.85;
+  ESM.queue.forEach(function(q) {
+    if (q.status === 'pending' && q.confidence >= HIGH) { q.status = 'approved'; }
+  });
+  renderQueue();
+}
+
+function bulkReject() {
+  var LOW = 0.85;
+  ESM.queue.forEach(function(q) {
+    if (q.status === 'pending' && q.confidence < LOW) { q.status = 'rejected'; }
+  });
+  renderQueue();
+}
+
+/* ── Commit approved to Supabase ─────────────────────────────────────── */
+function commitApproved() {
+  var toWrite = ESM.queue.filter(function(q) { return q.status === 'approved'; });
+  if (!toWrite.length) return;
+
+  document.getElementById('commitBtn').disabled = true;
+  /* Clear any previous result banner */
+  var resultEl = document.getElementById('writeResult');
+  resultEl.className = 'esm-write-result';
+  resultEl.textContent = '';
+
+  var inserted = 0;
+  var skipped  = 0;
+  var errors   = 0;
+
+  var promises = toWrite.map(function(item) {
+    var payload = {
+      property_id     : item.player.id,
+      image_url       : item.candidateUrl,
+      image_kind      : 'portrait',
+      status          : 'confirmed',
+      verified        : true,
+      source_type     : item.sourceType,
+      match_confidence: item.confidence,
+      note            : (ESM.selectedTeam ? ESM.selectedTeam.name + ' - ' : '') + item.player.name
+    };
+    /* Use return=representation so we can detect duplicates (201=inserted, 200+empty=skipped) */
+    return fetch(API_URL + '/entity_images?on_conflict=property_id,image_url', {
+      method : 'POST',
+      headers: {
+        'apikey'       : API_KEY,
+        'Authorization': 'Bearer ' + API_KEY,
+        'Content-Type' : 'application/json',
+        'Prefer'       : 'return=representation,resolution=ignore-duplicates'
+      },
+      body: JSON.stringify(payload)
+    }).then(function(r) {
+      if (!r.ok) {
+        item.status = 'error';
+        errors++;
+        return r.json().then(function(e) {
+          console.error('[ESM] write error for', item.player.slug, ':', e.message || r.status);
+        }).catch(function() {
+          console.error('[ESM] write error for', item.player.slug, ':', r.status);
+        });
+      }
+      return r.json().then(function(data) {
+        var isNew = r.status === 201 && Array.isArray(data) && data.length > 0;
+        if (isNew) {
+          inserted++;
+          item.status = 'written';
+          /* Update imageMap so roster reflects new image immediately */
+          ESM.imageMap[item.player.id] = {
+            property_id     : item.player.id,
+            image_url       : item.candidateUrl,
+            source_type     : item.sourceType,
+            verified        : true,
+            status          : 'confirmed',
+            match_confidence: item.confidence,
+            created_at      : new Date().toISOString()
+          };
+          ESM.imageCountMap[item.player.id] = (ESM.imageCountMap[item.player.id] || 0) + 1;
+        } else {
+          /* Row already existed — conflict ignored, treat as written */
+          skipped++;
+          item.status = 'written';
+        }
+      });
+    }).catch(function(e) {
+      item.status = 'error';
+      errors++;
+      console.error('[ESM] write error for', item.player.slug, ':', e.message);
+    });
+  });
+
+  Promise.all(promises).then(function() {
+    showWriteResult(inserted, skipped, errors);
+    renderQueue();
+    renderRoster(); /* Refresh table to show new images */
+  });
+}
+
+function showWriteResult(inserted, skipped, errors) {
+  var el = document.getElementById('writeResult');
+  var parts = [];
+  if (inserted > 0) parts.push(inserted + ' inserted');
+  if (skipped > 0)  parts.push(skipped + ' already existed (skipped)');
+  if (errors > 0)   parts.push(errors + ' failed');
+  if (!parts.length) { el.className = 'esm-write-result'; return; }
+  el.textContent = parts.join(' \u00b7 ');
+  el.className   = 'esm-write-result visible ' + (errors > 0 ? 'esm-write-result-warn' : 'esm-write-result-ok');
+}
+
+/* ── CORS alert helpers ──────────────────────────────────────────────── */
+function showCorsAlert() {
+  document.getElementById('corsAlert').classList.add('visible');
+  document.getElementById('pasteJsonField').style.display = '';
+}
+function hideCorsAlert() {
+  document.getElementById('corsAlert').classList.remove('visible');
+  document.getElementById('pasteJsonField').style.display = 'none';
+  document.getElementById('pasteJson').value = '';
+}
+
+/* ── Fetch alert helpers ─────────────────────────────────────────────── */
+function showFetchAlert(msg, type) {
+  var el = document.getElementById('fetchAlert');
+  el.textContent = msg;
+  el.className   = 'esm-alert visible esm-alert-' + (type === 'warn' ? 'warn' : 'info');
+}
+function clearFetchAlert() {
+  var el = document.getElementById('fetchAlert');
+  el.textContent = '';
+  el.className   = 'esm-alert';
+}
+
+/* ── Fallback bar helpers ────────────────────────────────────────────── */
+function showFallbackBar() { document.getElementById('fallbackBar').classList.add('visible'); }
+function hideFallbackBar() { document.getElementById('fallbackBar').classList.remove('visible'); }
+
+/* ── Loading state ───────────────────────────────────────────────────── */
+function setLoading(on) {
+  ESM.loading = on;
+  var btn = document.getElementById('reloadBtn');
+  if (on) {
+    btn.textContent = 'Loading...';
+    btn.disabled = true;
+    setRosterState('<div class="esm-empty">Loading roster...</div>');
+    updateSummary(null);
+    document.getElementById('rosterCount').textContent = '...';
+  } else {
+    btn.textContent = 'Reload';
+  }
+}
+
+/* ── DOM helpers ─────────────────────────────────────────────────────── */
+function setRosterState(html) {
+  document.getElementById('rosterState').innerHTML = html;
+}
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+</script>
+</body>
+</html>

@@ -301,7 +301,7 @@ window.navigateTo = SAI_UIH.navigateTo;
     '<button class="profile-item" onclick="navigateTo(\'property.html\')">Property (example)</button>' +
     '<button class="profile-item" onclick="navigateTo(\'property.html?slug=test\')">Introductions test</button>' +
     '<button class="profile-item" onclick="navigateTo(\'admin.html\')">Admin (future)</button>' +
-    '<button class="profile-item" onclick="navigateTo(\'coverage-monitor.html\')">Coverage Monitor</button>' +
+    '<button class="profile-item" onclick="navigateTo(\'admin-source-manager.html\')">Entity Source Manager</button>' +
     '<div class="dev-nav-divider"></div>' +
     '<button class="profile-item dev-nav-disable" ' +
       'onclick="localStorage.removeItem(\'sai_dev_nav\'); location.reload();">' +

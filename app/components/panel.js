@@ -40,12 +40,14 @@ function populateDetail(c) {
   var heroEl = document.getElementById('dp-hero');
   var m = c.imageMeta;
   heroEl.style.background = (m && m.bg) ? m.bg : cfg.bgVar;
+  var dpPlaceholder = '<div class="dp-hero-placeholder" style="color:' + cfg.fgVar + '">' + (HERO_ICONS[c.type] || HERO_ICONS.series) + '</div>';
   if (m) {
     var dpImgStyle = 'object-fit:' + m.fit + ';object-position:' + m.pos;
     if (m.pad) dpImgStyle += ';padding:' + m.pad + ';box-sizing:border-box';
-    heroEl.innerHTML = '<img src="' + m.url + '" alt="' + escHtml(c.name) + '" data-img-kind="' + m.kind + '" style="' + dpImgStyle + '">';
+    heroEl.innerHTML = '<img src="' + m.url + '" alt="' + escHtml(c.name) + '" data-img-kind="' + m.kind + '" style="' + dpImgStyle
+      + '" onerror="this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',this.getAttribute(\'data-fallback\'))" data-fallback="' + escHtml(dpPlaceholder) + '">';
   } else {
-    heroEl.innerHTML = '<div class="dp-hero-placeholder" style="color:' + cfg.fgVar + '">' + (HERO_ICONS[c.type] || HERO_ICONS.series) + '</div>';
+    heroEl.innerHTML = dpPlaceholder;
   }
 
   var h = '';
@@ -573,11 +575,12 @@ function dpAction(action, id) {
 }
 
 function selectCard(id) {
-  /* Toggle off if same card re-selected */
-  if (detailCardId === id) { closeDetail(); return; }
-  document.querySelectorAll('.fanscore-card').forEach(function(el) { el.classList.remove('selected'); });
-  var el = document.querySelector('.fanscore-card[data-id="' + id + '"]');
-  if (el) el.classList.add('selected');
+  /* Navigate directly to the property page.
+     The slide-out panel is no longer used for card navigation — clicking a card
+     goes straight to property.html. Hero action buttons are protected upstream
+     via the .card-hero-actions guard in card.js (event.target.closest check). */
   var card = allCards.filter(function(c) { return c.id === id; })[0];
-  if (card) openDetail(card);
+  if (card && card.slug) {
+    window.location.href = 'property.html?slug=' + encodeURIComponent(card.slug);
+  }
 }

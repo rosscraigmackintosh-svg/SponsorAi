@@ -2,7 +2,7 @@
 
 SponsorAI — Current Development State
 
-Last updated: 2026-03-16 (User-facing error pattern: `SAI_UIH.userErrorHtml(opts)` added to ui-helpers.js. intro modal `showIntroOutcome()` applies structured { title, explanation, nextStep, helpLine, actions } copy to all outcome states. 409 duplicate case now fully pattern-compliant.)
+Last updated: 2026-03-18 (Entity Source Manager MVP + second-pass refinements shipped. Coverage Monitor handoff links + Needs Attention default filter added. Admin Build Ledger created at `project-docs/ADMIN_BUILD_LEDGER.md`. Newcastle Red Bulls image pipeline formalised. `source_type` constraint extended to include `redbull_api`. Premiership Rugby team-player relationships backfilled (416 rows across 10 teams). ESM roster loading upgraded to three-step fallback: relationships primary, reverse-relationships secondary, image-note inference tertiary. Admin Feature Backlog at `project-docs/ADMIN_FEATURE_BACKLOG.md`.)
 
 ---
 
@@ -15,6 +15,9 @@ The authoritative technical source for prototype internals is:
 
 The authoritative issue list is the March 2026 code review at:
 `_internal/06_Experiments/SponsorAI_Code_Review.md`
+
+The admin and internal tooling feature backlog is at:
+`project-docs/ADMIN_FEATURE_BACKLOG.md`
 
 ---
 
@@ -248,3 +251,59 @@ Nürburgring: no confirmed Wikimedia Commons aerial alternative found; retains o
 | 8 GTWCE event entities | No social accounts; suppression reason `'Insufficient data'` | Intentional per Rule 8.4 |
 | 6 GTWCE venue entities | No social accounts; suppression reason `'Insufficient data'` | Intentional per Rule 8.4 |
 | Nürburgring venue image | Official circuit URL; no Wikimedia alternative confirmed | Known hotlink risk; to address when alternative source identified |
+
+### Newcastle Red Bulls image pipeline (2026-03-17)
+
+Newcastle Red Bulls images are sourced from the official Red Bull CMS API feed and treated as the authoritative source.
+
+**API endpoint:**
+```
+https://www.newcastleredbulls.com/v3/api/graphql/v1/v3/feed/en-INT
+  ?filter[type]=person-profiles&page[limit]=60&rb3Schema=v1:cardList
+```
+
+**Transform applied to all player headshots:**
+```
+c_fill,g_auto,w_300,h_300/q_auto,f_auto
+```
+Replace `{op}` in raw API URLs with this transform string. The result is a stable Cloudinary CDN URL that auto-crops to a 300x300 square portrait.
+
+**Source priority rule (encoded as `source_type` in `entity_images`):**
+
+| Priority | source_type | Description |
+|---|---|---|
+| 1 (highest) | `redbull_api` | Official Red Bull CMS API |
+| 2 | `manual` | Official site scrape or hand-verified insert |
+| 3 | `scan` | Semi-automated scan (Wikipedia / Wikimedia) |
+| 4 | `other` | Legacy Excel imports or ad-hoc inserts |
+
+Priority is enforced by insert order (newest `created_at` wins via `order=created_at.asc` in `loadEntityImages()`). Do not delete older rows to assert priority -- insert the higher-trust row after and the resolver picks it up automatically.
+
+**Coverage as of 2026-03-17:** 51 entity_images rows for 50 Newcastle squad members. All players have at least one `redbull_api` row. Five players also have older `manual` rows from a prior Excel import; these are retained for history but superseded by the API row.
+
+**Do not:**
+- Replace API images with Excel data or ad-hoc URLs
+- Scrape newcastleredbulls.com directly (session-cookie required; unstable)
+- Guess Cloudinary IDs without confirming from the API response
+
+**To update images in future:** re-fetch the API endpoint, diff against current `entity_images` rows, insert new rows for changed Cloudinary IDs with `source_type = 'redbull_api'`.
+
+---
+
+### Admin tool limitations — ESM roster inference (updated 2026-03-18)
+
+#### Entity Source Manager: roster loading hierarchy
+
+The Entity Source Manager (`admin-source-manager.html`) determines which athletes belong to a team using a three-step fallback:
+
+1. **`team_has_athlete` (primary):** Queries `property_relationships` where `from_id = team.id` and `relationship_type = 'team_has_athlete'`. No warning shown. Used when real relationship data exists.
+2. **`athlete_belongs_to_team` reverse (secondary):** Queries `property_relationships` where `to_id = team.id` and `relationship_type = 'athlete_belongs_to_team'`. No warning shown. Catches cases where the relationship was recorded from the athlete side.
+3. **Image notes inference (tertiary):** Falls back to `entity_images.note LIKE '%TeamName%'` substring matching. Fallback notice bar shown. Used only when no relationship data exists.
+
+**Current state (as of 2026-03-18):** Premiership Rugby — 10 teams, 416 `team_has_athlete` rows backfilled via migration `backfill_premiership_rugby_team_has_athlete_relationships`. All 10 rugby teams now resolve via step 1. Newcastle Red Bulls resolves via step 1 (relationships seeded from image notes at backfill time). GTWCE events, Formula E, and any other sport without relationship data still rely on step 3.
+
+**Remaining gap:** Teams without any `property_relationships` data rely on image notes. Players with no image row are invisible in the step-3 fallback. The fallback does not write relationships into `property_relationships`.
+
+**Resolution path:** Extend the backfill pattern to GTWCE, Formula E, and all remaining sports. See `ADMIN_BUILD_LEDGER.md` (2026-03-18 entry) for migration details. Long-term: replace note-based backfill with an authoritative ingestion pipeline that populates `property_relationships` on first data import.
+
+**Related backlog item:** Feature 3.5.1 (Entity Linking Manager) in `project-docs/ADMIN_FEATURE_BACKLOG.md`.

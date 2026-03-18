@@ -24,13 +24,15 @@ function renderCard(c, idx) {
   var m = c.imageMeta;
   var heroBg = (m && m.bg) ? m.bg : cfg.bgVar;
   var heroHtml = '<div class="card-hero" style="background:'+heroBg+'">';
+  /* Always render the placeholder; show it on image load error */
+  var placeholderHtml = '<div class="card-hero-placeholder" style="color:'+cfg.fgVar+'"'+(m?' hidden':'')+'>'+(HERO_ICONS[c.type]||HERO_ICONS.series)+'</div>';
   if (m) {
     var imgStyle = 'object-fit:'+m.fit+';object-position:'+m.pos;
     if (m.pad) imgStyle += ';padding:'+m.pad+';box-sizing:border-box';
-    heroHtml += '<img src="'+m.url+'" alt="'+c.name+'" loading="lazy" data-img-kind="'+m.kind+'" style="'+imgStyle+'">';
-  } else {
-    heroHtml += '<div class="card-hero-placeholder" style="color:'+cfg.fgVar+'">'+(HERO_ICONS[c.type]||HERO_ICONS.series)+'</div>';
+    heroHtml += '<img src="'+m.url+'" alt="'+c.name+'" loading="lazy" data-img-kind="'+m.kind+'" style="'+imgStyle
+      +'" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.card-hero-placeholder\').removeAttribute(\'hidden\')">';
   }
+  heroHtml += placeholderHtml;
   /* Hover overlay — actions centred over image, fade in on card hover, no layout impact */
   var _slug     = c.slug || '';
   var _inWL     = _slug && typeof SAI_STORAGE !== 'undefined' && SAI_STORAGE.watchlist.has(_slug);

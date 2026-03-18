@@ -332,7 +332,9 @@
         <!-- AUDIENCE ──────────────────────────────────────────────────────── -->
         <div class="prop-tab-panel" id="tab-panel-audience" style="display:none">
           <div class="prop-content-block">
-            <h2 class="prop-block-title">Platform Data</h2>
+            <h2 class="prop-block-title">Platform Data
+              <span id="platform-data-state-badge" class="prop-data-source-badge" style="display:none"></span>
+            </h2>
             <div class="prop-signal-grid" id="prop-signal-grid"></div>
           </div>
           <!-- X AUDIENCE GROWTH — shown only when real X rollup data exists -->
@@ -652,6 +654,17 @@ function setupBackButton() {
 /* ── Menu listeners ────────────────────────────────────────────────── */
 SAI_UIH.initMenuListeners();
 
+/* ── Image error fallback ──────────────────────────────────────────── */
+function onPropImgError(img) {
+  var propertyType = img.getAttribute('data-prop-type') || '';
+  var cfg = TYPE[propertyType] || { bgVar: 'var(--surface-muted)', fgVar: 'var(--text-3)' };
+  img.parentNode.innerHTML = '<div style="width:100%;height:100%;background:' + cfg.bgVar
+    + ';display:flex;align-items:center;justify-content:center;color:' + cfg.fgVar + '">'
+    + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+    + '</svg></div>';
+}
+
 /* ── Image rendering ───────────────────────────────────────────────── */
 function renderPropertyImage(imageMeta, propertyType) {
   var heroEl = document.getElementById('prop-image');
@@ -671,13 +684,12 @@ function renderPropertyImage(imageMeta, propertyType) {
     return;
   }
 
-  /* Render actual image */
-  var isCover = imageMeta.fit === 'cover';
+  /* Render actual image with graceful fallback on load error */
   var html = '<img src="' + escHtml(imageMeta.url) + '" ' +
     'style="width:100%;height:100%;object-fit:' + imageMeta.fit + ';object-position:' + imageMeta.pos + ';' +
     (imageMeta.bg ? 'background:' + imageMeta.bg + ';' : '') +
     (imageMeta.pad ? 'padding:' + imageMeta.pad + ';box-sizing:border-box;' : '') +
-    '" alt="Property image">';
+    '" alt="Property image" data-prop-type="' + escHtml(propertyType) + '" onerror="onPropImgError(this)">';
   heroEl.innerHTML = html;
 }
 
@@ -808,18 +820,31 @@ function renderXAudienceSection(rollup) {
 
 /* ── Render X follower history chart ────────────────────────────────── */
 function renderXFollowerChart(snapshots) {
-  var chartEl  = document.getElementById('x-follower-chart');
+  var chartEl   = document.getElementById('x-follower-chart');
   var unavailEl = document.getElementById('x-chart-unavail');
   if (!chartEl) return;
 
-  /* Need at least 2 points to draw a meaningful line */
-  var validPts = (snapshots || []).filter(function(s) {
-    return s.followers_count != null;
-  });
+  /* Suppress chart when history is too short for a meaningful trend line.
+     Computed here from the snapshot array itself (rather than currentProperty.dataState)
+     to avoid a race condition with loadPlatformAccounts running in parallel.
+     snapshots is ordered ASC so snapshots[0] is the oldest available point. */
+  var pts = (snapshots || []).filter(function(s) { return s.followers_count != null; });
+  if (pts.length > 0) {
+    var daysSinceOldest = (Date.now() - new Date(pts[0].snapshot_date).getTime()) / 86400000;
+    if (daysSinceOldest < 7) {
+      if (unavailEl) {
+        unavailEl.textContent   = 'More data needed for trends \u2014 chart available after 7 days of snapshots.';
+        unavailEl.style.display = 'block';
+      }
+      chartEl.style.display = 'none';
+      return;
+    }
+  }
 
-  if (validPts.length < 2) {
+  /* Need at least 2 valid points to draw a meaningful line */
+  if (pts.length < 2) {
     if (unavailEl) {
-      unavailEl.textContent  = 'Insufficient history for chart';
+      unavailEl.textContent   = 'Insufficient history for chart';
       unavailEl.style.display = 'block';
     }
     chartEl.style.display = 'none';
@@ -830,7 +855,7 @@ function renderXFollowerChart(snapshots) {
   chartEl.style.display = 'block';
 
   /* Convert to {date, value} format expected by SAI_CHARTS */
-  var chartData = validPts.map(function(s) {
+  var chartData = pts.map(function(s) {
     return { date: s.snapshot_date, value: Number(s.followers_count) };
   });
 
@@ -1131,19 +1156,16 @@ function renderProperty() {
     }
   }
 
-  /* Audience Signals
-     Social metrics are suppressed while property_platform_daily_metrics contains
-     synthetic seed data. The pending notice replaces all signal cards.
-     Once real X ingestion is running, the X Audience Growth block (rendered by
-     loadXAudienceData) will show live follower data directly above this section. */
-  var PENDING_SIGNAL = '<div class="prop-data-pending">' +
-    'No live platform data — connect X account and run ingestion to see real audience metrics.' +
-    '</div>';
-  document.getElementById('prop-signal-grid').innerHTML = PENDING_SIGNAL;
+  /* Audience Signals — set a neutral loading state.
+     renderPlatformSignalGrid() (called async via loadPlatformAccounts) will
+     replace this with real data, partial-data cards, or a true no-data state
+     based on what property_social_accounts + snapshots actually contain. */
+  var LOADING_SIGNAL = '<div class="prop-data-pending" style="font-style:italic">Loading platform data\u2026</div>';
+  document.getElementById('prop-signal-grid').innerHTML = LOADING_SIGNAL;
 
   /* Overview signal summary */
   var ovGrid = document.getElementById('overview-signal-grid');
-  if (ovGrid) ovGrid.innerHTML = PENDING_SIGNAL;
+  if (ovGrid) ovGrid.innerHTML = LOADING_SIGNAL;
 
   /* Momentum */
   var badges = computeMomentumScore(currentProperty);
@@ -1851,9 +1873,58 @@ var PLATFORM_META = {
   youtube:   { label: 'YouTube',     prefix: '',  baseUrl: 'https://youtube.com/@' }
 };
 
+/* ── Data state constants ────────────────────────────────────────────── */
+/* Five canonical states that describe how much platform data exists for  */
+/* a property. Used by renderPlatformSignalGrid, renderXFollowerChart,    */
+/* and stored on currentProperty.dataState for cross-function access.     */
+/*                                                                         */
+/* NO_DATA           — no social accounts linked (or all filtered out)    */
+/* CONNECTED_NO_DATA — account linked but zero snapshots in last 30 days  */
+/* PARTIAL           — snapshots exist, oldest is <7 days ago             */
+/* ACTIVE            — oldest snapshot in window is ≥7 days ago           */
+/* HIGH_CONFIDENCE   — oldest snapshot in window is ≥30 days ago          */
+
+var DATA_STATE_ORDER = ['HIGH_CONFIDENCE', 'ACTIVE', 'PARTIAL', 'CONNECTED_NO_DATA', 'NO_DATA'];
+
+var DATA_STATE_LABEL = {
+  'HIGH_CONFIDENCE'  : 'High confidence',
+  'ACTIVE'           : 'Active',
+  'PARTIAL'          : 'Building history',
+  'CONNECTED_NO_DATA': 'Connected — awaiting data',
+  'NO_DATA'          : 'No data'
+};
+
+/* Per-account state. snaps must be ordered snapshot_date DESC so that
+   snaps[last] is the oldest snapshot in the query window. */
+function computeAccountDataState(snaps) {
+  if (!snaps || snaps.length === 0) return 'CONNECTED_NO_DATA';
+  var oldestSnap = snaps[snaps.length - 1];
+  var daysSinceOldest = (Date.now() - new Date(oldestSnap.snapshot_date).getTime()) / 86400000;
+  if (daysSinceOldest >= 30) return 'HIGH_CONFIDENCE';
+  if (daysSinceOldest >= 7)  return 'ACTIVE';
+  return 'PARTIAL';
+}
+
+/* Property-level state: best (most informative) state across all platforms.
+   Returns NO_DATA when no linked accounts exist at all. */
+function computeDataState(accounts) {
+  if (!accounts || accounts.length === 0) return 'NO_DATA';
+  var states = accounts.map(function(a) {
+    return computeAccountDataState(a.social_account_snapshots);
+  });
+  for (var i = 0; i < DATA_STATE_ORDER.length; i++) {
+    if (states.indexOf(DATA_STATE_ORDER[i]) !== -1) return DATA_STATE_ORDER[i];
+  }
+  return 'NO_DATA';
+}
+
 function loadPlatformAccounts(propertyId) {
-  /* Query property_social_accounts with the most recent snapshot embedded.
-     social_account_snapshots.limit=1 + order=desc gives us the latest row. */
+  /* Fetch the last 30 days of snapshots per account (ordered DESC).
+     This window powers computeAccountDataState():
+       snaps[0]   = latest  (used for display value)
+       snaps[last] = oldest in window (used to measure history span)
+     Limit 60 is generous enough for daily ingestion over 30 days + gaps. */
+  var thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   apiFetch(
     '/property_social_accounts?property_id=eq.' + propertyId +
     '&status=not.in.(not_found,suspended)' +
@@ -1861,9 +1932,12 @@ function loadPlatformAccounts(propertyId) {
     ',social_account_snapshots!social_account_snapshots_social_account_id_fkey' +
     '(snapshot_date,followers_count,posts_count,likes_count,views_count,data_source,source_detail,completeness_pct,ingested_at)' +
     '&order=platform.asc' +
+    '&social_account_snapshots.snapshot_date=gte.' + thirtyDaysAgo +
     '&social_account_snapshots.order=snapshot_date.desc' +
-    '&social_account_snapshots.limit=1'
+    '&social_account_snapshots.limit=60'
   ).then(function(rows) {
+    /* Always render signal grid — handles all states including empty */
+    renderPlatformSignalGrid(rows || []);
     if (!rows || rows.length === 0) return;
     renderPlatformAccounts(rows);
     /* Render per-platform provenance blocks for scraper-backed platforms */
@@ -1873,7 +1947,109 @@ function loadPlatformAccounts(propertyId) {
       renderScraperSourcesSection(acct.platform, acct, snap);
     });
   })
-  .catch(function() { /* silent — basic platform list remains */ });
+  .catch(function() {
+    /* On failure, replace loading state with no-data */
+    renderPlatformSignalGrid([]);
+  });
+}
+
+/* ── Platform Signal Grid ────────────────────────────────────────────── */
+/* Renders the Platform Data summary cards (prop-signal-grid) and the    */
+/* Audience Summary overview cards (overview-signal-grid) using computed  */
+/* data_state per account. Also stores property-level state on            */
+/* currentProperty.dataState and updates the section header badge.        */
+/*                                                                         */
+/* State rendering:                                                        */
+/*   NO_DATA           → "No platform data available."                    */
+/*   CONNECTED_NO_DATA → "--" value + "Account connected — no data yet"  */
+/*   PARTIAL           → value + "Building history" + trend note          */
+/*   ACTIVE            → value (no extra label)                           */
+/*   HIGH_CONFIDENCE   → value (no extra label)                           */
+
+function renderPlatformSignalGrid(accounts) {
+  var signalGrid   = document.getElementById('prop-signal-grid');
+  var overviewGrid = document.getElementById('overview-signal-grid');
+  if (!signalGrid) return;
+
+  /* Compute and store property-level state */
+  var propState = computeDataState(accounts);
+  if (currentProperty) currentProperty.dataState = propState;
+
+  /* Update section header badge */
+  var badge = document.getElementById('platform-data-state-badge');
+  if (badge) {
+    badge.textContent = DATA_STATE_LABEL[propState] || propState;
+    badge.style.display = (propState === 'ACTIVE' || propState === 'HIGH_CONFIDENCE')
+      ? 'none'   /* clean — no badge needed when data is in good shape */
+      : '';
+  }
+
+  /* NO_DATA: no linked accounts at all */
+  if (propState === 'NO_DATA') {
+    var noDataHtml = '<div class="prop-data-pending">No data available.</div>';
+    signalGrid.innerHTML = noDataHtml;
+    if (overviewGrid) overviewGrid.innerHTML = noDataHtml;
+    return;
+  }
+
+  /* Build per-platform signal cards */
+  var cards = '';
+
+  accounts.forEach(function(a) {
+    var snaps      = a.social_account_snapshots || [];
+    var snap       = snaps.length ? snaps[0] : null; /* latest (DESC order) */
+    var acctState  = computeAccountDataState(snaps);
+    var meta       = PLATFORM_META[a.platform] || {
+      label: a.platform.charAt(0).toUpperCase() + a.platform.slice(1)
+    };
+
+    /* CONNECTED_NO_DATA: linked but nothing ingested in window */
+    if (acctState === 'CONNECTED_NO_DATA') {
+      cards +=
+        '<div class="prop-signal-card">' +
+          '<div class="prop-signal-label">' + escHtml(meta.label) + '</div>' +
+          '<div class="prop-signal-val" style="color:var(--text-3)">--</div>' +
+          '<div class="prop-signal-state-label">Account connected \u2014 no data yet</div>' +
+        '</div>';
+      return;
+    }
+
+    /* PARTIAL / ACTIVE / HIGH_CONFIDENCE */
+    var metricLabel = meta.label + ' Followers';
+    if (a.platform === 'youtube') metricLabel = 'YouTube Subscribers';
+
+    var hasValue = snap && snap.followers_count != null;
+    var val = hasValue
+      ? (fmtFollowers(snap.followers_count) || String(snap.followers_count))
+      : '--';
+
+    var dateLine = (snap && snap.snapshot_date)
+      ? '<div class="prop-signal-delta" style="color:var(--text-3)">' + escHtml(snap.snapshot_date) + '</div>'
+      : '';
+
+    /* State label: only shown for PARTIAL */
+    var stateLabel = (acctState === 'PARTIAL')
+      ? '<div class="prop-signal-state-label">Building history</div>'
+      : '';
+
+    /* Trend note: only shown for PARTIAL */
+    var trendNote = (acctState === 'PARTIAL')
+      ? '<div class="prop-signal-trend-note">More data needed for trends</div>'
+      : '';
+
+    cards +=
+      '<div class="prop-signal-card">' +
+        '<div class="prop-signal-label">' + escHtml(metricLabel) + '</div>' +
+        '<div class="prop-signal-val">' + escHtml(val) + '</div>' +
+        dateLine +
+        stateLabel +
+        trendNote +
+      '</div>';
+  });
+
+  var fallback = '<div class="prop-data-pending">No platform data available.</div>';
+  signalGrid.innerHTML = cards || fallback;
+  if (overviewGrid) overviewGrid.innerHTML = cards || fallback;
 }
 
 function renderPlatformAccounts(accounts) {
@@ -3668,6 +3844,32 @@ function renderSponsorshipSignals(prop) {
   font-size: var(--text-sm);
   color: var(--text-3);
   line-height: 1.5;
+}
+
+/* ── Partial-data state elements within signal cards ─────────────── */
+/* Used when a platform has snapshots but insufficient history for    */
+/* trend calculations.                                                */
+
+.prop-signal-state-label {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 6px;
+  line-height: 1.5;
+  margin-top: var(--spacing-xs);
+}
+.prop-signal-trend-note {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  margin-top: 4px;
+  font-style: italic;
+  line-height: 1.4;
 }
 
 /* ── Source state badge variants ─────────────────────────────────── */

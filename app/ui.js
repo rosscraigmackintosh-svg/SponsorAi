@@ -647,7 +647,7 @@ function resetExplore() {
 }
 
 /* ── Pagination ──────────────────────────────────────────────────────── */
-var PAGE_SIZE      = 24;
+var PAGE_SIZE      = 48;
 var _displayedCount = PAGE_SIZE;
 var _currentVis    = []; /* filtered + sorted set, full, updated on each renderGrid call */
 

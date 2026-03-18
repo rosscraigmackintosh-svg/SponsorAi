@@ -53,14 +53,33 @@ function fmtFollowers(v) {
 /* ── DB-registered images (entity_images, verified=true) ──────────────── */
 /* Populated by loadEntityImages() at grid-load time.
    Keys are property slugs; values are { src } objects.
-   Takes priority over images.js in resolveImageMeta. */
+   Takes priority over images.js in resolveImageMeta.
+
+   Source priority (recorded on each row as source_type):
+     1. redbull_api   — official Red Bull CMS API (canonical; highest trust)
+     2. manual        — official site scrape or hand-verified insert
+     3. scan          — semi-automated scan (e.g. Wikipedia / Wikimedia)
+     4. other/legacy  — Excel imports or ad-hoc inserts (lowest trust)
+   Resolver does not filter by source_type; instead it relies on created_at
+   ordering (asc) so the most recently inserted row wins per slug. This means
+   a redbull_api insert added after a legacy manual row will automatically
+   take precedence without any deletion of historical data.
+
+   Newcastle Red Bulls note:
+   Images for this team are sourced from the official Red Bull CMS API feed:
+     https://www.newcastleredbulls.com/v3/api/graphql/v1/v3/feed/en-INT
+       ?filter[type]=person-profiles&page[limit]=60&rb3Schema=v1:cardList
+   Transform applied: c_fill,g_auto,w_300,h_300/q_auto,f_auto
+   This is the authoritative source. Do not replace with Excel or ad-hoc URLs. */
 var ENTITY_IMAGES_DB = {};
 
 /* Fetch verified entity_images from Supabase and populate ENTITY_IMAGES_DB.
-   Uses a PostgREST nested select to join properties(slug) without a view. */
+   Uses a PostgREST nested select to join properties(slug) without a view.
+   Order: created_at asc so newest insert wins when a property has multiple images
+   (e.g. player who moved teams, or legacy Excel row superseded by API row). */
 function loadEntityImages() {
   return apiFetch(
-    '/entity_images?select=image_url,properties(slug,property_type)&verified=eq.true&limit=500'
+    '/entity_images?select=image_url,properties(slug,property_type)&verified=eq.true&order=created_at.asc&limit=2000'
   ).then(function(rows) {
     var map = {};
     (rows || []).forEach(function(r) {
@@ -78,7 +97,9 @@ function loadEntityImages() {
 
 /* ── Image metadata resolver ──────────────────────────────────────────── */
 /* Resolution order:
-   1. entity_images (DB, verified=true) — populated by Scan images workflow
+   1. entity_images (DB, verified=true) — newest row per slug wins (created_at asc)
+      source_type priority: redbull_api > manual > scan > other
+      (priority is enforced by insert order, not by query filtering)
    2. PROPERTY_IMAGES (images.js)       — static hand-curated registry
    3. EVENT_VENUE_MAP fallback for events
    4. null                              — card renders hero placeholder icon

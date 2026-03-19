@@ -53,7 +53,7 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-bg"
     style="background-color:#000000;background-image:url('https://www.sponsorai.com/images/email.jpg');background-size:cover;background-position:center top;background-repeat:no-repeat;">
     <tr>
-      <td align="center" style="background-color:rgba(0,0,0,0.88);background-image:linear-gradient(to bottom,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.90) 60%,rgba(0,0,0,0.97) 100%);">
+      <td align="center" style="background-color:rgba(0,0,0,0.68);background-image:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.72) 60%,rgba(0,0,0,0.92) 100%);">
 
         <!--[if gte mso 9]>
         <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"

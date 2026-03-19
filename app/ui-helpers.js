@@ -129,10 +129,11 @@ window.SAI_UIH = (function() {
      Inline-safe no-data display for FanScore slots. Use where a numeric
      FanScore would normally render (cards, compare rows, property header).
 
-     @param {string} [reason]  'suppressed' | 'unavailable' | omit for auto
+     @param {string} [reason]  'insufficient_data' | 'not_available' | omit for auto
      @returns {string} HTML string safe for innerHTML                      */
   function fanScoreNoDataHtml(reason) {
-    var label = (reason === 'suppressed') ? 'Insufficient data' : 'Not available';
+    var label = (reason === 'insufficient_data' || reason === 'suppressed')
+      ? 'Insufficient data' : 'Not available';
     return '<span class="fanscore-no-data" ' +
            'title="FanScore: ' + label + ' \u2014 no qualifying social data for this property">' +
            label +

@@ -251,7 +251,7 @@
           <div class="prop-fanscore-panel">
             <div class="prop-fanscore-panel-label">FanScore</div>
             <div id="fanscore-suppressed" style="display:none">
-              <div class="prop-notice" style="color:var(--text-3)">Score suppressed: insufficient data</div>
+              <div class="prop-notice" id="fanscore-suppressed-notice" style="color:var(--text-3)">FanScore: Not available</div>
             </div>
             <div id="fanscore-content">
               <div class="prop-score-block">
@@ -990,23 +990,53 @@ function loadProperty() {
           conf30: row.confidence_band_30d,
           sup30: row.suppression_reason_30d,
           imageMeta: imgMeta,
-          /* ── Synthetic-data suppression ─────────────────────────────
-             All social metrics below are derived from property_platform_daily_metrics,
-             which is confirmed synthetic seed data. These fields are intentionally
-             nulled here so no part of the UI renders them as real data.
-             Remove these null overrides once a real ingestion pipeline populates
-             the table for this property.                                        */
-          followers: null,
-          followersDelta: null,
-          posts30d: null,
-          interactions30d: null,
-          engRate30d: null,
-          platforms: null,
-          hasSyntheticData: true,   /* remove when real platform data exists */
+          /* Live social metrics — from social_rollups_daily via v_property_summary_current.
+             Real ingestion pipeline active since 2026-03-17. No overrides needed. */
+          followers: n(row.total_followers_latest),
+          followersDelta: n(row.followers_net_30d),
+          posts30d: n(row.posts_30d),
+          interactions30d: n(row.total_interactions_30d),
+          engRate30d: n(row.engagement_rate_30d_pct),
+          platforms: row.platforms_active || null,
           sport: row.sport || null,
           region: row.region || null,
           city: row.city || null
         };
+
+        /* ── FanScore availability fields (derived) ──────────────────────────
+           Mirrors the derivation in data.js so property.html stays in sync.
+           These are computed once here and used by renderProperty + chart fns. */
+        var _propS30    = currentProperty.s30;
+        var _propSup30  = currentProperty.sup30;
+        var _propConf   = currentProperty.conf30;
+        var _propCov    = currentProperty.cov30;
+        var _propPlats  = currentProperty.platforms;
+        var _propCovDays = (function() {
+          if (_propCov == null) return null;
+          return Math.max(1, Math.round(Number(_propCov) * 30 / 100));
+        })();
+        currentProperty.fanScoreStatus   = (_propS30 != null && !_propSup30) ? 'available'
+                                         : _propSup30                        ? 'insufficient_data'
+                                         :                                     'not_available';
+        currentProperty.coverageDays     = _propCovDays;
+        currentProperty.confidenceReason = (function() {
+          if (!_propConf) return null;
+          var platCount = (_propPlats && _propPlats.length) ? _propPlats.length : null;
+          var platPart  = platCount ? (' across ' + platCount + ' platform' + (platCount === 1 ? '' : 's')) : '';
+          var band = _propConf.toLowerCase();
+          if (band === 'high')   { return 'Based on 30+ days of signal' + platPart; }
+          if (band === 'medium') {
+            var dl = _propCovDays ? _propCovDays + ' days' : 'limited days';
+            return 'Based on ' + dl + ' of signal' + platPart;
+          }
+          /* Low */
+          if (_propCovDays && _propCovDays > 1) {
+            return 'Early signal \u2014 ' + _propCovDays + ' day' + (_propCovDays === 1 ? '' : 's') + ' of data' + platPart;
+          }
+          return 'Early signal' + platPart;
+        })();
+        /* Trend chart requires at least 2 valid spark points; set after sparks load */
+        currentProperty.hasEnoughDataForTrend = false;
 
         renderProperty();
 
@@ -1030,10 +1060,14 @@ function loadProperty() {
               currentProperty.sparks = sparkData.map(function(r) {
                 return { d: r.metric_date, v: r.suppression_reason ? null : n(r.fanscore_value) };
               });
+              /* Update trend availability based on actual spark data loaded */
+              var _validPts = currentProperty.sparks.filter(function(p){ return p.v != null; });
+              currentProperty.hasEnoughDataForTrend = _validPts.length >= 2;
               renderFanScoreChart();
               renderMomentumChart();
             } else {
-              /* Not enough data — show unavailable state in momentum chart */
+              /* Not enough data for trend chart — score still shows if available */
+              currentProperty.hasEnoughDataForTrend = false;
               renderMomentumChart();
             }
           })
@@ -1111,18 +1145,21 @@ function renderProperty() {
 
   /* FanScore
      Trust rule: never show 0 or a fabricated score.
-     When no valid data exists, show calm no-data state.
-     sup30 set → "Insufficient data" (suppressed by model)
-     s30 null  → "Not available" (no social accounts / no ingestion) */
+     fanScoreStatus drives all branching — single source of truth.
+       'available'        → show score, confidence, and trend
+       'insufficient_data' → no social window data; score cannot be computed
+       'not_available'     → no social accounts linked; nothing to score */
   var fsContent = document.getElementById('fanscore-content');
   var fsSuppressed = document.getElementById('fanscore-suppressed');
-  var fsNoScore = !currentProperty.sup30 && currentProperty.s30 == null;
-  if (currentProperty.sup30 || fsNoScore) {
+  var fsStatus = currentProperty.fanScoreStatus;
+  if (fsStatus !== 'available') {
     fsContent.style.display = 'none';
     fsSuppressed.style.display = 'block';
-    var suppNotice = fsSuppressed.querySelector('.prop-notice');
+    var suppNotice = document.getElementById('fanscore-suppressed-notice');
     if (suppNotice) {
-      suppNotice.textContent = currentProperty.sup30 ? 'Insufficient data' : 'FanScore: Not available';
+      suppNotice.textContent = (fsStatus === 'insufficient_data')
+        ? 'FanScore: Insufficient data'
+        : 'FanScore: Not available';
     }
   } else {
     fsContent.style.display = 'block';
@@ -1144,15 +1181,19 @@ function renderProperty() {
       trendRow.style.display = 'none';
     }
 
-    /* Confidence */
+    /* Confidence band + optional reason text */
     var confEl = document.getElementById('prop-confidence');
     if (currentProperty.conf30) {
-      confEl.textContent = currentProperty.conf30 + ' confidence';
+      var confHtml = '<span class="prop-conf-band">' + currentProperty.conf30 + ' confidence</span>';
+      if (currentProperty.confidenceReason) {
+        confHtml += '<span class="prop-conf-reason">' + escHtml(currentProperty.confidenceReason) + '</span>';
+      }
+      confEl.innerHTML = confHtml;
       confEl.style.fontSize = 'var(--text-xs)';
       confEl.style.color = 'var(--text-3)';
       confEl.style.marginTop = 'var(--spacing-xs)';
     } else {
-      confEl.textContent = '';
+      confEl.innerHTML = '';
     }
   }
 
@@ -1288,8 +1329,8 @@ function renderMomentumMetrics() {
   var metricsEl = document.getElementById('momentum-metrics');
   if (!c || !metricsEl) return;
 
-  /* If score is suppressed there is nothing meaningful to show */
-  if (c.sup30) {
+  /* Nothing to show unless a score is available */
+  if (c.fanScoreStatus !== 'available') {
     metricsEl.style.display = 'none';
     return;
   }
@@ -1369,21 +1410,8 @@ function renderMomentumChart() {
   var unavailEl = document.getElementById('momentum-chart-unavail');
   if (!c || !wrap || !chartEl || !unavailEl) return;
 
-  /* Synthetic data suppression: FanScore is computed from synthetic
-     property_platform_daily_metrics. Do not render the chart until
-     real platform data is ingested. */
-  if (c.hasSyntheticData) {
-    wrap.style.display = 'none';
-    var chartLoadEl = document.getElementById('audience-chart-loading');
-    if (chartLoadEl) {
-      chartLoadEl.textContent = 'FanScore trend not available — real platform data required.';
-      chartLoadEl.style.color = 'var(--text-3)';
-    }
-    return;
-  }
-
-  /* Suppressed by scoring system: no chart */
-  if (c.sup30) {
+  /* No score of any kind: hide chart entirely, no empty frame */
+  if (c.fanScoreStatus !== 'available') {
     wrap.style.display = 'none';
     return;
   }
@@ -1392,12 +1420,15 @@ function renderMomentumChart() {
   var chartLoadEl = document.getElementById('audience-chart-loading');
   if (chartLoadEl) chartLoadEl.style.display = 'none';
 
-  /* No usable sparks: show unavailable notice */
+  /* Score exists but not enough data points for a trend line yet.
+     Show a calm unavailable state — separate from score availability. */
   var sparks   = c.sparks || [];
   var validPts = sparks.filter(function(p) { return p.v != null; });
   if (validPts.length < 2) {
     chartEl.style.display = 'none';
-    unavailEl.textContent  = 'Insufficient data for chart';
+    unavailEl.textContent  = c.coverageDays && c.coverageDays < 7
+      ? 'Limited history available. Trend chart will appear as data builds.'
+      : 'Not enough data for trend chart yet.';
     unavailEl.style.display = 'block';
     wrap.style.display      = 'block';
     return;
@@ -1816,7 +1847,7 @@ function renderKeyMetrics() {
   /* Momentum */
   var momEl = document.getElementById('metric-momentum');
   if (momEl) {
-    if (c.sup30) {
+    if (c.fanScoreStatus !== 'available') {
       momEl.textContent = '--';
     } else if (c.t30 != null) {
       var tSign = c.t30 >= 0 ? '+' : '';
@@ -1834,7 +1865,7 @@ function renderKeyMetrics() {
   /* 90-Day Trend */
   var growEl = document.getElementById('metric-growth');
   if (growEl) {
-    if (c.sup30) {
+    if (c.fanScoreStatus !== 'available') {
       growEl.textContent = '--';
     } else if (c.s30 != null && c.s90 != null) {
       var d90 = c.s30 - c.s90;
@@ -2328,7 +2359,7 @@ function renderSponsorshipSignals(prop) {
 
   loadGrid().then(function(cards) {
     var others = cards.filter(function(c) {
-      return c.slug !== prop.slug && !c.sup30;
+      return c.slug !== prop.slug && c.fanScoreStatus !== 'insufficient_data';
     });
 
     var h = strHash(prop.slug || prop.name || '');
@@ -2610,7 +2641,12 @@ function renderSponsorshipSignals(prop) {
 .prop-confidence {
   font-size: var(--text-xs);
   color: var(--text-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+.prop-conf-band   { display: block; }
+.prop-conf-reason { display: block; font-style: italic; opacity: 0.8; font-size: 11px; }
 
 .prop-signal-grid {
   display: grid;

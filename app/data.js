@@ -209,6 +209,42 @@ function loadRelationships(propertyId) {
   });
 }
 
+/* ── FanScore availability helpers ───────────────────────────────────── */
+
+/**
+ * Derive an approximate day-count of valid data coverage from completeness_pct.
+ * completeness_pct_30d = (days_with_data / 30) * 100, so days ≈ pct * 30 / 100.
+ * Returns null when cov30 is null (no window data at all).
+ */
+function deriveCoverageDays(cov30) {
+  if (cov30 == null) return null;
+  return Math.max(1, Math.round(Number(cov30) * 30 / 100));
+}
+
+/**
+ * Return a short, calm, trust-first reason string for the confidence band.
+ * Designed for the UI helper copy below the confidence label.
+ * Never implies the score is unreliable — just explains its basis.
+ */
+function deriveConfidenceReason(conf30, coverageDays, platforms) {
+  if (!conf30) return null;
+  var platCount = (platforms && platforms.length) ? platforms.length : null;
+  var platPart  = platCount ? (' across ' + platCount + ' platform' + (platCount === 1 ? '' : 's')) : '';
+  var band = conf30.toLowerCase();
+  if (band === 'high') {
+    return 'Based on 30+ days of signal' + platPart;
+  }
+  if (band === 'medium') {
+    var dayLabel = coverageDays ? coverageDays + ' days' : 'limited days';
+    return 'Based on ' + dayLabel + ' of signal' + platPart;
+  }
+  /* Low */
+  if (coverageDays && coverageDays > 1) {
+    return 'Early signal — ' + coverageDays + ' day' + (coverageDays === 1 ? '' : 's') + ' of data' + platPart;
+  }
+  return 'Early signal' + platPart;
+}
+
 /* ── Momentum signal computation ─────────────────────────────────────── */
 function computeMomentumScore(c) {
   if (!c || c.sup30) return [];
@@ -274,17 +310,24 @@ function loadGrid() {
           return rows.map(function(r){
             var slug    = r.slug || null;
             var imgMeta = resolveImageMeta(slug, r.property_type);
-            var card = {
+            var _sparks     = sparkMap[r.property_id] || [];
+            var _platforms  = r.platforms_active || null;
+            var _s30        = n(r.avg_score_30d);
+            var _sup30      = r.suppression_reason_30d;
+            var _conf30     = r.confidence_band_30d;
+            var _cov30      = n(r.completeness_pct_30d);
+            var _covDays    = deriveCoverageDays(_cov30);
+            var _card = {
               id:r.property_id, name:r.property_name, type:r.property_type, country:r.country,
               bio:r.bio||null,
               slug:slug,
               asOf:r.as_of_day, model:r.model_version,
-              s30:n(r.avg_score_30d), s60:n(r.avg_score_60d), s90:n(r.avg_score_90d),
+              s30:_s30, s60:n(r.avg_score_60d), s90:n(r.avg_score_90d),
               t30:n(r.trend_value_30d), t90:n(r.trend_value_90d),
               vol30:n(r.volatility_value_30d),
-              cov30:n(r.completeness_pct_30d), conf30:r.confidence_band_30d,
-              sup30:r.suppression_reason_30d,
-              sparks:sparkMap[r.property_id]||[],
+              cov30:_cov30, conf30:_conf30,
+              sup30:_sup30,
+              sparks:_sparks,
               teamIds:r.team_ids||null, teamNames:r.team_names||null,
               driverIds:r.driver_ids||null, driverNames:r.driver_names||null,
               image_url:imgMeta ? imgMeta.url : null,  /* kept for backward compat */
@@ -294,16 +337,28 @@ function loadGrid() {
               posts30d:n(r.posts_30d),
               interactions30d:n(r.total_interactions_30d),
               engRate30d:n(r.engagement_rate_30d_pct),
-              platforms:r.platforms_active||null,
+              platforms:_platforms,
               sport:r.sport||null,
               region:r.region||null,
-              city:r.city||null
+              city:r.city||null,
+              /* ── FanScore availability fields ──────────────────────────────────
+                 Derived from the raw window data. Used by cards, panels, and the
+                 property page to explain confidence without hiding valid scores.
+                 Never fabricated — all values come from real DB rows.          */
+              fanScoreStatus: (_s30 != null && !_sup30) ? 'available'
+                            : _sup30                    ? 'insufficient_data'
+                            :                            'not_available',
+              coverageDays:   _covDays,
+              confidenceReason: deriveConfidenceReason(_conf30, _covDays, _platforms),
+              /* Trend/history visuals require >= 2 valid spark points.
+                 Score availability is independent of trend availability. */
+              hasEnoughDataForTrend: (_sparks.filter(function(p){ return p.v != null; }).length >= 2)
             };
             /* Trust rule: properties without social data are never penalised.
                Absence of a signal is not a negative signal.
                s30 == null and sup30 == null is a valid state — rendered as
                "Not available" by the card and compare views. Do not fabricate. */
-            return card;
+            return _card;
           });
         });
     });

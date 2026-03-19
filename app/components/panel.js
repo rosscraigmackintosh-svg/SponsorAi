@@ -83,14 +83,18 @@ function populateDetail(c) {
     h += '<div class="dp-conf" style="margin-top:var(--spacing-xs);color:var(--text-3)">No public social media data available</div>';
   } else if (sup) {
     h += '<div class="dp-score-primary"><span class="dp-score-val fanscore-no-data" style="color:var(--text-3)">Insufficient data</span><span class="dp-score-label">FanScore</span></div>';
-    h += '<div class="dp-conf" style="margin-top:var(--spacing-xs)">' + escHtml(c.sup30) + '</div>';
+    h += '<div class="dp-conf" style="margin-top:var(--spacing-xs);color:var(--text-3)">No social platform data available for scoring</div>';
   } else {
     h += '<div class="dp-score-primary">';
     h += '<span class="dp-score-val" style="color:' + scoreColor + '">' + fmtScore(c.s30) + '</span>';
     h += '<span class="dp-score-label">30-day average</span>';
     h += '</div>';
     if (c.t30 != null) h += '<div class="dp-trend" style="color:' + arrC(c.t30) + ';margin-bottom:var(--spacing-xs)">' + arr(c.t30) + '\u2009' + Math.abs(c.t30).toFixed(2) + '\u2009/\u2009day</div>';
-    if (c.conf30) h += '<div class="dp-conf">' + c.conf30 + ' confidence</div>';
+    if (c.conf30) {
+      h += '<div class="dp-conf">' + c.conf30 + ' confidence';
+      if (c.confidenceReason) h += '<span class="dp-conf-reason">' + escHtml(c.confidenceReason) + '</span>';
+      h += '</div>';
+    }
   }
   /* Short description */
   if (c.bio) {
@@ -169,9 +173,16 @@ function populateDetail(c) {
     { label: 'Audience consistency', val: _consistency }
   ]);
   if (sup) {
-    h += '<div class="dp-integrity-notice">Unusual activity detected and adjusted in the FanScore calculation.</div>';
-  } else if (c.cov30 != null && c.cov30 < 80) {
-    h += '<div class="dp-integrity-notice">Data coverage for this window is ' + Math.round(c.cov30) + '%. Score reliability may be reduced.</div>';
+    h += '<div class="dp-integrity-notice">More data is needed before a reliable FanScore can be shown.</div>';
+  } else if (c.conf30 && c.conf30.toLowerCase() === 'low') {
+    /* Low confidence = fewer than 7 days of signal.
+       Acknowledge the thin history calmly — do not imply the score is broken. */
+    var _dn = c.coverageDays;
+    h += '<div class="dp-integrity-notice">'
+      + (_dn ? 'Score is based on ' + _dn + ' day' + (_dn === 1 ? '' : 's') + ' of data.'
+             : 'Score is based on limited data.')
+      + ' Confidence will improve as more data is collected.'
+      + '</div>';
   }
   h += '</div>';
 
@@ -229,10 +240,13 @@ function populateDetail(c) {
   h += '<div class="dp-section-label">Score history</div>';
   if (!sup && !noData && c.sparks && c.sparks.length >= 2) {
     h += '<div class="dp-spark-chart">' + renderSpark(c.sparks, scoreColor, 280, 64) + '</div>';
+  } else if (!sup && !noData) {
+    /* Score exists but not enough spark points for a trend line yet */
+    h += '<div class="dp-conf" style="color:var(--text-3);margin-bottom:var(--spacing-sm)">Limited history available. Trend chart will appear as data builds.</div>';
   }
   if (noData) {
     h += '<div class="dp-conf" style="color:var(--text-3)">No social data available for this property</div>';
-  } else {
+  } else if (!sup) {
     h += '<div class="dp-windows">';
     h += dpWindow(c.s30, '30d', scoreColor);
     h += dpWindow(c.s60, '60d', null);

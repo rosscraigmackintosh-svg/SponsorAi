@@ -94,6 +94,7 @@ function renderCard(c, idx) {
     +'</div>'
     +'<div class="score-aside">'
     +(!noData&&c.conf30?'<div class="conf-line">'+c.conf30+' confidence</div>':'')
+    +(!noData&&c.confidenceReason?'<div class="conf-line conf-reason">'+escHtml(c.confidenceReason)+'</div>':'')
     +(!noData&&c.cov30!=null?'<div class="conf-line">'+Math.round(c.cov30)+'% coverage</div>':'')
     +'</div></div>'
 

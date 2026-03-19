@@ -5,7 +5,7 @@
 
 /* Use alternate background image for investor pages */
 .bg-image {
-  background-image: url('images/sports-bg2.png');
+  background-image: url('images/sports-bg2.jpg');
 }
 
 /* Override hero alignment — login is centred, not bottom-anchored */
@@ -210,6 +210,6 @@
 /* === Mobile image swap === */
 @media (max-width: 767px) {
   .bg-image {
-    background-image: url('images/sports-bg2-mob.png');
+    background-image: url('images/sports-bg2-mob.jpg');
   }
 }

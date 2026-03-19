@@ -21,7 +21,7 @@
 
 /* Alternative image (set per-page) */
 .bg-image--alt {
-  background-image: url('images/sports-bg3.png');
+  background-image: url('images/sports-bg3.jpg');
 }
 
 /* Portal page doesn't bottom-anchor like the hero page */
@@ -403,6 +403,6 @@
 /* === Mobile image swap === */
 @media (max-width: 767px) {
   .bg-image--alt {
-    background-image: url('images/sports-bg3-mob.png');
+    background-image: url('images/sports-bg3-mob.jpg');
   }
 }

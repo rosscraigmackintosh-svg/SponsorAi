@@ -45,7 +45,7 @@ body {
 .bg-image {
   position: absolute;
   inset: 0;
-  background-image: url('images/sports-bg.png');
+  background-image: url('images/sports-bg.jpg');
   background-size: cover;
   background-position: center 40%;
   background-repeat: no-repeat;
@@ -741,6 +741,6 @@ body {
 /* === Mobile image swaps === */
 @media (max-width: 767px) {
   .bg-image {
-    background-image: url('images/sports-bg-mob.png');
+    background-image: url('images/sports-bg-mob.jpg');
   }
 }

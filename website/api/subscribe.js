@@ -74,8 +74,10 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td>
-                    <img src="https://www.sponsorai.com/images/logo-whitepng.png" alt="SponsorAI" height="20"
-                      style="display:block;border:0;outline:none;text-decoration:none;" />
+                    <a href="https://www.sponsorai.com" style="text-decoration:none;border:0;">
+                      <img src="https://www.sponsorai.com/images/logo-whitepng.png" alt="SponsorAI" height="20"
+                        style="display:block;border:0;outline:none;text-decoration:none;" />
+                    </a>
                   </td>
                   <td align="right">
                     <span style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.30);padding:5px 12px;border-radius:100px;display:inline-block;">Early Access</span>

@@ -32,7 +32,7 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; }
-    body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #08080e; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #000000; }
     a { color: inherit; text-decoration: none; }
     @media screen and (max-width: 600px) {
       .email-container { width: 100% !important; }
@@ -42,18 +42,18 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #08080e;">
+<body style="margin: 0; padding: 0; background-color: #000000;">
 
   <!-- Preheader -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#08080e;line-height:1px;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#000000;line-height:1px;">
     We have your details. We'll be in touch when we have a release date to share.&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;
   </div>
 
   <!-- Background table -->
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-bg"
-    style="background-color:#08080e;background-image:url('https://www.sponsorai.com/images/email.jpg');background-size:cover;background-position:center top;background-repeat:no-repeat;">
+    style="background-color:#000000;background-image:url('https://www.sponsorai.com/images/email.jpg');background-size:cover;background-position:center top;background-repeat:no-repeat;">
     <tr>
-      <td align="center" style="background-color:rgba(8,8,14,0.72);background-image:linear-gradient(to bottom,rgba(8,8,14,0.55) 0%,rgba(8,8,14,0.70) 60%,rgba(8,8,14,0.92) 100%);">
+      <td align="center" style="background-color:rgba(0,0,0,0.88);background-image:linear-gradient(to bottom,rgba(0,0,0,0.82) 0%,rgba(0,0,0,0.90) 60%,rgba(0,0,0,0.97) 100%);">
 
         <!--[if gte mso 9]>
         <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"

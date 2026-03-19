@@ -143,7 +143,7 @@
       if (!API_URL) {
         /* Config missing — dev fallback */
         console.warn('[SponsorAI] API_URL missing — portal signup not stored. Email was:', email);
-        _portalSignupSuccess(portalForm, emailInput, noteEl, btn);
+        _portalSignupSuccess(portalForm, emailInput, noteEl, btn, email);
         return;
       }
 
@@ -159,12 +159,12 @@
       })
       .then(function (res) {
         if (res.ok) {
-          _portalSignupSuccess(portalForm, emailInput, noteEl, btn);
+          _portalSignupSuccess(portalForm, emailInput, noteEl, btn, email);
         } else {
           return res.json().then(function (body) {
             /* 23505 = unique violation: already signed up — treat as success */
             if (body && body.code === '23505') {
-              _portalSignupSuccess(portalForm, emailInput, noteEl, btn);
+              _portalSignupSuccess(portalForm, emailInput, noteEl, btn, email);
             } else {
               if (btn) { btn.disabled = false; }
               if (noteEl) { noteEl.textContent = 'Something went wrong. Please try again in a moment.'; noteEl.className = 'signup__note is-error'; }
@@ -181,11 +181,22 @@
     });
   }
 
-  function _portalSignupSuccess(form, input, note, btn) {
+  function _notifyResend(email) {
+    fetch('/api/subscribe', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email: email, source: 'investor-portal' })
+    }).catch(function (err) {
+      console.warn('[SponsorAI] Resend subscribe error:', err);
+    });
+  }
+
+  function _portalSignupSuccess(form, input, note, btn, email) {
     form.classList.add('is-submitted');
     if (note)  { note.textContent = "You're on the list. We'll be in touch."; note.className = 'signup__note is-success'; }
     if (input) { input.value = ''; }
     if (btn)   { btn.disabled = false; }
+    if (email) { _notifyResend(email); }
   }
 
 })();

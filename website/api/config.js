@@ -10,6 +10,9 @@
      WEBSITE_API_KEY
      WEBSITE_PORTAL_USERNAME
      WEBSITE_PORTAL_PASSWORD
+
+   Also required (server-side only, NOT exposed to frontend):
+     RESEND_API_KEY  — used by /api/subscribe for Resend email + audience
 */
 
 module.exports = function handler(req, res) {

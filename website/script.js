@@ -106,12 +106,24 @@
     });
   }
 
+  /* ── Resend — fire-and-forget (does not affect UX) ─────────────────── */
+  function notifyResend(email) {
+    fetch('/api/subscribe', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email: email, source: 'website' })
+    }).catch(function (err) {
+      console.warn('[SponsorAI] Resend subscribe error:', err);
+    });
+  }
+
   /* ── Outcome handlers ──────────────────────────────────────────────── */
   function handleSuccess(email, isDuplicate) {
     setSubmitting(false);
     form.classList.add('is-submitted');
     setNote("You're on the list. We'll be in touch.", 'success');
     input.value = '';
+    notifyResend(email);
   }
 
   function handleError(err, email) {

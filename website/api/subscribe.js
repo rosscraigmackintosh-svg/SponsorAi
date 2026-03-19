@@ -17,7 +17,7 @@ const FROM_ADDRESS = 'SponsorAI <hello@sponsorai.com>';
 const SUBJECT      = "You're on the list \u2014 SponsorAI";
 
 const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html dir="ltr" lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html dir="ltr" lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" style="height:100%;">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,6 +32,7 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; }
+    html, body { height: 100% !important; }
     body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #000000; }
     a { color: inherit; text-decoration: none; }
     @media screen and (max-width: 600px) {
@@ -42,7 +43,7 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000;">
+<body style="margin: 0; padding: 0; background-color: #000000; height: 100%;">
 
   <!-- Preheader -->
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#000000;line-height:1px;">
@@ -50,10 +51,10 @@ const EMAIL_HTML = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//E
   </div>
 
   <!-- Background table -->
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-bg"
-    style="background-color:#000000;background-image:url('https://www.sponsorai.com/images/email.jpg');background-size:cover;background-position:center top;background-repeat:no-repeat;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" height="100%" class="email-bg"
+    style="background-color:#000000;background-image:url('https://www.sponsorai.com/images/email.jpg');background-size:cover;background-position:center top;background-repeat:no-repeat;min-height:100vh;">
     <tr>
-      <td align="center" style="background-color:rgba(0,0,0,0.68);background-image:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.72) 60%,rgba(0,0,0,0.92) 100%);">
+      <td align="center" valign="top" style="background-color:rgba(0,0,0,0.68);background-image:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.72) 60%,rgba(0,0,0,0.92) 100%);min-height:100vh;">
 
         <!--[if gte mso 9]>
         <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"

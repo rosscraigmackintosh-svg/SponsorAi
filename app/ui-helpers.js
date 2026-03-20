@@ -304,6 +304,22 @@ window.navigateTo = SAI_UIH.navigateTo;
     '<button class="profile-item" onclick="navigateTo(\'admin.html\')">Admin (future)</button>' +
     '<button class="profile-item" onclick="navigateTo(\'admin-source-manager.html\')">Entity Source Manager</button>' +
     '<div class="dev-nav-divider"></div>' +
+    (function() {
+      var isDemo = false;
+      try { isDemo = localStorage.getItem('sai_demo_mode') === 'true'; } catch(e) {}
+      if (isDemo) {
+        return '<button class="profile-item" style="color:var(--positive)" ' +
+          'onclick="localStorage.setItem(\'sai_demo_mode\',\'false\'); location.reload();">' +
+          'Demo mode: ON \u2014 disable' +
+        '</button>';
+      } else {
+        return '<button class="profile-item" ' +
+          'onclick="localStorage.setItem(\'sai_demo_mode\',\'true\'); location.reload();">' +
+          'Demo mode: OFF \u2014 enable' +
+        '</button>';
+      }
+    }()) +
+    '<div class="dev-nav-divider"></div>' +
     '<button class="profile-item dev-nav-disable" ' +
       'onclick="localStorage.removeItem(\'sai_dev_nav\'); location.reload();">' +
       'Disable dev nav' +

@@ -962,7 +962,8 @@ function loadProperty() {
       'total_followers_latest,followers_net_30d,posts_30d,total_interactions_30d,engagement_rate_30d_pct,platforms_active,' +
       'sport,region,city';
 
-    return apiFetch('/v_property_summary_current?slug=eq.' + encodeURIComponent(slug) + '&select=' + cols)
+    var summaryView = DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current';
+    return apiFetch(summaryView + '?slug=eq.' + encodeURIComponent(slug) + '&select=' + cols)
       .then(function(rows) {
         if (!rows || rows.length === 0) {
           showError('Property not found');
@@ -1049,12 +1050,19 @@ function loadProperty() {
         /* Load linked platform accounts for Sources tab */
         loadPlatformAccounts(currentProperty.id);
 
-        /* Load sparkline in parallel */
-        return apiFetch('/fanscore_daily?select=metric_date,fanscore_value,suppression_reason' +
-          '&property_id=eq.' + currentProperty.id +
-          '&model_version=eq.' + MODEL +
-          '&metric_date=gte.' + new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10) +
-          '&order=metric_date.asc&limit=200')
+        /* Load sparkline in parallel — demo mode uses the union view */
+        var since90 = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+        var sparkEndpoint = DEMO_MODE
+          ? '/v_fanscore_daily_demo?select=metric_date,fanscore_value,suppression_reason' +
+              '&property_id=eq.' + currentProperty.id +
+              '&metric_date=gte.' + since90 +
+              '&order=metric_date.asc&limit=200'
+          : '/fanscore_daily?select=metric_date,fanscore_value,suppression_reason' +
+              '&property_id=eq.' + currentProperty.id +
+              '&model_version=eq.' + MODEL +
+              '&metric_date=gte.' + since90 +
+              '&order=metric_date.asc&limit=200';
+        return apiFetch(sparkEndpoint)
           .then(function(sparkData) {
             if (sparkData && sparkData.length >= 2) {
               currentProperty.sparks = sparkData.map(function(r) {
@@ -1505,7 +1513,7 @@ function renderEcosystem(rels) {
 
   /* Fetch related properties including influence signals */
   var idList = relIds.join(',');
-  apiFetch('/v_property_summary_current'
+  apiFetch((DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current')
     + '?property_id=in.(' + idList + ')'
     + '&select=property_id,property_name,property_type,avg_score_30d,slug,'
     + 'suppression_reason_30d,total_followers_latest,trend_value_30d')
@@ -1724,7 +1732,7 @@ function loadSimilarProperties() {
   var cols = 'property_id,property_name,property_type,country,slug,' +
              'total_followers_latest,sport,region';
 
-  apiFetch('/v_property_summary_current'
+  apiFetch((DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current')
     + '?' + filter
     + '&slug=neq.' + encodeURIComponent(cp.slug)
     + '&select=' + cols
@@ -1829,6 +1837,55 @@ function switchTab(tabName) {
 function renderKeyMetrics() {
   var c = currentProperty;
   if (!c) return;
+
+  /* Demo mode: when social metrics are unavailable, replace the three social
+     stat cards with a single calm notice and show only the FanScore-derived
+     metrics (Momentum, 90-Day Trend) in their normal positions.
+     Does not fabricate any audience, engagement, or platform values.
+     Only activates when DEMO_MODE is true AND all three social fields are null. */
+  if (DEMO_MODE) {
+    var noSocial = c.followers == null &&
+                   c.engRate30d == null &&
+                   (!c.platforms || c.platforms.length === 0);
+    if (noSocial) {
+      var row = document.getElementById('prop-metrics-row');
+      if (row) {
+        /* Recompute Momentum and 90-Day Trend inline (same logic as normal path) */
+        var momHtml = '--', momStyle = '';
+        if (c.fanScoreStatus === 'available' && c.t30 != null) {
+          var tSign = c.t30 >= 0 ? '+' : '';
+          momHtml  = arr(c.t30) + '\u2009' + tSign + c.t30.toFixed(2);
+          momStyle = 'color:' + arrC(c.t30) + ';';
+        }
+        var trendHtml = '--', trendStyle = '';
+        if (c.fanScoreStatus === 'available' && c.s30 != null && c.s90 != null) {
+          var d90     = c.s30 - c.s90;
+          var d90Sign = d90 >= 0 ? '+' : '';
+          trendHtml  = d90Sign + d90.toFixed(1);
+          trendStyle = 'color:' + arrC(d90) + ';';
+        }
+        row.innerHTML =
+          '<div class="prop-metric-card" style="grid-column:1/span 3;justify-content:center">' +
+            '<div class="prop-metric-val" ' +
+              'style="font-size:var(--text-sm);color:var(--text-3);font-weight:400;' +
+                     'letter-spacing:0;line-height:1.5;white-space:normal">' +
+              'Live social metrics will populate as source coverage expands.' +
+            '</div>' +
+          '</div>' +
+          '<div class="prop-metric-card">' +
+            '<div class="prop-metric-label">Momentum</div>' +
+            '<div class="prop-metric-val" style="' + momStyle + '">' + momHtml + '</div>' +
+            '<div class="prop-metric-sub">30d slope / day</div>' +
+          '</div>' +
+          '<div class="prop-metric-card">' +
+            '<div class="prop-metric-label">90-Day Trend</div>' +
+            '<div class="prop-metric-val" style="' + trendStyle + '">' + trendHtml + '</div>' +
+            '<div class="prop-metric-sub">score change</div>' +
+          '</div>';
+      }
+      return;
+    }
+  }
 
   /* Total Audience */
   var audEl    = document.getElementById('metric-audience');

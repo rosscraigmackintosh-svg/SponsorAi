@@ -236,7 +236,7 @@ function loadPortfolio() {
     + 'total_followers_latest,engagement_rate_30d_pct';
 
   /* Fetch from Supabase */
-  apiFetch('/v_property_summary_current?slug=in.(' + slugList + ')&select=' + cols)
+  apiFetch((DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current') + '?slug=in.(' + slugList + ')&select=' + cols)
     .then(function(rows) {
       if (!rows || rows.length === 0) {
         document.getElementById('empty-state').style.display = 'block';

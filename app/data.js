@@ -1,6 +1,16 @@
 /* ── Config (API_URL, API_KEY loaded from config.js) ─────────────────── */
 var MODEL = 'v1.0';
 
+/* ── Demo mode ────────────────────────────────────────────────────────── */
+/* When true, data.js fetches from demo views (v_property_summary_demo,   */
+/* v_fanscore_daily_demo) which blend real + synthetic 90-day history.     */
+/* Toggle via localStorage.sai_demo_mode = 'true' / 'false'.              */
+/* The Dev nav provides the toggle button. Real data is never altered.     */
+var DEMO_MODE = (function() {
+  try { return localStorage.getItem('sai_demo_mode') === 'true'; }
+  catch(e) { return false; }
+}());
+
 function countryFlag(code) {
   if (!code) return '';
   var aliases = { UK:'GB', ENG:'GB', SCO:'GB', WAL:'GB', NIR:'GB' };
@@ -285,20 +295,32 @@ function loadGrid() {
     +'sport,region,city';
 
   return imgPromise.then(function() {
-  return apiFetch('/v_property_summary_current?select='+cols
+  /* Demo mode: switch to demo views that blend real + synthetic history. */
+  var summaryView = DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current';
+  return apiFetch(summaryView+'?select='+cols
     +'&visible_in_ui=eq.true'
     +'&order=property_name.asc&limit=200')
     .then(function(rows){
       var ids=rows.map(function(r){return r.property_id;});
       var since=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
       var idList=ids.join(',');
-      return apiFetch('/fanscore_daily'
-        +'?select=property_id,metric_date,fanscore_value,suppression_reason'
-        +'&property_id=in.('+idList+')'
-        +'&model_version=eq.'+MODEL
-        +'&metric_date=gte.'+since
-        +'&order=property_id.asc,metric_date.asc'
-        +'&limit=5000')
+      /* Demo spark source: v_fanscore_daily_demo unions real v2.0 + synthetic rows. */
+      /* Production spark source: fanscore_daily filtered to v1.0 (historical data). */
+      var sparkPath = DEMO_MODE
+        ? '/v_fanscore_daily_demo'
+            +'?select=property_id,metric_date,fanscore_value,suppression_reason'
+            +'&property_id=in.('+idList+')'
+            +'&metric_date=gte.'+since
+            +'&order=property_id.asc,metric_date.asc'
+            +'&limit=5000'
+        : '/fanscore_daily'
+            +'?select=property_id,metric_date,fanscore_value,suppression_reason'
+            +'&property_id=in.('+idList+')'
+            +'&model_version=eq.'+MODEL
+            +'&metric_date=gte.'+since
+            +'&order=property_id.asc,metric_date.asc'
+            +'&limit=5000';
+      return apiFetch(sparkPath)
         .then(function(sparkData){
           var sparkMap={};
           (sparkData||[]).forEach(function(r){

@@ -206,7 +206,7 @@ SAI_UIH.initTheme();
 function loadBridgeContent() {
   var cols = 'property_id,property_name,property_type,slug,avg_score_30d,trend_value_30d,confidence_band_30d,suppression_reason_30d';
 
-  apiFetch('/v_property_summary_current?visible_in_ui=eq.true&select=' + cols + '&order=avg_score_30d.desc.nullslast&limit=5')
+  apiFetch((DEMO_MODE ? '/v_property_summary_demo' : '/v_property_summary_current') + '?visible_in_ui=eq.true&select=' + cols + '&order=avg_score_30d.desc.nullslast&limit=5')
     .then(function(rows) {
       if (!rows || rows.length === 0) {
         return;

@@ -63,14 +63,13 @@ BEGIN
 
     -- CTE: annotate each daily row with a day_index for regr_slope
     -- day_index = 0 for the earliest day in the window, N for the most recent.
+    -- CTE: date - date returns integer in PostgreSQL; cast to float for regr_slope
     WITH daily AS (
       SELECT
         fd.property_id,
         fd.fanscore_value,
-        EXTRACT(
-          DAY FROM fd.metric_date
-          - MIN(fd.metric_date) OVER (PARTITION BY fd.property_id)
-        )::float AS day_idx
+        (fd.metric_date - MIN(fd.metric_date) OVER (PARTITION BY fd.property_id))::float
+          AS day_idx
       FROM fanscore_daily fd
       WHERE fd.model_version  = p_model_version
         AND fd.fanscore_value IS NOT NULL   -- only scored rows, skip suppressed

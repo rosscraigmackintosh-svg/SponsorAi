@@ -143,15 +143,20 @@ Add new entries as `<button>` elements using `.profile-item` class, with `onclic
 
 Insert above the `.dev-nav-divider` line. The "Disable dev nav" button must always remain last.
 
-### Current entries (as of 2026-03-15)
+### Current entries (as of 2026-03-19)
 
-| Label | Target |
+| Label | Target / Action |
 |---|---|
 | Account | `account.html` |
 | Properties | `explore.html` |
 | Property (example) | `property.html` |
 | Introductions test | `property.html?slug=test` |
 | Admin (future) | `admin.html` |
+| Entity Source Manager | `admin-source-manager.html` |
+| Demo mode: OFF/ON | toggles `localStorage.sai_demo_mode`, reloads page |
+
+The demo mode toggle renders its current state dynamically (green "ON" when active).
+It does not navigate to a page; it sets `sai_demo_mode` and reloads.
 
 Update this table whenever entries are added or removed.
 
